@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyKal: your financial brain.</title>
+  <meta name="description"
+    content="MoneyKal is an intelligent financial platform that understands your financial world, analyses your information, and helps you make better decisions.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    // Already signed in, go straight to the product. (Unchanged behaviour.)
+    const sess = JSON.parse(localStorage.getItem('twin_session') || '{}');
+    if (sess.token) {
+      window.location.href = 'dashboard.html';
+    }
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <!-- ================= NAVIGATION ================= -->
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <!-- IDs preserved: i18n.js binds the theme and language toggles by id. -->
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login" data-i18n="nav-login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent" data-i18n="nav-getstarted">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <!-- ================= 1. WHAT MONEYKAL IS ================= -->
+    <section class="mk-hero" id="what">
+      <div class="mk-hero__grid">
+
+        <div class="mk-hero__text">
+          <p class="mk-eyebrow mk-hero__eyebrow">Your Financial Brain</p>
+
+          <h1 class="mk-hero__title">
+            <span class="mk-line"><span>Understand</span></span>
+            <span class="mk-line"><span>your money.</span></span>
+            <span class="mk-line"><span class="mk-accent-text">Then act on it.</span></span>
+          </h1>
+
+          <p class="mk-hero__lede">
+            MoneyKal is an intelligent personal finance platform. It reads your financial
+            life, works out what it means, and helps you decide what to do next.
+          </p>
+
+          <!-- The five things the platform covers, said plainly. A visitor should
+               not have to scroll to learn the scope. -->
+          <ul class="mk-hero__does">
+            <li>Tracking</li>
+            <li>Intelligence</li>
+            <li>Tax</li>
+            <li>Decisions</li>
+            <li>Ask it anything</li>
+          </ul>
+
+          <div class="mk-hero__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+              Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <a href="#journeys" class="mk-btn mk-btn--ghost mk-btn--lg">See how it works</a>
+          </div>
+        </div>
+
+        <!-- A condensed view of the real product surface, so the page shows what
+             MoneyKal is rather than only describing it. The .mk-hero__readout
+             hook is preserved: home-landing.js starts the counters from it. -->
+        <div class="mk-hero__visual" aria-hidden="true">
+          <div class="mk-preview">
+
+            <div class="mk-preview__bar">
+              <span class="mk-preview__mark"></span>
+              <span class="mk-preview__name">Overview</span>
+              <span class="mk-preview__chip">This month</span>
+            </div>
+
+            <div class="mk-preview__body">
+
+              <div class="mk-hero__readout mk-preview__headline">
+                <span class="mk-readout__label">Net position</span>
+                <span class="mk-readout__value" data-count="482000" data-prefix="&#8377;">&#8377;0</span>
+                <span class="mk-readout__delta">
+                  <span class="mk-readout__arrow">&uarr;</span>
+                  <span data-count="18" data-suffix="%">0%</span> this quarter
+                </span>
+              </div>
+
+              <svg class="mk-preview__chart" viewBox="0 0 340 104" fill="none" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="mkPrevFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--mk-accent)" stop-opacity="0.28" />
+                    <stop offset="100%" stop-color="var(--mk-accent)" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path class="mk-preview__area"
+                  d="M0 82 L38 74 L76 78 L114 60 L152 66 L190 44 L228 50 L266 30 L304 24 L340 14 L340 104 L0 104 Z"
+                  fill="url(#mkPrevFill)" />
+                <path class="mk-preview__line"
+                  d="M0 82 L38 74 L76 78 L114 60 L152 66 L190 44 L228 50 L266 30 L304 24 L340 14"
+                  stroke="var(--mk-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+
+              <div class="mk-preview__tiles">
+                <div class="mk-tile">
+                  <span class="mk-tile__k">Cash flow</span>
+                  <b class="mk-tile__v">&#8377;64,200</b>
+                </div>
+                <div class="mk-tile">
+                  <span class="mk-tile__k">Goal progress</span>
+                  <b class="mk-tile__v">72%</b>
+                </div>
+                <div class="mk-tile">
+                  <span class="mk-tile__k">Buffer</span>
+                  <b class="mk-tile__v">6.4 mo</b>
+                </div>
+              </div>
+
+              <div class="mk-preview__rows">
+                <div class="mk-prow">
+                  <span class="mk-prow__k">Essentials</span>
+                  <span class="mk-prow__bar"><i style="width:68%"></i></span>
+                  <span class="mk-prow__v">&#8377;41,800</span>
+                </div>
+                <div class="mk-prow">
+                  <span class="mk-prow__k">Lifestyle</span>
+                  <span class="mk-prow__bar"><i style="width:44%"></i></span>
+                  <span class="mk-prow__v">&#8377;26,300</span>
+                </div>
+                <div class="mk-prow">
+                  <span class="mk-prow__k">Investments</span>
+                  <span class="mk-prow__bar"><i style="width:31%"></i></span>
+                  <span class="mk-prow__v">&#8377;18,500</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FEATURE BAR =================
+         Navigation, not content. The homepage stays short; each entry opens
+         the dedicated page for that capability. -->
+    <section class="mk-fbar-wrap" aria-label="Explore MoneyKal">
+      <div class="mk-wrap">
+        <nav class="mk-fbar">
+          <a class="mk-fbar__item" href="hisaab.html">
+            <span class="mk-fbar__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+            </span>
+            <span class="mk-fbar__name">Hisaab</span>
+            <span class="mk-fbar__desc">Track every rupee</span>
+          </a>
+          <a class="mk-fbar__item" href="taxes.html">
+            <span class="mk-fbar__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M9 7h6M9 11h6M9 15h3M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/></svg>
+            </span>
+            <span class="mk-fbar__name">Taxes</span>
+            <span class="mk-fbar__desc">Tax categories and dates</span>
+          </a>
+          <a class="mk-fbar__item" href="intelligence.html">
+            <span class="mk-fbar__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a5 5 0 0 0-5 5c0 1.6.7 3 1.9 3.9V15a3.1 3.1 0 0 0 6.2 0v-3.1A5 5 0 0 0 12 3z"/></svg>
+            </span>
+            <span class="mk-fbar__name">Intelligence</span>
+            <span class="mk-fbar__desc">Rules you can audit</span>
+          </a>
+          <a class="mk-fbar__item" href="app.html">
+            <span class="mk-fbar__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM11 19h2"/></svg>
+            </span>
+            <span class="mk-fbar__name">App</span>
+            <span class="mk-fbar__desc">MoneyKal on mobile</span>
+          </a>
+          <a class="mk-fbar__item" href="security.html">
+            <span class="mk-fbar__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+                stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.1 8 11 4.6-1.9 8-6 8-11V5z"/></svg>
+            </span>
+            <span class="mk-fbar__name">Security &amp; Privacy</span>
+            <span class="mk-fbar__desc">How your data is held</span>
+          </a>
+        </nav>
+      </div>
+    </section>
+
+    <section class="mk-section mk-ambient mk-ambient--grid" id="journeys">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">Two journeys, one engine</p>
+          <h2 class="mk-h2">Your money. And your company's.</h2>
+          <p class="mk-sub">
+            The same financial intelligence layer, pointed at two different problems.
+            Pick the one you are here for.
+          </p>
+        </header>
+
+        <div class="mk-journey" data-reveal data-demo="journeys">
+          <div class="mk-journey__tabs" role="tablist" aria-label="Choose a journey">
+            <button class="mk-journey__tab is-active" role="tab" aria-selected="true" data-journey="individual">
+              <span class="mk-journey__tabk">For individuals</span>
+              <span class="mk-journey__tabd">Daily, personal, intelligent</span>
+            </button>
+            <button class="mk-journey__tab" role="tab" aria-selected="false" data-journey="business">
+              <span class="mk-journey__tabk">For startups &amp; CFOs</span>
+              <span class="mk-journey__tabd">Business financial intelligence</span>
+            </button>
+          </div>
+
+          <div class="mk-journey__body">
+            <ol class="mk-flow" id="mkJourneyFlow" aria-live="polite"></ol>
+            <div class="mk-journey__side">
+              <p class="mk-eyebrow">What you get</p>
+              <ul class="mk-journey__feats" id="mkJourneyFeats"></ul>
+              <a class="mk-link-arrow" id="mkJourneyCta" href="register.html?v=2&amp;type=individual">
+                Build yours <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section" id="intelligence">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Tathya · Ask. Analyze. Act.</p>
+          <h2 class="mk-h2">
+            It reads the pattern<br>
+            <span class="mk-muted-text">you would have missed.</span>
+          </h2>
+          <p class="mk-sub">
+            Tathya works over your own figures. This week against your usual week, this month
+            against last, the category that actually moved. It surfaces the one thing worth
+            knowing today.
+          </p>
+        </header>
+
+        <div class="mk-tathya" data-reveal data-demo="tathya">
+          <ol class="mk-stages mk-stages--five" id="mkTathyaStages">
+            <li class="is-active" data-stage="0"><span></span>Data</li>
+            <li data-stage="1"><span></span>Analysis</li>
+            <li data-stage="2"><span></span>Patterns</li>
+            <li data-stage="3"><span></span>Insight</li>
+            <li data-stage="4"><span></span>Action</li>
+          </ol>
+
+          <div class="mk-tathya__stage">
+            <!-- STATE 1 — the raw material -->
+            <div class="mk-tathya__panel is-on" data-panel="0">
+              <ul class="mk-chips" id="mkTathyaChips"></ul>
+            </div>
+
+            <!-- STATE 2 — the comparison being made -->
+            <div class="mk-tathya__panel" data-panel="1">
+              <div class="mk-scan" id="mkTathyaScan">
+                <div class="mk-scan__row" style="--h:34%"><span>Wk 1</span><i></i><em>₹5,100</em></div>
+                <div class="mk-scan__row" style="--h:41%"><span>Wk 2</span><i></i><em>₹6,150</em></div>
+                <div class="mk-scan__row" style="--h:38%"><span>Wk 3</span><i></i><em>₹5,700</em></div>
+                <div class="mk-scan__row is-hot" style="--h:100%"><span>Wk 4</span><i></i><em>₹17,200</em></div>
+                <div class="mk-scan__beam" aria-hidden="true"></div>
+              </div>
+              <p class="mk-tathya__reading">
+                Comparing this week against your <b>3-week average of ₹5,650</b>…
+              </p>
+            </div>
+
+            <!-- STATE 3 — every pattern the rules found, and how strong each is.
+                 This is the honest picture of how the engine works: several
+                 candidates are detected, then one is chosen. Showing the
+                 shortlist is what makes the next state read as a decision
+                 rather than a headline. -->
+            <div class="mk-tathya__panel" data-panel="2">
+              <ul class="mk-patterns" id="mkTathyaPatterns"></ul>
+              <p class="mk-tathya__reading">
+                <b>4 patterns</b> detected, ranked by how much they actually move.
+              </p>
+            </div>
+
+            <!-- STATE 4 — the conclusion, with its basis -->
+            <div class="mk-tathya__panel" data-panel="3">
+              <div class="mk-insight">
+                <span class="mk-insight__tag">Insight · Needs attention</span>
+                <h3 class="mk-insight__title">Spending is higher this week</h3>
+                <p class="mk-insight__body">
+                  Your spending this week is <b data-count="204" data-suffix="%">0%</b> higher than your
+                  usual pattern: ₹17,200 against a typical ₹5,650.
+                </p>
+                <p class="mk-insight__basis">
+                  Shopping accounts for ₹14,000 of the difference.
+                </p>
+              </div>
+            </div>
+
+            <!-- STATE 5 — what to do about it. An insight that ends at the
+                 observation is only half the job. -->
+            <div class="mk-tathya__panel" data-panel="4">
+              <div class="mk-action">
+                <span class="mk-action__tag">Recommended action</span>
+                <h3 class="mk-action__title">Move ₹6,000 back before month end</h3>
+                <p class="mk-action__body">
+                  Holding shopping to your usual week for the rest of the month keeps the
+                  Emergency Fund on pace and leaves the buffer above three months.
+                </p>
+                <div class="mk-action__row">
+                  <span class="mk-action__pill">Buffer stays 5.6 mo</span>
+                  <span class="mk-action__pill">Goal holds December</span>
+                </div>
+                <span class="mk-action__cta">Simulate it in What-If <span aria-hidden="true">→</span></span>
+              </div>
+            </div>
+          </div>
+
+          <p class="mk-demo__note">Deterministic rules, not a language model guessing at a headline.</p>
+        </div>
+
+        <p class="mk-more-link"><a class="mk-link-arrow" href="tathya.html">Explore Tathya <span aria-hidden="true">&rarr;</span></a></p>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint" id="varta">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">Varta · Speak. Ask. Understand.</p>
+          <h2 class="mk-h2">Talk to your finances.</h2>
+          <p class="mk-sub">
+            Ask the way you would think it. Varta answers from your own figures and shows the figure
+            it used, so you can check the reasoning rather than trust it.
+          </p>
+        </header>
+
+        <div class="mk-varta" data-reveal data-demo="varta">
+          <div class="mk-varta__stage" aria-live="polite">
+            <!-- The asking side: a waveform that only moves while a question is
+                 being spoken, so the motion means something. -->
+            <div class="mk-varta__ask">
+              <span class="mk-wave" id="mkVartaWave" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </span>
+              <p class="mk-varta__q">
+                <span class="mk-varta__typed"></span><span class="mk-ask__caret" aria-hidden="true"></span>
+              </p>
+            </div>
+
+            <!-- Between the question and the answer: the twin actually reading
+                 the position it will answer from. Each source lights as it is
+                 consulted, so the pause has visible content instead of being
+                 dead air. -->
+            <div class="mk-varta__thinking" id="mkVartaThinking" aria-hidden="true">
+              <span class="mk-varta__thinklabel">Reading your position</span>
+              <ul class="mk-varta__sources">
+                <li data-src="0"><span></span>Hisaab</li>
+                <li data-src="1"><span></span>Goals</li>
+                <li data-src="2"><span></span>Upcoming</li>
+                <li data-src="3"><span></span>Brain</li>
+              </ul>
+            </div>
+
+            <div class="mk-varta__a" id="mkVartaAnswer">
+              <span class="mk-varta__badge">Brain</span>
+              <p class="mk-varta__text"></p>
+              <ul class="mk-varta__figures"></ul>
+              <p class="mk-varta__basis"></p>
+            </div>
+          </div>
+
+          <!-- Copy lives in the markup so the script stays presentation-only. -->
+          <ul class="mk-varta__source" hidden>
+            <li data-q="Can I afford a new car?"
+                data-a="On today's position, a ₹6.5L car is affordable, but it takes your emergency buffer under three months."
+                data-f="Buffer 5.6 mo → 2.4 mo|Available ₹4,82,000|EMI ₹11,400/mo"
+                data-b="From available money, this month's spending and what is already due."></li>
+            <li data-q="What happens if I increase my SIP?"
+                data-a="Another ₹5,000 a month pulls your goal in by about four months, and your surplus still stays positive."
+                data-f="Goal Dec → Aug|Surplus ₹22,600/mo|Goal progress 68% → 81%"
+                data-b="From income, stated expenses and your goal's target date."></li>
+            <li data-q="Where am I overspending?"
+                data-a="Shopping. It is ₹14,000 above your own three-week average and accounts for most of this week's jump."
+                data-f="Shopping +204%|Groceries steady|Dining +12%"
+                data-b="From your Hisaab entries, week over week."></li>
+            <li data-q="How much can I save this month?"
+                data-a="About ₹22,600 without changing anything, or ₹31,200 if you hold shopping to your usual week."
+                data-f="Income ₹1,36,000|Committed ₹41,049|Typical spend ₹72,300"
+                data-b="From this month's entries, what is still due and your stated income."></li>
+            <li data-q="Will this affect my Goa goal?"
+                data-a="Yes. At this month's pace the Goa trip slips from December to February. Holding ₹6,000 back keeps it on date."
+                data-f="Goa ₹57,600 / ₹80,000|72% complete|Needs ₹7,400/mo"
+                data-b="From the goal's target date and your current monthly surplus."></li>
+          </ul>
+
+          <div class="mk-ask__dots" id="mkVartaDots" role="tablist" aria-label="Example questions"></div>
+        </div>
+
+        <p class="mk-more-link"><a class="mk-link-arrow" href="varta.html">Explore Varta <span aria-hidden="true">&rarr;</span></a></p>
+      </div>
+    </section>
+
+    <section class="mk-section" id="alerts">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">WhatsApp</p>
+          <h2 class="mk-h2">
+            MoneyKal, wherever you are.<br>
+            <span class="mk-muted-text">Talk to it on WhatsApp.</span>
+          </h2>
+          <p class="mk-sub">
+            Send a message. Send a voice note. Ask about your money. MoneyKal transcribes what you
+            said, answers from your own figures, and reaches out first when something needs you.
+          </p>
+        </header>
+
+        <div class="mk-alerts" data-reveal data-demo="alerts">
+          <div class="mk-alerts__triggers">
+            <p class="mk-eyebrow">What you can do</p>
+            <ul class="mk-alerts__list" id="mkAlertTriggers"></ul>
+          </div>
+
+          <!-- A phone, not a card. The message has to look like it arrived. -->
+          <div class="mk-phone" aria-hidden="true">
+            <div class="mk-phone__frame">
+              <div class="mk-phone__notch"></div>
+              <div class="mk-phone__bar">
+                <span class="mk-wa" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor">
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.24.68-1.42 1.31-1.96 1.35-.5.04-.98.22-3.3-.69-2.78-1.1-4.55-3.94-4.69-4.13-.14-.19-1.13-1.5-1.13-2.87s.72-2.03.98-2.31c.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.24.57.8 1.98.87 2.12.07.14.12.31.02.5-.09.19-.14.31-.28.47l-.42.49c-.14.14-.28.29-.12.57.16.28.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.21 1.36.28.14.44.12.6-.07.17-.19.7-.81.88-1.09.19-.28.37-.23.63-.14.25.09 1.66.78 1.94.92.28.14.47.21.54.33.07.11.07.66-.17 1.34z"/>
+                  </svg>
+                </span>
+                <span class="mk-phone__who">
+                  <b>MoneyKal</b>
+                  <em id="mkPhoneStatus">online</em>
+                </span>
+              </div>
+              <div class="mk-phone__thread" id="mkPhoneThread"></div>
+            </div>
+            <span class="mk-phone__glow" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <p class="mk-demo__note mk-alerts__note">
+          Illustrative thread. Text, photos and voice notes are handled on WhatsApp today: a voice
+          note is transcribed before it is answered.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ================= 5. THE FINANCIAL BRAIN ================= -->
+    <section class="mk-section mk-section--tint" id="twin">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">One connected system</p>
+          <h2 class="mk-h2" data-i18n="twin-build">The Financial Brain</h2>
+          <p class="mk-sub">
+            One living model of your position, fed by everything MoneyKal knows and powering
+            everything it can do. Not a dashboard on top of your data. The layer underneath it.
+          </p>
+        </header>
+
+        <div class="mk-hub" data-reveal data-demo="hub">
+          <div class="mk-hub__col mk-hub__col--in">
+            <p class="mk-hub__colhead">Reads</p>
+            <div class="mk-hub__node" style="--d:0ms"><span class="mk-hub__dot"></span>Hisaab entries</div>
+            <div class="mk-hub__node" style="--d:90ms"><span class="mk-hub__dot"></span>Goals</div>
+            <div class="mk-hub__node" style="--d:180ms"><span class="mk-hub__dot"></span>Upcoming payments</div>
+            <div class="mk-hub__node" style="--d:270ms"><span class="mk-hub__dot"></span>Financial behaviour</div>
+            <div class="mk-hub__node" style="--d:360ms"><span class="mk-hub__dot"></span>Gmail context</div>
+          </div>
+
+          <div class="mk-hub__core">
+            <div class="mk-hub__ring" aria-hidden="true"></div>
+            <div class="mk-hub__ring mk-hub__ring--2" aria-hidden="true"></div>
+            <div class="mk-hub__coreinner">
+              <span class="mk-hub__corelabel">Financial</span>
+              <span class="mk-hub__corename">BRAIN</span>
+              <span class="mk-hub__corestat" id="mkHubStat">syncing</span>
+            </div>
+          </div>
+
+          <div class="mk-hub__col mk-hub__col--out">
+            <p class="mk-hub__colhead">Powers</p>
+            <div class="mk-hub__node" style="--d:0ms"><span class="mk-hub__dot"></span>Tathya insights</div>
+            <div class="mk-hub__node" style="--d:90ms"><span class="mk-hub__dot"></span>Varta answers</div>
+            <div class="mk-hub__node" style="--d:180ms"><span class="mk-hub__dot"></span>What-If simulations</div>
+            <div class="mk-hub__node" style="--d:270ms"><span class="mk-hub__dot"></span>Daily Home</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-quote">
+      <div class="mk-wrap">
+        <blockquote data-reveal>
+          <p data-i18n="quote-text">“Plans are worthless, but planning is everything.”</p>
+          <cite>Dwight D. Eisenhower</cite>
+        </blockquote>
+      </div>
+    </section>
+    <section class="mk-section mk-section--tint" id="insights">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow" data-i18n="mag-header-desc">Strategic financial intelligence, curated.</p>
+          <h2 class="mk-h2" data-i18n="mag-header-title">Global Perspectives</h2>
+        </header>
+      </div>
+
+      <!-- Continuous reading rail. Pauses on hover and on focus so a keyboard
+           user can actually reach the links. -->
+      <div class="mk-marquee" id="mkMarquee">
+        <div class="mk-marquee__track">
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://www.newtraderu.com/2026/08/01/warren-buffetts-rule-number-one-is-never-lose-money-7-habits-that-keep-him-from-breaking-it/">
+            <span class="mk-post__cat" data-i18n="cat-investment">Investment</span>
+            <h3>What Warren Buffett Can Teach You About Simulating Before You Decide</h3>
+            <span class="mk-post__by">Warren Buffett <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://www.economicprinciples.org/how-the-economic-machine-works">
+            <span class="mk-post__cat" data-i18n="cat-economics">Economics</span>
+            <h3>Ray Dalio's “Economic Machine” and Why Your Finances Deserve the Same Thinking</h3>
+            <span class="mk-post__by">Ray Dalio <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://www.nobelprize.org/prizes/economic-sciences/2002/kahneman/facts/">
+            <span class="mk-post__cat" data-i18n="cat-behavioral">Behavioral Finance</span>
+            <h3>Daniel Kahneman and the Money Mistakes You Don't Know You're Making</h3>
+            <span class="mk-post__by">Daniel Kahneman <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener" href="https://fs.blog/charlie-munger-mental-toolbox/">
+            <span class="mk-post__cat" data-i18n="cat-mental">Mental Models</span>
+            <h3>Charlie Munger's Mental Models and Why One Opinion Is Never Enough</h3>
+            <span class="mk-post__by">Charlie Munger <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://blogs.microsoft.com/blog/2025/05/19/microsoft-build-2025-the-age-of-ai-agents-and-building-the-open-agentic-web/">
+            <span class="mk-post__cat" data-i18n="cat-ai">Agentic AI</span>
+            <h3>Satya Nadella and the Shift From AI Tools to AI Agents</h3>
+            <span class="mk-post__by">Satya Nadella <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- ================= 9. START TODAY ================= -->
+    <section class="mk-final">
+      <div class="mk-wrap">
+        <div class="mk-final__inner" data-reveal>
+          <h2 class="mk-h1 mk-final__title">
+            <span class="mk-line"><span>Start</span></span>
+            <span class="mk-line"><span class="mk-accent-text">today.</span></span>
+          </h2>
+          <p class="mk-sub mk-final__sub">
+            Build the picture once, then let it keep itself current.
+          </p>
+          <div class="mk-final__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+              Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- i18n.js is shared with the app and owns the theme + language toggles. -->
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

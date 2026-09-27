@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Varta: speak, ask, understand | MoneyKal</title>
+  <meta name="description" content="Varta is MoneyKal's voice interface. Ask about your finances in plain speech and hear an answer computed from your own position.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <section class="mk-phero">
+      <div class="mk-wrap mk-phero__inner">
+        <a class="mk-crumb" href="index.html"><span aria-hidden="true">&larr;</span> MoneyKal</a>
+        <h1 class="mk-phero__title">Varta</h1>
+        <p class="mk-phero__lede">Speak. Ask. Understand. Varta is the voice interface to MoneyKal. Ask the way you would think it, and the answer comes back from your own numbers.</p>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">What it does</p>
+          <h2 class="mk-h2">A conversation with your own figures</h2>
+          <p class="mk-sub">Varta is the same intelligence the rest of MoneyKal uses, reached by speaking instead of typing.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Interaction</span>
+            <h3>Talk, and interrupt</h3>
+            <p>Varta runs as a live voice session in the browser. You speak naturally and can cut in while it is talking, the way you would in a real conversation, rather than waiting for a turn to finish.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Grounding</span>
+            <h3>Answers from your position</h3>
+            <p>Varta answers from your own financial data rather than from general knowledge, and the figure behind an answer is shown alongside it so you can check the reasoning instead of trusting it.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Continuity</span>
+            <h3>It remembers the thread</h3>
+            <p>Turns within a session are kept, so a follow up question does not need you to restate what you were asking about.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Transcripts</span>
+            <h3>Shown live, not stored by default</h3>
+            <p>What you say is transcribed on screen as you speak. Those transcripts are not written to your chat history or the database unless persistence is deliberately switched on.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">How it works</p>
+          <h2 class="mk-h2">One session, start to finish</h2>
+          <p class="mk-sub">The flow is designed so a spoken answer is as checkable as a written one.</p>
+        </header>
+
+        <ol class="mk-steps" data-reveal>
+          <li class="mk-step">
+            <span class="mk-step__n">01</span>
+            <div>
+              <h3>Open a session</h3>
+              <p>MoneyKal issues a short lived session token scoped to you and the profile you are working in.</p>
+            </div>
+          </li>
+          <li class="mk-step">
+            <span class="mk-step__n">02</span>
+            <div>
+              <h3>Ask in plain speech</h3>
+              <p>Speech is transcribed live, and you can interrupt the assistant at any point.</p>
+            </div>
+          </li>
+          <li class="mk-step">
+            <span class="mk-step__n">03</span>
+            <div>
+              <h3>It fetches real figures</h3>
+              <p>When answering needs your data, the assistant calls back into MoneyKal for the specific numbers rather than inventing them.</p>
+            </div>
+          </li>
+          <li class="mk-step">
+            <span class="mk-step__n">04</span>
+            <div>
+              <h3>You hear the answer and see the basis</h3>
+              <p>The spoken answer arrives with the figure it used displayed next to it.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Worth knowing</p>
+          <h2 class="mk-h2">Availability</h2>
+          <p class="mk-sub">The honest boundary of the feature.</p>
+        </header>
+
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Voice needs to be switched on for the deployment</h3>
+            <p>Varta depends on a configured voice provider and a publicly reachable callback, so it is available when the deployment has been set up for it. Where voice is not configured, the rest of MoneyKal is unaffected and the same questions can be asked in writing. Varta runs in the browser, and on a deployment with telephony configured it can also call the phone number saved on your profile and talk you through your numbers there.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <section class="mk-section" aria-label="Varta voice interface">
+      <div class="mk-wrap">
+        <div class="mk-orb" data-varta-orb>
+          <div class="voice-orb-container">
+            <div class="voice-orb" id="vartaOrb"></div>
+            <div class="voice-orb-ring"></div>
+            <div class="voice-orb-ring delay"></div>
+          </div>
+          <p class="mk-orb__status" data-orb-status>Talk to Your Financial Brain</p>
+          <p class="mk-orb__hint" data-orb-hint>Tap the mic to start a live conversation</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint" id="varta">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">Varta · Speak. Ask. Understand.</p>
+          <h2 class="mk-h2">Talk to your finances.</h2>
+          <p class="mk-sub">
+            Ask the way you would think it. Varta answers from your own position and shows the figure
+            it used, so you can check the reasoning rather than trust it.
+          </p>
+        </header>
+
+        <div class="mk-varta" data-reveal data-demo="varta">
+          <div class="mk-varta__stage" aria-live="polite">
+            <!-- The asking side: a waveform that only moves while a question is
+                 being spoken, so the motion means something. -->
+            <div class="mk-varta__ask">
+              <span class="mk-wave" id="mkVartaWave" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </span>
+              <p class="mk-varta__q">
+                <span class="mk-varta__typed"></span><span class="mk-ask__caret" aria-hidden="true"></span>
+              </p>
+            </div>
+
+            <!-- Between the question and the answer: the twin actually reading
+                 the position it will answer from. Each source lights as it is
+                 consulted, so the pause has visible content instead of being
+                 dead air. -->
+            <div class="mk-varta__thinking" id="mkVartaThinking" aria-hidden="true">
+              <span class="mk-varta__thinklabel">Reading your position</span>
+              <ul class="mk-varta__sources">
+                <li data-src="0"><span></span>Hisaab</li>
+                <li data-src="1"><span></span>Goals</li>
+                <li data-src="2"><span></span>Upcoming</li>
+                <li data-src="3"><span></span>Brain</li>
+              </ul>
+            </div>
+
+            <div class="mk-varta__a" id="mkVartaAnswer">
+              <span class="mk-varta__badge">MoneyKal</span>
+              <p class="mk-varta__text"></p>
+              <ul class="mk-varta__figures"></ul>
+              <p class="mk-varta__basis"></p>
+            </div>
+          </div>
+
+          <!-- Copy lives in the markup so the script stays presentation-only. -->
+          <ul class="mk-varta__source" hidden>
+            <li data-q="Can I afford a new car?"
+                data-a="On today's position, a ₹6.5L car is affordable, but it takes your emergency buffer under three months."
+                data-f="Buffer 5.6 mo → 2.4 mo|Available ₹4,82,000|EMI ₹11,400/mo"
+                data-b="From available money, this month's spending and what is already due."></li>
+            <li data-q="What happens if I increase my SIP?"
+                data-a="Another ₹5,000 a month pulls your goal in by about four months, and your surplus still stays positive."
+                data-f="Goal Dec → Aug|Surplus ₹22,600/mo|Goal progress 68% → 81%"
+                data-b="From income, stated expenses and your goal's target date."></li>
+            <li data-q="Where am I overspending?"
+                data-a="Shopping. It is ₹14,000 above your own three-week average and accounts for most of this week's jump."
+                data-f="Shopping +204%|Groceries steady|Dining +12%"
+                data-b="From your Hisaab entries, week over week."></li>
+            <li data-q="How much can I save this month?"
+                data-a="About ₹22,600 without changing anything, or ₹31,200 if you hold shopping to your usual week."
+                data-f="Income ₹1,36,000|Committed ₹41,049|Typical spend ₹72,300"
+                data-b="From this month's entries, what is still due and your stated income."></li>
+            <li data-q="Will this affect my Goa goal?"
+                data-a="Yes. At this month's pace the Goa trip slips from December to February. Holding ₹6,000 back keeps it on date."
+                data-f="Goa ₹57,600 / ₹80,000|72% complete|Needs ₹7,400/mo"
+                data-b="From the goal's target date and your current monthly surplus."></li>
+          </ul>
+
+          <div class="mk-ask__dots" id="mkVartaDots" role="tablist" aria-label="Example questions"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-pcta">
+      <div class="mk-wrap">
+        <h2>Start today</h2>
+        <p>Build the picture once, then let MoneyKal keep it current.</p>
+        <div class="mk-pcta__row">
+          <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+            Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+        </div>
+        <div class="mk-more">
+        <a href="hisaab.html">Hisaab</a>
+        <a href="taxes.html">Taxes</a>
+        <a href="intelligence.html">Intelligence</a>
+        <a href="app.html">App</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="security.html">Security &amp; Privacy</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+  <script src="js/varta-orb.js?v=1"></script>
+</body>
+
+</html>

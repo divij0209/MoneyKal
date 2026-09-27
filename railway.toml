@@ -1,0 +1,71 @@
+# Railway service definition for the MoneyKal API.
+#
+# WHAT RAILWAY DEPLOYS FROM THIS REPOSITORY
+# -----------------------------------------
+# This repository holds three deployable things: the FastAPI backend, the
+# static web client in twin-app/, and an Expo React Native app in mobile/.
+# Only the backend belongs on Railway. The other two are built and hosted
+# elsewhere (twin-app/ on Vercel, mobile/ through EAS), and neither should ever
+# be installed or executed inside the API container.
+#
+# Two mechanisms keep that true:
+#
+#   * builder = "DOCKERFILE" pins the build to ./Dockerfile, which COPYs only
+#     backend/, alembic/ and alembic.ini. .dockerignore additionally excludes
+#     mobile/ and every .env from the build context, so a stray package.json
+#     cannot pull Railway's Node detection into a Python service.
+#   * watchPatterns limits redeploys to paths the API is actually built from.
+#     Without it, an Android-only or CSS-only commit rebuilds and restarts
+#     production for no reason.
+#
+# MIGRATIONS
+# ----------
+# preDeployCommand runs ONCE per deployment, before any new container serves
+# traffic — not once per replica. That distinction is the whole reason it is
+# used here: `alembic upgrade head` in a container start command would have
+# every replica racing the same DDL on the same database. Running it here also
+# means a failed migration aborts the deploy and leaves the previous version
+# serving, rather than starting a new version against a schema it cannot use.
+#
+# The application itself never migrates on startup. backend/database.py's
+# auto_create_all() refuses remote databases outright, and migrate.py does the
+# same, so Alembic is the only thing that changes the production schema.
+#
+# DATABASE
+# --------
+# The production database stays on Supabase. Do NOT add a Railway Postgres to
+# this project: every account, ledger row and billing order already lives in
+# Supabase, and a second database would serve an empty schema that looks
+# exactly like data loss. DATABASE_URL is set in the Railway dashboard.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+# Only these paths produce a new API build. mobile/ and twin-app/ deliberately
+# do not appear: they ship on their own platforms.
+watchPatterns = [
+  "backend/**",
+  "alembic/**",
+  "alembic.ini",
+  "Dockerfile",
+  ".dockerignore",
+  "railway.toml",
+]
+
+[deploy]
+# Schema first, once, and only if it succeeds.
+preDeployCommand = ["alembic upgrade head"]
+
+# The container's own CMD already binds 0.0.0.0 on $PORT, which is what Railway
+# injects, so no startCommand override is needed here.
+
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+# Uvicorn stops accepting connections on SIGTERM and finishes in-flight
+# requests; this gives it room to do that before SIGKILL.
+drainingSeconds = 30

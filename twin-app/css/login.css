@@ -1,0 +1,2129 @@
+/* ==========================================================================
+   MONEYKAL — AUTHENTICATION
+   Premium financial-intelligence auth surface.
+
+   Palette is deliberately limited to the three MoneyKal universals:
+     near-black · off-white · cyan
+   The only colour outside that set is a restrained red, used exclusively to
+   signal a failure state, never as decoration or accent.
+
+   The auth stage now follows the app-wide theme rather than pinning itself to
+   dark. The token *roles* below are unchanged, so every rule further down this
+   file — and the whole of terms.css, which borrows them — keeps working: only
+   the values behind the roles flip. Dark resolves to the marketing site's
+   near-black × cyan; light resolves to its warm off-white × deep cyan, so
+   login.html and index.html read as one product in either theme.
+
+   The theme itself is owned by the shared switcher (`#theme-toggle` →
+   js/i18n.js → `moneykal_theme` → `data-theme` on <html>); nothing here
+   stores or decides it.
+   ========================================================================== */
+
+/* ----------------------------- DARK (default) ----------------------------- */
+:root,
+:root[data-theme="dark"] {
+  /* Ground — matches css/home.css dark, a rich near-black rather than flat #000 */
+  --mk-black:        #070809;
+  --mk-panel:        #0B0D0F;
+  --mk-elev:         #101315;
+  --mk-elev-2:       #16191C;
+
+  /* Off-white */
+  --mk-off:          #F2F5F6;
+  --mk-off-dim:      rgba(242, 245, 246, 0.62);
+  --mk-off-faint:    rgba(242, 245, 246, 0.40);
+  --mk-off-ghost:    rgba(242, 245, 246, 0.16);
+
+  /* Cyan */
+  --mk-cyan:         #00E5FF;
+  --mk-cyan-hi:      #6BF1FF;
+  --mk-cyan-deep:    #00B4C8;
+  --mk-cyan-06:      rgba(0, 229, 255, 0.06);
+  --mk-cyan-12:      rgba(0, 229, 255, 0.12);
+  --mk-cyan-20:      rgba(0, 229, 255, 0.20);
+  --mk-cyan-glow:    rgba(0, 229, 255, 0.45);
+
+  /* What sits *on* a cyan fill */
+  --mk-on-accent:      #04161A;
+  --mk-on-accent-soft: rgba(4, 22, 26, 0.25);
+
+  /* Lines */
+  --mk-line:         rgba(242, 245, 246, 0.09);
+  --mk-line-soft:    rgba(242, 245, 246, 0.05);
+  --mk-line-strong:  rgba(242, 245, 246, 0.18);
+
+  /* Flat washes used for field fills and inert panels. In dark these lift a
+     surface off the ground; in light they press it into the page, which is
+     why they are tokens rather than literal white at low alpha. */
+  --mk-wash:         rgba(242, 245, 246, 0.030);
+  --mk-wash-2:       rgba(242, 245, 246, 0.050);
+  --mk-wash-3:       rgba(242, 245, 246, 0.075);
+
+  --mk-autofill:     #0D0F11;
+  --mk-scrim:        rgba(0, 0, 0, 0.78);
+  --mk-modal-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9);
+  --mk-card-shadow:  0 1px 2px rgba(0, 0, 0, 0.5), 0 26px 60px -26px rgba(0, 0, 0, 0.92);
+  --mk-grid-fade:    0.9;
+
+  /* Failure only */
+  --mk-danger:       #FF5A5A;
+  --mk-danger-12:    rgba(255, 90, 90, 0.12);
+
+  /* Cyan chevron for <select>, as a data URI (cannot read a custom property) */
+  --mk-select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300E5FF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  --mk-picker-filter: invert(1) opacity(0.45);
+}
+
+/* -------------------------------- LIGHT --------------------------------- */
+:root[data-theme="light"] {
+  --mk-black:        #F4F2ED;
+  --mk-panel:        #EDEAE3;
+  --mk-elev:         #FBFAF7;
+  --mk-elev-2:       #F4F1EA;
+
+  --mk-off:          #14171A;
+  --mk-off-dim:      rgba(20, 23, 26, 0.62);
+  --mk-off-faint:    rgba(20, 23, 26, 0.45);
+  --mk-off-ghost:    rgba(20, 23, 26, 0.32);
+
+  /* Deepened so cyan still holds contrast against a light ground */
+  --mk-cyan:         #00808F;
+  --mk-cyan-hi:      #00A0B4;
+  --mk-cyan-deep:    #00646F;
+  --mk-cyan-06:      rgba(0, 128, 143, 0.06);
+  --mk-cyan-12:      rgba(0, 128, 143, 0.14);
+  --mk-cyan-20:      rgba(0, 128, 143, 0.22);
+  --mk-cyan-glow:    rgba(0, 128, 143, 0.30);
+
+  --mk-on-accent:      #FFFFFF;
+  --mk-on-accent-soft: rgba(255, 255, 255, 0.35);
+
+  --mk-line:         rgba(20, 23, 26, 0.11);
+  --mk-line-soft:    rgba(20, 23, 26, 0.07);
+  --mk-line-strong:  rgba(20, 23, 26, 0.22);
+
+  --mk-wash:         rgba(20, 23, 26, 0.022);
+  --mk-wash-2:       rgba(20, 23, 26, 0.042);
+  --mk-wash-3:       rgba(20, 23, 26, 0.062);
+
+  --mk-autofill:     #FBFAF7;
+  --mk-scrim:        rgba(20, 23, 26, 0.42);
+  --mk-modal-shadow: 0 40px 90px -34px rgba(20, 23, 26, 0.34);
+  --mk-card-shadow:  0 1px 2px rgba(20, 23, 26, 0.05), 0 22px 50px -24px rgba(20, 23, 26, 0.22);
+  --mk-grid-fade:    0.55;
+
+  --mk-danger:       #C4362F;
+  --mk-danger-12:    rgba(196, 54, 47, 0.10);
+
+  --mk-select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300808F' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  --mk-picker-filter: opacity(0.55);
+}
+
+/* --------------------------- Theme-independent --------------------------- */
+:root {
+  --mk-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-mono:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --mk-ease:    cubic-bezier(0.22, 1, 0.36, 1);
+  --mk-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+  --mk-radius:  6px;
+}
+
+/* The theme cross-fades rather than snapping, and only colour properties
+   transition, so nothing reflows mid-switch. Mirrors css/home.css. */
+body.auth-page,
+body.auth-page .auth-canvas,
+body.auth-page .ob-input,
+body.auth-page .btn-login-solid,
+body.auth-page .mk-btn,
+body.auth-page .ashow__card,
+body.auth-page .auth-tabs,
+body.auth-page .auth-tab,
+body.auth-page .auth-iconbtn {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 420ms;
+  transition-timing-function: var(--mk-ease-io);
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+body.auth-page {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: var(--mk-black);
+  color: var(--mk-off);
+  font-family: var(--mk-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body.auth-page *,
+body.auth-page *::before,
+body.auth-page *::after { box-sizing: border-box; }
+
+body.auth-page ::selection {
+  background: var(--mk-cyan);
+  color: var(--mk-on-accent);
+}
+
+body.auth-page :focus-visible {
+  outline: 2px solid var(--mk-cyan);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Split-screen shell
+   -------------------------------------------------------------------------- */
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ---------- Left: brand + form ---------- */
+.auth-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(28px, 4vw, 56px) clamp(24px, 5vw, 72px);
+  background: var(--mk-black);
+  z-index: 2;
+}
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  width: fit-content;
+}
+
+/* The shared MoneyKal mark (assets/brand/moneykal-mark.png). It is clipped to
+   the hexagon silhouette rather than left on its square plate, so it carries
+   its own light ground - which is what keeps the navy M legible here on
+   black - without a white box around it. */
+.auth-brand__mark {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.auth-brand__mark svg,
+.auth-brand__mark img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.auth-brand__name {
+  font-family: var(--mk-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mk-off);
+}
+
+.auth-brand__name em {
+  font-style: normal;
+  color: var(--mk-cyan);
+}
+
+/* Body of the left column — vertically centred, capped for readability */
+.auth-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.auth-form-wrap {
+  width: 100%;
+  max-width: 424px;
+}
+
+.auth-form-wrap--wide { max-width: 560px; }
+
+/* ---------- Heading block ---------- */
+.auth-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mk-cyan);
+  margin-bottom: 20px;
+}
+
+.auth-eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--mk-cyan);
+  opacity: 0.7;
+}
+
+.auth-title {
+  font-family: var(--mk-display);
+  font-size: clamp(30px, 3.4vw, 40px);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.033em;
+  color: var(--mk-off);
+  margin: 0 0 12px;
+}
+
+.auth-subtitle {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--mk-off-dim);
+  margin: 0 0 34px;
+  max-width: 40ch;
+}
+
+/* --------------------------------------------------------------------------
+   Left column - top bar and the Sign in / Sign up tabs
+   -------------------------------------------------------------------------- */
+.auth-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Theme switch. This is the app-wide control: the id is the one js/i18n.js
+   binds, so the button writes `moneykal_theme` and flips `data-theme` exactly
+   as it does on every other MoneyKal page. Nothing auth-specific decides the
+   theme; this surface only reads it. */
+.auth-iconbtn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--mk-line);
+  border-radius: 9px;
+  color: var(--mk-off-dim);
+  cursor: pointer;
+}
+
+.auth-iconbtn:hover {
+  color: var(--mk-cyan);
+  border-color: var(--mk-line-strong);
+  background: var(--mk-wash-2);
+}
+
+.auth-iconbtn svg { display: block; }
+
+/* A segmented control. Each tab is a link to the page that owns that form, so
+   the sign-in form and the multi-step sign-up wizard keep their own pages and
+   their own scripts - the control only *looks* like a tab set. */
+.auth-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin: 0 0 30px;
+  background: var(--mk-wash);
+  border: 1px solid var(--mk-line);
+  border-radius: 11px;
+  isolation: isolate;
+}
+
+.auth-tabs__pill {
+  position: absolute;
+  z-index: -1;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 6px);
+  background: var(--mk-elev);
+  border: 1px solid var(--mk-line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px var(--mk-cyan-06);
+  transition: transform 0.45s var(--mk-ease);
+}
+
+.auth-tabs[data-active="signup"] .auth-tabs__pill {
+  transform: translateX(calc(100% + 4px));
+}
+
+.auth-tab {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: var(--mk-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--mk-off-faint);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s var(--mk-ease);
+}
+
+.auth-tab:hover { color: var(--mk-off-dim); }
+
+.auth-tab[aria-current="page"],
+.auth-tab[aria-current="page"]:hover { color: var(--mk-off); }
+
+/* --------------------------------------------------------------------------
+   Fields
+   -------------------------------------------------------------------------- */
+.field-stack { display: grid; gap: 18px; }
+
+.mk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.mk-field > span,
+.mk-field__label {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+  transition: color 0.25s var(--mk-ease);
+}
+
+.mk-field:focus-within > span,
+.mk-field:focus-within .mk-field__label { color: var(--mk-cyan); }
+
+.mk-field .req { color: var(--mk-cyan); margin-left: 3px; }
+
+.mk-input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* The input itself. `.ob-input` is preserved because the existing register
+   markup and auth.js both address fields by that class. */
+body.auth-page .ob-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  background: var(--mk-wash);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-radius);
+  color: var(--mk-off);
+  font-family: var(--mk-body);
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  outline: none;
+  transition:
+    border-color 0.25s var(--mk-ease),
+    background 0.25s var(--mk-ease),
+    box-shadow 0.25s var(--mk-ease);
+  appearance: none;
+}
+
+body.auth-page .ob-input::placeholder {
+  color: var(--mk-off-ghost);
+  font-weight: 400;
+}
+
+body.auth-page .ob-input:hover:not(:focus) {
+  border-color: var(--mk-line-strong);
+  background: var(--mk-wash-2);
+}
+
+body.auth-page .ob-input:focus {
+  border-color: var(--mk-cyan);
+  background: var(--mk-wash-3);
+  box-shadow: 0 0 0 3px var(--mk-cyan-12);
+}
+
+body.auth-page .ob-input:focus-visible { outline: none; }
+
+/* Inputs that carry a leading icon or a trailing affordance.
+   Scoped under body.auth-page so these out-rank the base `padding: 0 16px`
+   above — without the extra specificity the icon sits on top of the text. */
+body.auth-page .mk-input-shell--icon .ob-input { padding-left: 44px; }
+body.auth-page .mk-input-shell--action .ob-input { padding-right: 48px; }
+
+.mk-input-icon {
+  position: absolute;
+  left: 15px;
+  color: var(--mk-off-faint);
+  pointer-events: none;
+  transition: color 0.25s var(--mk-ease);
+  display: flex;
+}
+
+.mk-input-shell:focus-within .mk-input-icon { color: var(--mk-cyan); }
+
+/* Password reveal */
+.eye-icon {
+  position: absolute;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--mk-off-faint);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s var(--mk-ease), background 0.2s var(--mk-ease);
+}
+
+.eye-icon:hover {
+  color: var(--mk-off);
+  background: var(--mk-wash-3);
+}
+
+/* Number inputs: strip the spinners, they cheapen the field */
+body.auth-page .ob-input[type="number"] { -moz-appearance: textfield; }
+body.auth-page .ob-input[type="number"]::-webkit-outer-spin-button,
+body.auth-page .ob-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Selects get a custom cyan chevron */
+body.auth-page select.ob-input {
+  cursor: pointer;
+  padding-right: 40px;
+  background-image: var(--mk-select-caret);
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+}
+
+body.auth-page select.ob-input option {
+  background: var(--mk-elev);
+  color: var(--mk-off);
+}
+
+/* Date inputs */
+body.auth-page .ob-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: var(--mk-picker-filter);
+  cursor: pointer;
+}
+
+/* Autofill — the browser default wash would destroy the palette */
+body.auth-page .ob-input:-webkit-autofill,
+body.auth-page .ob-input:-webkit-autofill:hover,
+body.auth-page .ob-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--mk-off);
+  -webkit-box-shadow: 0 0 0 1000px var(--mk-autofill) inset;
+  caret-color: var(--mk-off);
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* --------------------------------------------------------------------------
+   Row helpers
+   -------------------------------------------------------------------------- */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.auth-utility-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 18px 0 28px;
+}
+
+.auth-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--mk-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mk-off-dim);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s var(--mk-ease);
+}
+
+.auth-link:hover { color: var(--mk-cyan); }
+
+.auth-link--cyan { color: var(--mk-cyan); }
+.auth-link--cyan:hover { color: var(--mk-off); }
+
+/* Checkbox — custom, because the native control cannot be themed cleanly */
+.mk-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--mk-off-dim);
+}
+
+.mk-check input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mk-check__box {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border: 1px solid var(--mk-line-strong);
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s var(--mk-ease);
+}
+
+.mk-check__box svg {
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.2s var(--mk-ease);
+  color: var(--mk-black);
+}
+
+.mk-check input:checked + .mk-check__box {
+  background: var(--mk-cyan);
+  border-color: var(--mk-cyan);
+}
+
+.mk-check input:checked + .mk-check__box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.mk-check input:focus-visible + .mk-check__box {
+  box-shadow: 0 0 0 3px var(--mk-cyan-12);
+}
+
+.mk-check:hover .mk-check__box { border-color: var(--mk-cyan); }
+
+/* --------------------------------------------------------------------------
+   Buttons
+   `.btn-login-solid` is the existing hook used across register.html and
+   auth.js, so the primary CTA keeps that class name.
+   -------------------------------------------------------------------------- */
+body.auth-page .btn-login-solid,
+.mk-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 52px;
+  padding: 0 22px;
+  background: var(--mk-cyan);
+  color: var(--mk-on-accent);
+  border: 1px solid var(--mk-cyan);
+  border-radius: var(--mk-radius);
+  font-family: var(--mk-body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background 0.22s var(--mk-ease),
+    box-shadow 0.22s var(--mk-ease),
+    transform 0.12s var(--mk-ease),
+    opacity 0.22s var(--mk-ease);
+}
+
+body.auth-page .btn-login-solid:hover:not(:disabled),
+.mk-btn:hover:not(:disabled) {
+  background: var(--mk-cyan-hi);
+  border-color: var(--mk-cyan-hi);
+  box-shadow: 0 0 0 1px var(--mk-cyan-20), 0 8px 30px -8px var(--mk-cyan-glow);
+}
+
+body.auth-page .btn-login-solid:active:not(:disabled),
+.mk-btn:active:not(:disabled) { transform: translateY(1px); }
+
+body.auth-page .btn-login-solid:disabled,
+.mk-btn:disabled { cursor: not-allowed; opacity: 0.55; }
+
+/* The arrow slides on hover */
+.btn-arrow { transition: transform 0.25s var(--mk-ease); }
+body.auth-page .btn-login-solid:hover:not(:disabled) .btn-arrow { transform: translateX(4px); }
+
+/* Secondary / ghost */
+.mk-btn--ghost,
+body.auth-page .btn-outline {
+  width: 100%;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--mk-off-dim);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-radius);
+  font-family: var(--mk-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s var(--mk-ease);
+}
+
+.mk-btn--ghost:hover,
+body.auth-page .btn-outline:hover {
+  color: var(--mk-off);
+  border-color: var(--mk-line-strong);
+  background: var(--mk-wash-2);
+}
+
+/* ---------- Button loading state ----------
+   auth.js swaps button text while a request is in flight. `.is-loading`
+   layers a spinner over the label without changing the button's width,
+   so the form does not reflow mid-submit. */
+.mk-btn.is-loading,
+body.auth-page .btn-login-solid.is-loading {
+  color: transparent;
+  pointer-events: none;
+}
+
+.mk-btn.is-loading::after,
+body.auth-page .btn-login-solid.is-loading::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--mk-on-accent-soft);
+  border-top-color: var(--mk-on-accent);
+  border-radius: 50%;
+  animation: mkSpin 0.6s linear infinite;
+}
+
+.mk-btn--ghost.is-loading::after,
+body.auth-page .btn-outline.is-loading::after {
+  border: 2px solid var(--mk-line);
+  border-top-color: var(--mk-cyan);
+}
+
+@keyframes mkSpin { to { transform: rotate(360deg); } }
+
+/* --------------------------------------------------------------------------
+   Status messages — error / success
+   `.auth-error` keeps its name and its display:none default because auth.js
+   toggles it directly via style.display.
+   -------------------------------------------------------------------------- */
+.auth-error,
+.mk-alert {
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 15px;
+  margin-bottom: 20px;
+  border-radius: var(--mk-radius);
+  font-size: 13.2px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  border: 1px solid var(--mk-danger-12);
+  background: var(--mk-danger-12);
+  color: var(--mk-danger);
+  animation: mkAlertIn 0.32s var(--mk-ease) both;
+}
+
+/* auth.js sets display:block; flex is what the layout actually wants, so
+   re-assert it whenever the element is visible. */
+.auth-error[style*="block"],
+.mk-alert[style*="block"] { display: flex !important; }
+
+.mk-alert--success {
+  border-color: var(--mk-cyan-20);
+  background: var(--mk-cyan-06);
+  color: var(--mk-cyan);
+}
+
+.mk-alert__icon { flex-shrink: 0; margin-top: 1px; }
+
+@keyframes mkAlertIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   Divider + footer
+   -------------------------------------------------------------------------- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 28px 0;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--mk-line);
+}
+
+.auth-alt {
+  font-size: 13.5px;
+  color: var(--mk-off-dim);
+  text-align: center;
+}
+
+.auth-alt a {
+  color: var(--mk-cyan);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s var(--mk-ease);
+}
+
+.auth-alt a:hover { opacity: 0.75; }
+
+.auth-foot {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--mk-off-faint);
+}
+
+.auth-foot a {
+  color: var(--mk-off-faint);
+  text-decoration: none;
+  transition: color 0.2s var(--mk-ease);
+}
+
+.auth-foot a:hover { color: var(--mk-off-dim); }
+
+/* Security note — small trust cue, kept to one restrained line */
+.auth-secure {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+  margin-top: 26px;
+}
+
+.auth-secure svg { color: var(--mk-cyan); opacity: 0.8; }
+
+/* --------------------------------------------------------------------------
+   Right: the product showcase
+
+   A deck of floating MoneyKal surfaces that cycles through the four things the
+   product actually does - Hisaab, Taxes, Ask MoneyKal, Intelligence. Every
+   figure on these cards is the same illustrative data the marketing pages use
+   (js/home-landing.js), so the panel shows the real product rather than a
+   generic fintech graphic.
+
+   Motion budget: each card holds a slow vertical float, scenes cross-fade with
+   a short staggered rise, and rows/bars/figures fill in while their scene is
+   on screen. No particles, no flashes, and nothing runs while the tab is
+   hidden - js/auth-showcase.js parks the loop on `visibilitychange`.
+   -------------------------------------------------------------------------- */
+.auth-canvas {
+  position: relative;
+  overflow: hidden;
+  background: var(--mk-panel);
+  border-left: 1px solid var(--mk-line-soft);
+  display: flex;
+  flex-direction: column;
+  padding: clamp(28px, 3.4vw, 52px);
+  isolation: isolate;
+}
+
+/* Fine measurement grid */
+.auth-canvas__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--mk-line-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--mk-line-soft) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 90% 75% at 55% 42%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 75% at 55% 42%, #000 30%, transparent 100%);
+  opacity: var(--mk-grid-fade);
+  z-index: 0;
+}
+
+/* A single soft cyan bloom, low opacity - depth without gradient soup */
+.auth-canvas__bloom {
+  position: absolute;
+  width: 640px;
+  height: 640px;
+  right: -190px;
+  top: 6%;
+  background: radial-gradient(circle, var(--mk-cyan-12) 0%, transparent 65%);
+  z-index: 0;
+  pointer-events: none;
+  animation: mkBloom 16s ease-in-out infinite;
+}
+
+@keyframes mkBloom {
+  0%, 100% { transform: scale(1);    opacity: 0.8; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+
+/* ---------- Stage scaffold ---------- */
+.auth-stage {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-stage__deck {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+}
+
+/* ---------- One scene ---------- */
+.ashow {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 1500px;
+  perspective-origin: 60% 42%;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.38s var(--mk-ease-io), visibility 0.38s var(--mk-ease-io);
+}
+
+.ashow.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.ashow__stack {
+  position: relative;
+  width: min(376px, 100%);
+  transform-style: preserve-3d;
+  transform: rotateY(-9deg) rotateX(4.5deg);
+}
+
+/* ---------- Cards ----------
+   `transform` carries the scene entrance and the card's depth; the idle float
+   is on `translate`, which composes with it instead of overwriting it. */
+.ashow__card {
+  background: var(--mk-elev);
+  border: 1px solid var(--mk-line);
+  border-radius: 12px;
+  box-shadow: var(--mk-card-shadow);
+  padding: 15px 16px;
+  transform: translate3d(0, 30px, var(--z, 0px)) scale(0.972);
+  opacity: 0;
+  transition:
+    transform 0.5s var(--mk-ease),
+    opacity 0.34s var(--mk-ease-io);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+.ashow.is-active .ashow__card {
+  transform: translate3d(0, 0, var(--z, 0px)) scale(1);
+  opacity: 1;
+  animation: ashowFloat var(--fd, 8s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * -1.4s);
+}
+
+.ashow.is-exit .ashow__card {
+  transform: translate3d(0, -26px, var(--z, 0px)) scale(0.985);
+  opacity: 0;
+  transition-delay: calc(var(--i, 0) * 35ms);
+}
+
+@keyframes ashowFloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -10px; }
+}
+
+/* The main surface sits in flow; the satellites hang off its corners. */
+.ashow__card--main { position: relative; z-index: 2; }
+
+.ashow__card--sat {
+  position: absolute;
+  z-index: 3;
+  width: 178px;
+  padding: 12px 13px;
+  --z: 44px;
+}
+
+.ashow__card--tl { bottom: 100%; left:  -96px; margin-bottom: -13px; }
+.ashow__card--tr { bottom: 100%; right: -92px; margin-bottom: -11px; }
+.ashow__card--bl { top: 100%;    left:  -92px; margin-top: -12px; }
+.ashow__card--br { top: 100%;    right: -96px; margin-top: -13px; }
+
+/* ---------- Card chrome ---------- */
+.ashow__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 11px;
+  margin-bottom: 11px;
+  border-bottom: 1px solid var(--mk-line-soft);
+}
+
+.ashow__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mk-cyan);
+  box-shadow: 0 0 0 3px var(--mk-cyan-12);
+  flex-shrink: 0;
+}
+
+.ashow__title {
+  font-family: var(--mk-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--mk-off);
+}
+
+.ashow__meta {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--mk-off-faint);
+  white-space: nowrap;
+}
+
+.ashow__k {
+  display: block;
+  font-family: var(--mk-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+  margin-bottom: 6px;
+}
+
+/* ---------- Ledger rows ----------
+   Rows arrive one after another while the scene is on screen, the way an
+   entry lands in Hisaab. Re-running is free: the animation is declared on
+   `.is-active`, so it restarts whenever the scene comes back round. */
+.ashow__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.ashow__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 6px;
+  border-radius: 7px;
+  opacity: 0;
+}
+
+.ashow.is-active .ashow__row {
+  animation: ashowRowIn 0.4s var(--mk-ease) both;
+  animation-delay: calc(0.26s + var(--r, 0) * 0.09s);
+}
+
+@keyframes ashowRowIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The row the scene is "working on" gets a quiet cyan wash */
+.ashow.is-active .ashow__row--focus {
+  animation:
+    ashowRowIn 0.4s var(--mk-ease) both,
+    ashowRowLit 2.2s var(--mk-ease-io) 1s infinite;
+  animation-delay: calc(0.26s + var(--r, 0) * 0.09s), 1s;
+}
+
+/* While a scene is leaving, its contents hold their resolved state so the
+   cards fade out as whole objects instead of emptying first. */
+.ashow.is-exit .ashow__row,
+.ashow.is-exit .ashow__answer {
+  opacity: 1;
+  animation: none;
+}
+
+.ashow.is-exit .ashow__track i {
+  width: var(--w, 50%);
+  animation: none;
+}
+
+.ashow.is-exit .ashow__fan .fan-p,
+.ashow.is-exit .ashow__fan .fan-hist,
+.ashow.is-exit .ashow__arrow path {
+  stroke-dashoffset: 0;
+  animation: none;
+}
+
+.ashow.is-exit .ashow__fan .fan-cone {
+  opacity: 0.1;
+  animation: none;
+}
+
+.ashow.is-exit .ashow__state i { animation: none; }
+.ashow.is-exit .ashow__state i:last-child { opacity: 1; }
+
+@keyframes ashowRowLit {
+  0%, 100% { background: transparent; }
+  22%, 62% { background: var(--mk-cyan-06); }
+}
+
+.ashow__ico {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  border-radius: 6px;
+  background: var(--mk-wash-2);
+  flex-shrink: 0;
+}
+
+.ashow__label {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ashow__name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--mk-off);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ashow__sub {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--mk-off-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ashow__amt {
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-off-dim);
+  white-space: nowrap;
+}
+
+.ashow__amt.is-in { color: var(--mk-cyan); }
+
+/* ---------- Figure blocks ---------- */
+.ashow__fig {
+  font-family: var(--mk-display);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-off);
+  line-height: 1.15;
+}
+
+.ashow__fig--accent { color: var(--mk-cyan); }
+.ashow__fig--sm { font-size: 16px; }
+
+.ashow__note {
+  margin: 5px 0 0;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--mk-off-faint);
+}
+
+.ashow__totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ashow__totals b {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-off);
+  margin-top: 2px;
+}
+
+.ashow__totals b.is-in { color: var(--mk-cyan); }
+
+/* ---------- Bars ---------- */
+.ashow__bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.ashow__bar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--mk-off-dim);
+}
+
+.ashow__bar b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-off);
+}
+
+.ashow__track {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--mk-wash-3);
+  overflow: hidden;
+}
+
+.ashow__track i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--mk-cyan);
+  opacity: 0.9;
+}
+
+.ashow.is-active .ashow__track i {
+  animation: ashowFill 0.7s var(--mk-ease) both;
+  animation-delay: calc(0.38s + var(--r, 0) * 0.09s);
+}
+
+@keyframes ashowFill {
+  from { width: 0; }
+  to   { width: var(--w, 50%); }
+}
+
+/* ---------- Status line (Taxes: Reading, Matching, Checking, Done) ---------- */
+.ashow__state {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 15px;
+  min-width: 76px;
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--mk-cyan);
+}
+
+.ashow__state i {
+  position: absolute;
+  right: 0;
+  font-style: normal;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.ashow.is-active .ashow__state i {
+  animation: ashowState 3.2s var(--mk-ease-io) infinite;
+  animation-delay: calc(var(--s, 0) * 0.8s);
+}
+
+@keyframes ashowState {
+  0%       { opacity: 0; transform: translateY(5px); }
+  4%, 23%  { opacity: 1; transform: none; }
+  27%      { opacity: 0; transform: translateY(-5px); }
+  100%     { opacity: 0; transform: translateY(-5px); }
+}
+
+/* ---------- Ask MoneyKal ---------- */
+.ashow__q {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  min-height: 34px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--mk-off);
+}
+
+.ashow__caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 12px;
+  background: var(--mk-cyan);
+  translate: 0 1px;
+  animation: ashowCaret 1.05s steps(1) infinite;
+}
+
+@keyframes ashowCaret {
+  0%, 50%       { opacity: 1; }
+  50.01%, 100%  { opacity: 0; }
+}
+
+.ashow__chips {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 11px 0;
+  padding: 0;
+}
+
+.ashow__chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3.5px 8px;
+  border: 1px solid var(--mk-line);
+  border-radius: 20px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--mk-off-faint);
+}
+
+.ashow__chips li::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.ashow.is-active .ashow__chips li {
+  animation: ashowChip 3.2s var(--mk-ease-io) infinite;
+  animation-delay: calc(0.7s + var(--r, 0) * 0.26s);
+}
+
+@keyframes ashowChip {
+  0%, 100%  { color: var(--mk-off-faint); border-color: var(--mk-line); }
+  10%, 40%  { color: var(--mk-cyan);      border-color: var(--mk-cyan-20); }
+}
+
+.ashow__answer {
+  padding: 11px 12px;
+  background: var(--mk-cyan-06);
+  border: 1px solid var(--mk-cyan-12);
+  border-radius: 9px;
+  opacity: 0;
+}
+
+.ashow.is-active .ashow__answer {
+  animation: ashowRowIn 0.45s var(--mk-ease) 1.3s both;
+}
+
+.ashow__answer p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--mk-off);
+}
+
+.ashow__figures {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 9px 0 0;
+  padding: 0;
+}
+
+.ashow__figures li {
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-cyan);
+}
+
+.ashow__basis {
+  margin: 9px 0 0;
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--mk-off-faint);
+}
+
+/* The Varta waveform, reduced to a chip-sized ornament */
+.ashow__wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 2.5px;
+  height: 18px;
+}
+
+.ashow__wave i {
+  width: 2px;
+  height: 5px;
+  border-radius: 1px;
+  background: var(--mk-cyan);
+  opacity: 0.75;
+}
+
+.ashow.is-active .ashow__wave i {
+  animation: ashowWave 1.15s var(--mk-ease-io) infinite;
+  animation-delay: calc(var(--r, 0) * 0.085s);
+}
+
+@keyframes ashowWave {
+  0%, 100% { height: 5px;  opacity: 0.5; }
+  50%      { height: 15px; opacity: 1; }
+}
+
+/* ---------- Intelligence ---------- */
+.ashow__choices {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.ashow__choice {
+  padding: 4px 9px;
+  border: 1px solid var(--mk-line);
+  border-radius: 20px;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--mk-off-faint);
+  white-space: nowrap;
+}
+
+.ashow__choice.is-on {
+  color: var(--mk-cyan);
+  border-color: var(--mk-cyan-20);
+  background: var(--mk-cyan-06);
+}
+
+.ashow__split {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.ashow__arrow {
+  color: var(--mk-cyan);
+  opacity: 0.55;
+}
+
+.ashow__arrow svg { display: block; width: 34px; height: 12px; }
+
+.ashow__arrow path {
+  stroke-dasharray: 70;
+  stroke-dashoffset: 70;
+}
+
+.ashow.is-active .ashow__arrow path {
+  animation: ashowDraw 0.6s var(--mk-ease) 0.55s forwards;
+}
+
+@keyframes ashowDraw { to { stroke-dashoffset: 0; } }
+
+/* The forward-simulation fan, carried over from the previous panel and
+   miniaturised onto a card. */
+.ashow__fan { display: block; width: 100%; height: auto; }
+
+.ashow__fan .fan-cone {
+  fill: var(--mk-cyan);
+  opacity: 0;
+}
+
+.ashow.is-active .ashow__fan .fan-cone {
+  animation: ashowCone 0.8s var(--mk-ease) 0.62s forwards;
+}
+
+@keyframes ashowCone { to { opacity: 0.1; } }
+
+.ashow__fan .fan-p,
+.ashow__fan .fan-hist {
+  fill: none;
+  stroke: var(--mk-cyan);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
+}
+
+.ashow__fan .fan-hist { stroke: var(--mk-off-faint); }
+.ashow__fan .fan-p1 { opacity: 0.9; }
+.ashow__fan .fan-p2 { opacity: 0.55; }
+.ashow__fan .fan-p3 { opacity: 0.34; }
+
+.ashow.is-active .ashow__fan .fan-p,
+.ashow.is-active .ashow__fan .fan-hist {
+  animation: ashowDrawLong 1s var(--mk-ease) both;
+  animation-delay: calc(0.4s + var(--r, 0) * 0.09s);
+}
+
+@keyframes ashowDrawLong { to { stroke-dashoffset: 0; } }
+
+/* --------------------------------------------------------------------------
+   Stage rail - which feature is on screen, and how long it has left
+   -------------------------------------------------------------------------- */
+.auth-stage__rail {
+  display: flex;
+  gap: clamp(14px, 2vw, 24px);
+  margin: 24px 0 22px;
+  flex-wrap: wrap;
+}
+
+.astage-tab {
+  position: relative;
+  padding-top: 9px;
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--mk-off-faint);
+  transition: color 0.4s var(--mk-ease);
+}
+
+.astage-tab::before,
+.astage-tab::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1px;
+  border-radius: 1px;
+}
+
+.astage-tab::before {
+  width: 100%;
+  background: var(--mk-line-strong);
+}
+
+.astage-tab::after {
+  width: 0;
+  background: var(--mk-cyan);
+}
+
+.astage-tab.is-on { color: var(--mk-off); }
+
+.astage-tab.is-on::after {
+  --w: 100%;
+  animation: ashowFill var(--mk-scene, 4000ms) linear both;
+}
+
+/* --------------------------------------------------------------------------
+   Stage copy - one line per feature, swapped with the scene
+   -------------------------------------------------------------------------- */
+.canvas-kicker {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mk-cyan);
+  margin-bottom: 16px;
+}
+
+.canvas-kicker__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--mk-cyan);
+  animation: mkPulse 2.4s var(--mk-ease-io) infinite;
+}
+
+@keyframes mkPulse {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0 var(--mk-cyan-20); }
+  50%      { opacity: 0.6; box-shadow: 0 0 0 5px transparent; }
+}
+
+.auth-stage__copy {
+  position: relative;
+  z-index: 1;
+  min-height: 116px;
+}
+
+.astage-copy {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition:
+    opacity 0.34s var(--mk-ease-io),
+    transform 0.4s var(--mk-ease),
+    visibility 0.34s var(--mk-ease-io);
+}
+
+.astage-copy.is-on {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.astage-copy h2 {
+  font-family: var(--mk-display);
+  font-size: clamp(21px, 2.1vw, 29px);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.028em;
+  color: var(--mk-off);
+  margin: 0 0 10px;
+}
+
+.astage-copy h2 em {
+  font-style: normal;
+  color: var(--mk-cyan);
+}
+
+.astage-copy p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--mk-off-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Forgot-password modal
+   -------------------------------------------------------------------------- */
+.mk-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.28s var(--mk-ease), visibility 0.28s var(--mk-ease);
+}
+
+.mk-modal.is-open { opacity: 1; visibility: visible; }
+
+.mk-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--mk-scrim);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.mk-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 452px;
+  background: var(--mk-elev);
+  border: 1px solid var(--mk-line);
+  border-radius: 10px;
+  padding: clamp(26px, 4vw, 36px);
+  box-shadow: var(--mk-modal-shadow);
+  transform: translateY(14px) scale(0.985);
+  transition: transform 0.32s var(--mk-ease);
+}
+
+.mk-modal.is-open .mk-modal__panel { transform: translateY(0) scale(1); }
+
+/* A single cyan hairline along the top edge, the one flourish this panel gets */
+.mk-modal__panel::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 26px;
+  right: 26px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mk-cyan), transparent);
+  opacity: 0.7;
+}
+
+.mk-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--mk-off-faint);
+  cursor: pointer;
+  transition: all 0.2s var(--mk-ease);
+}
+
+.mk-modal__close:hover {
+  color: var(--mk-off);
+  border-color: var(--mk-line);
+  background: var(--mk-wash-2);
+}
+
+.mk-modal__title {
+  font-family: var(--mk-display);
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--mk-off);
+  margin: 0 0 10px;
+}
+
+.mk-modal__text {
+  font-size: 13.8px;
+  line-height: 1.62;
+  color: var(--mk-off-dim);
+  margin: 0 0 24px;
+}
+
+/* Modal view switching: idle form vs. success confirmation */
+.mk-modal__view { display: none; }
+.mk-modal__view.is-active { display: block; }
+
+.mk-modal__success-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--mk-cyan-20);
+  background: var(--mk-cyan-06);
+  color: var(--mk-cyan);
+  margin-bottom: 20px;
+  animation: mkPopIn 0.42s var(--mk-ease) both;
+}
+
+@keyframes mkPopIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.mk-modal__foot {
+  margin-top: 18px;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Register — step scaffolding
+   `.step-view` / `.is-active` / `.ob-option` / `.is-selected` are all driven
+   by auth.js and keep their names.
+   -------------------------------------------------------------------------- */
+.step-view { display: none; }
+
+.step-view.is-active {
+  display: block;
+  animation: mkStepIn 0.42s var(--mk-ease) both;
+}
+
+@keyframes mkStepIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Progress rail */
+.step-rail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 30px;
+}
+
+.step-rail__seg {
+  height: 2px;
+  flex: 1;
+  background: var(--mk-line);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.step-rail__seg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--mk-cyan);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s var(--mk-ease);
+}
+
+.step-rail__seg.is-done::after,
+.step-rail__seg.is-current::after { transform: scaleX(1); }
+
+.step-rail__seg.is-current::after { box-shadow: 0 0 12px var(--mk-cyan-20); }
+
+.step-count {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+  white-space: nowrap;
+}
+
+.step-count em { font-style: normal; color: var(--mk-cyan); }
+
+/* Selectable option cards */
+.ob-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.ob-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* styles.css sets justify-content: space-between on .ob-option, which pushes
+     the label away from its radio mark. Reset it here. */
+  justify-content: flex-start;
+  text-align: left;
+  gap: 14px;
+  padding: 17px 18px;
+  background: var(--mk-wash);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-radius);
+  cursor: pointer;
+  transition: all 0.24s var(--mk-ease);
+}
+
+.ob-option:hover {
+  border-color: var(--mk-line-strong);
+  background: var(--mk-wash-2);
+}
+
+.ob-option.is-selected {
+  border-color: var(--mk-cyan);
+  background: var(--mk-cyan-06);
+}
+
+.ob-option > div { flex: 1; min-width: 0; }
+
+.ob-option h4 {
+  margin: 0 0 3px;
+  font-family: var(--mk-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--mk-off);
+}
+
+.ob-option p {
+  margin: 0;
+  font-size: 12.8px;
+  line-height: 1.45;
+  color: var(--mk-off-dim);
+}
+
+/* Radio indicator */
+.ob-option__mark {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  border: 1px solid var(--mk-line-strong);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  transition: all 0.24s var(--mk-ease);
+}
+
+.ob-option__mark::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mk-cyan);
+  transform: scale(0);
+  transition: transform 0.24s var(--mk-ease);
+}
+
+.ob-option.is-selected .ob-option__mark { border-color: var(--mk-cyan); }
+.ob-option.is-selected .ob-option__mark::after { transform: scale(1); }
+
+/* Section heading inside a step */
+.step-heading {
+  font-family: var(--mk-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mk-off);
+  margin: 0 0 6px;
+}
+
+.step-note {
+  font-size: 12.8px;
+  color: var(--mk-off-dim);
+  margin: 0 0 20px;
+}
+
+/* Excel helper strip */
+.step-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 22px;
+  background: var(--mk-wash);
+  border: 1px solid var(--mk-line-soft);
+  border-radius: var(--mk-radius);
+  font-size: 12.4px;
+}
+
+.step-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--mk-cyan);
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  margin: 0;
+  transition: opacity 0.2s var(--mk-ease);
+}
+
+.step-tool:hover { opacity: 0.72; }
+
+.step-tools__sep {
+  width: 1px;
+  height: 14px;
+  background: var(--mk-line);
+}
+
+/* Auto-calculated metric readout */
+.calc-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 18px;
+  margin-top: 20px;
+  background: var(--mk-wash);
+  border: 1px solid var(--mk-line-soft);
+  border-radius: var(--mk-radius);
+}
+
+.calc-panel__label {
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+  margin-bottom: 6px;
+}
+
+.calc-panel__value {
+  font-family: var(--mk-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mk-off);
+}
+
+/* Zoho confirmation line */
+#zohoMsg {
+  display: none;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--mk-cyan-20);
+  background: var(--mk-cyan-06);
+  border-radius: var(--mk-radius);
+  color: var(--mk-cyan);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#zohoMsg[style*="block"] { display: flex !important; }
+
+.step-actions { display: grid; gap: 10px; margin-top: 24px; }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+/* The satellite cards hang outside the main card's box, so they need room
+   either side of it. Below this width they would collide with the panel edge;
+   the main surface carries the scene on its own. */
+@media (max-width: 1320px) {
+  .ashow__card--sat { display: none; }
+  .ashow__stack { width: min(420px, 100%); }
+}
+
+/* Below the split-screen threshold the showcase would be squeezed into
+   something illegible, so it is dropped and the form takes the full width. */
+@media (max-width: 1024px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-canvas { display: none; }
+
+  .auth-main { min-height: 100vh; min-height: 100dvh; }
+
+  .auth-body { align-items: center; }
+  .auth-form-wrap { max-width: 480px; }
+  .auth-foot { justify-content: center; }
+}
+
+@media (max-width: 720px) {
+  .auth-main { padding: 24px 22px 32px; }
+  .auth-title { font-size: 27px; }
+  .auth-subtitle { font-size: 14px; margin-bottom: 28px; }
+  .field-row { grid-template-columns: 1fr; gap: 18px; margin-bottom: 18px; }
+  .calc-panel { grid-template-columns: 1fr; gap: 14px; }
+}
+
+@media (max-width: 480px) {
+  .auth-main { padding: 20px 18px 28px; }
+
+  /* 16px minimum keeps iOS from zooming the viewport on focus */
+  body.auth-page .ob-input { font-size: 16px; height: 50px; }
+
+  .auth-title { font-size: 25px; }
+  .auth-eyebrow { margin-bottom: 16px; }
+  .auth-tabs { margin-bottom: 24px; }
+  .auth-tab { height: 38px; font-size: 13px; }
+
+  .auth-utility-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 16px 0 24px;
+  }
+
+  .auth-foot { gap: 12px; font-size: 11px; }
+  .mk-modal { padding: 16px; }
+  .mk-modal__panel { padding: 26px 20px; }
+  .step-tools { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .step-tools__sep { display: none; }
+}
+
+/* Short viewports: stop centring, let the column scroll naturally */
+@media (max-height: 700px) and (min-width: 1025px) {
+  .auth-body { justify-content: flex-start; padding-top: 32px; }
+  .auth-stage__deck { min-height: 260px; }
+  .auth-stage__copy { min-height: 96px; }
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion - hold every animated element at its resolved end state
+
+   The showcase still cycles (the scene swap is the content, not decoration),
+   but it cross-fades in place: no float, no rise, no stroke drawing, and the
+   cards sit flat instead of on a perspective plane.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  body.auth-page *,
+  body.auth-page *::before,
+  body.auth-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .ashow__stack { transform: none; }
+
+  .ashow__card,
+  .ashow.is-active .ashow__card,
+  .ashow.is-exit .ashow__card {
+    transform: translate3d(0, 0, var(--z, 0px));
+    animation: none;
+  }
+
+  .ashow.is-exit .ashow__card { opacity: 0; }
+  .ashow.is-active .ashow__card { opacity: 1; }
+
+  .ashow__row,
+  .ashow__answer { opacity: 1; }
+
+  .ashow__track i { width: var(--w, 50%); }
+
+  .ashow__fan .fan-p,
+  .ashow__fan .fan-hist,
+  .ashow__arrow path { stroke-dashoffset: 0; }
+
+  .ashow__fan .fan-cone { opacity: 0.1; }
+
+  /* Only the first status word, rather than a stack of four on top of
+     each other. */
+  .ashow__state i { opacity: 0; }
+  .ashow__state i:first-child { opacity: 1; }
+
+  .ashow__caret { opacity: 1; }
+  .astage-tab.is-on::after { width: 100%; }
+}
+
+
+/* ==========================================================================
+   DEVANAGARI TYPOGRAPHY
+   The eyebrows and labels are set as tracked uppercase, which is a Latin
+   convention. Devanagari has no case, and letter-spacing pulls its conjuncts
+   apart, so in Hindi those rules are relaxed: normal tracking, no transform,
+   and a little more line height for the taller matras.
+   ========================================================================== */
+
+[data-lang="hi"] .mk-eyebrow,
+[data-lang="hi"] .mk-fbar__desc,
+[data-lang="hi"] .mk-cap__k,
+[data-lang="hi"] .mk-sec__label,
+[data-lang="hi"] .mk-tile__k,
+[data-lang="hi"] .mk-readout__label,
+[data-lang="hi"] .mk-brain__num,
+[data-lang="hi"] .mk-step__n,
+[data-lang="hi"] .canvas-kicker,
+[data-lang="hi"] .astage-tab,
+[data-lang="hi"] .ashow__k,
+[data-lang="hi"] .mk-post__cat,
+[data-lang="hi"] .auth-eyebrow,
+[data-lang="hi"] .mk-field > span,
+[data-lang="hi"] .step-count,
+[data-lang="hi"] .eyebrow,
+[data-lang="hi"] .llf-hero__eyebrow,
+[data-lang="hi"] .llf-sec__label,
+[data-lang="hi"] .llf-freedom__label,
+[data-lang="hi"] .llf-break__title,
+[data-lang="hi"] .llf-verdict__tag,
+[data-lang="hi"] .llf-tradeoff__label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* Headlines are tightened for Latin; Devanagari needs that tracking back. */
+[data-lang="hi"] .mk-hero__title,
+[data-lang="hi"] .mk-h1,
+[data-lang="hi"] .mk-h2,
+[data-lang="hi"] .mk-phero__title,
+[data-lang="hi"] .auth-title,
+[data-lang="hi"] .astage-copy h2,
+[data-lang="hi"] .llf-hero__title,
+[data-lang="hi"] .llf-sec h2 {
+  letter-spacing: -0.005em;
+  line-height: 1.24;
+}

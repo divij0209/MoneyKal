@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing | MoneyKal</title>
+  <meta name="description" content="What MoneyKal costs, what is free forever, and exactly which features sit behind each plan. No hidden tiers and no per-seat surprises.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+
+  <style>
+    /* Page-local. Everything else on this page reuses the shared mk-* system;
+       only the plan grid needs geometry the other pages have no use for. */
+    .mk-plans {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .mk-plan {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--mk-line, rgba(128, 128, 128, .28));
+      border-radius: 14px;
+      padding: 28px 26px;
+      background: var(--mk-surface, transparent);
+    }
+
+    .mk-plan--featured {
+      border-color: var(--mk-accent, #06b6d4);
+      border-width: 1.5px;
+      position: relative;
+    }
+
+    .mk-plan__flag {
+      position: absolute;
+      top: -11px;
+      left: 26px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--mk-accent, #06b6d4);
+      color: #06121a;
+    }
+
+    .mk-plan__name { font-size: 15px; font-weight: 600; letter-spacing: .01em; margin: 0 0 6px; }
+    .mk-plan__who { font-size: 13.5px; opacity: .72; margin: 0 0 20px; min-height: 38px; }
+
+    .mk-plan__price { display: flex; align-items: baseline; gap: 7px; margin-bottom: 4px; }
+    .mk-plan__amount { font-size: 34px; font-weight: 700; letter-spacing: -.02em; line-height: 1; }
+    .mk-plan__per { font-size: 13.5px; opacity: .7; }
+    .mk-plan__billing { font-size: 12.5px; opacity: .6; margin: 0 0 22px; min-height: 18px; }
+
+    .mk-plan__cta { margin-bottom: 22px; }
+    .mk-plan__cta .mk-btn { width: 100%; justify-content: center; text-align: center; }
+
+    .mk-plan__list { list-style: none; margin: 0; padding: 0; font-size: 13.5px; line-height: 1.55; }
+    .mk-plan__list li { display: flex; gap: 9px; padding: 6px 0; align-items: flex-start; }
+    .mk-plan__list li::before {
+      content: "";
+      flex: none;
+      width: 15px; height: 15px;
+      margin-top: 3px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .18;
+    }
+    .mk-plan__list li.is-on::before {
+      opacity: 1;
+      background: var(--mk-accent, #06b6d4);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    .mk-plan__group {
+      font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      opacity: .55; margin: 18px 0 6px;
+    }
+
+    .mk-compare { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+    .mk-compare th, .mk-compare td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--mk-line, rgba(128,128,128,.2)); }
+    .mk-compare thead th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .6; font-weight: 600; }
+    .mk-compare td:not(:first-child), .mk-compare th:not(:first-child) { text-align: center; width: 116px; }
+    .mk-compare__scroll { overflow-x: auto; }
+    .mk-yes { color: var(--mk-accent, #06b6d4); font-weight: 600; }
+    .mk-no { opacity: .38; }
+  </style>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="pricing.html" class="is-current">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main>
+
+    <section class="mk-section mk-section--top">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Pricing</p>
+          <h1 class="mk-h2">The part that does the thinking is free</h1>
+          <p class="mk-sub">Understanding your own money should not be behind a paywall. Everything
+            that reads your finances, works out what they mean and helps you decide is on the free
+            plan and stays there. What you pay for is the work that costs us money every time you
+            use it &mdash; and, for a company, the depth a CFO needs.</p>
+        </header>
+
+        <div class="mk-plans" data-reveal>
+
+          <article class="mk-plan">
+            <p class="mk-plan__name">Free</p>
+            <p class="mk-plan__who">For anyone who wants to see their money clearly and decide better.</p>
+            <div class="mk-plan__price">
+              <span class="mk-plan__amount">&#8377;0</span>
+              <span class="mk-plan__per">forever</span>
+            </div>
+            <p class="mk-plan__billing">No card. No trial that quietly ends.</p>
+            <div class="mk-plan__cta">
+              <a href="register.html" class="mk-btn mk-btn--ghost">Create an account</a>
+            </div>
+
+            <p class="mk-plan__group">The core product</p>
+            <ul class="mk-plan__list">
+              <li class="is-on">Overview, with every figure showing its working</li>
+              <li class="is-on">Hisaab &mdash; the full income and expense ledger</li>
+              <li class="is-on">Goals, budgets and upcoming payments</li>
+              <li class="is-on">Decision simulation with real amortisation and a plausibility check</li>
+              <li class="is-on">Tathya, the grounded assistant</li>
+              <li class="is-on">The full Indian tax engine, both regimes, all seven heads of income</li>
+              <li class="is-on">Weekly report and daily insights</li>
+            </ul>
+
+            <p class="mk-plan__group">Money Splits</p>
+            <ul class="mk-plan__list">
+              <li class="is-on">Unlimited groups</li>
+              <li class="is-on">Invite anyone, including people without MoneyKal</li>
+              <li class="is-on">Every split mode &mdash; equal, exact, percentage, shares, itemized, multiple payers</li>
+              <li class="is-on">Live balances and debt simplification</li>
+              <li class="is-on">Full, partial and custom settlements</li>
+              <li class="is-on">Activity feed and notifications</li>
+            </ul>
+          </article>
+
+          <article class="mk-plan mk-plan--featured">
+            <span class="mk-plan__flag">Most popular</span>
+            <p class="mk-plan__name">Premium</p>
+            <p class="mk-plan__who">For people splitting regularly, or who want the AI conveniences on top.</p>
+            <div class="mk-plan__price">
+              <span class="mk-plan__amount">&#8377;149</span>
+              <span class="mk-plan__per">/ month</span>
+            </div>
+            <p class="mk-plan__billing">&#8377;1,490 a year &mdash; two months free.</p>
+            <div class="mk-plan__cta">
+              <a href="register.html" class="mk-btn mk-btn--accent">Start free, upgrade later</a>
+            </div>
+
+            <p class="mk-plan__group">Everything in Free, plus</p>
+            <ul class="mk-plan__list">
+              <li class="is-on">Scan a receipt and have MoneyKal itemize the split for you</li>
+              <li class="is-on">Category, member and trend analytics across your groups</li>
+              <li class="is-on">Expenses in a currency other than the group&rsquo;s own</li>
+              <li class="is-on">Search every expense by amount, member, category and date range</li>
+              <li class="is-on">Recurring shared expenses &mdash; rent, subscriptions, bills</li>
+              <li class="is-on">Settlement suggestions and automatic reminders</li>
+              <li class="is-on">Export a group&rsquo;s expenses and balances to CSV</li>
+              <li class="is-on">AI spending insights across your shared expenses</li>
+            </ul>
+          </article>
+
+          <article class="mk-plan">
+            <p class="mk-plan__name">Startup</p>
+            <p class="mk-plan__who">For a founder or an early finance lead running the company&rsquo;s numbers.</p>
+            <div class="mk-plan__price">
+              <span class="mk-plan__amount">&#8377;999</span>
+              <span class="mk-plan__per">/ month</span>
+            </div>
+            <p class="mk-plan__billing">&#8377;9,990 a year. One company, unlimited viewers.</p>
+            <div class="mk-plan__cta">
+              <a href="register.html?type=startup" class="mk-btn mk-btn--ghost">Set up a company</a>
+            </div>
+
+            <p class="mk-plan__group">Everything in Premium, plus</p>
+            <ul class="mk-plan__list">
+              <li class="is-on">CFO overview &mdash; burn, runway, break-even and hiring capacity, each with its formula</li>
+              <li class="is-on">Cash projection with a decayed growth assumption, stated on the chart</li>
+              <li class="is-on">Financial health score, capped honestly when a pillar has no data</li>
+              <li class="is-on">Decision log &mdash; the prediction, and the outcome tracked against it</li>
+              <li class="is-on">Risk alerts on runway, burn, revenue, hiring and goals</li>
+              <li class="is-on">Fundraise readiness against stage benchmarks</li>
+              <li class="is-on">GST calculator and the compliance deadline centre</li>
+              <li class="is-on">Bank statement import</li>
+              <li class="is-on">Personalised market pulse</li>
+            </ul>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Compare</p>
+          <h2 class="mk-h2">Every difference between the plans</h2>
+          <p class="mk-sub">The whole list. There is no fourth tier, no per-seat charge and nothing
+            here that is not already built.</p>
+        </header>
+
+        <div class="mk-compare__scroll" data-reveal>
+          <table class="mk-compare">
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col">Free</th>
+                <th scope="col">Premium</th>
+                <th scope="col">Startup</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Overview, Hisaab, goals and budgets</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Decision simulation</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Tathya, the grounded assistant</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Indian tax engine, both regimes</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Money Splits &mdash; groups, balances, settlements</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Receipt scanning and itemized splits</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Split analytics and AI spending insights</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Recurring shared expenses</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Multi-currency expenses</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Advanced search across every expense</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Settlement suggestions and reminders</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>CSV export</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>CFO metrics &mdash; burn, runway, break-even</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Decision log with outcome tracking</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Risk alerts</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Fundraise readiness</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>GST calculator and compliance centre</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Bank statement import</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+              <tr><td>Market pulse against your own position</td><td class="mk-no">&mdash;</td><td class="mk-no">&mdash;</td><td class="mk-yes">&#10003;</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">How we think about it</p>
+          <h2 class="mk-h2">Why this is the line we drew</h2>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">The free plan</span>
+            <h3>Not a demo of the real thing</h3>
+            <p>The tax engine, the simulation engine and the assistant are the product, and they are
+              all on the free plan with no usage limit. A person trying to work out whether they can
+              afford something should not meet a paywall at the moment they ask.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">What you pay for</span>
+            <h3>Work with a marginal cost</h3>
+            <p>Receipt scanning, split insights and statement import each cost us money on every
+              run. Charging for those, rather than for the core, is what keeps the core free rather
+              than eventually rationed.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Splitting</span>
+            <h3>Free for everyone you split with</h3>
+            <p>Creating groups, adding expenses, settling up and being invited are free on both
+              sides, permanently. Someone you owe money to never needs an account, let alone a
+              paid one, for you to settle with them.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">What we do not do</span>
+            <h3>Your data is not the product</h3>
+            <p>No advertising, no selling or brokering your information, and no commission from
+              any lender, fund or insurer for a recommendation. Subscriptions are the only revenue,
+              which is the only arrangement under which advice can be neutral.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Questions</p>
+          <h2 class="mk-h2">Pricing questions</h2>
+        </header>
+
+        <div class="mk-faq" data-reveal>
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="pq1" id="pq1-btn">
+                <span>Does the free plan expire?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="pq1" role="region" aria-labelledby="pq1-btn">
+              <div class="mk-faq__inner">
+                <p>No. It is not a trial. There is no card at sign-up and nothing switches off after a period.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="pq2" id="pq2-btn">
+                <span>Do people I split with need to pay?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="pq2" role="region" aria-labelledby="pq2-btn">
+              <div class="mk-faq__inner">
+                <p>No, and they do not even need an account. Anyone can be added to a group by email and settle with you without ever signing up.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="pq3" id="pq3-btn">
+                <span>Is the tax calculator limited on the free plan?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="pq3" role="region" aria-labelledby="pq3-btn">
+              <div class="mk-faq__inner">
+                <p>No. Both regimes, all seven heads of income, HRA, Chapter VI-A, surcharge with marginal relief and ITR form selection are free and unlimited. It is an estimate for planning rather than a filing, on every plan.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="pq4" id="pq4-btn">
+                <span>Can one account hold both a personal and a company profile?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="pq4" role="region" aria-labelledby="pq4-btn">
+              <div class="mk-faq__inner">
+                <p>Not today. An account is either an individual or a startup, and switching replaces the profile rather than adding one, so use two accounts if you want both. Holding both on a single login is on the roadmap and is not built yet.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="pq5" id="pq5-btn">
+                <span>Can I cancel, and what happens to my data?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="pq5" role="region" aria-labelledby="pq5-btn">
+              <div class="mk-faq__inner">
+                <p>Cancel whenever you like and the account drops to Free at the end of the period already paid for. Nothing is deleted: premium features stop, and your groups, balances, ledger and history stay exactly as they are.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="pq6" id="pq6-btn">
+                <span>Is payment live yet?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="pq6" role="region" aria-labelledby="pq6-btn">
+              <div class="mk-faq__inner">
+                <p>Not yet. Billing is not connected, so every account is on the free plan today and the premium gates are enforced but not purchasable. We would rather say so here than take a card for something we cannot yet charge for.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

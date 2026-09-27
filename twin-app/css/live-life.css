@@ -1,0 +1,1710 @@
+/* ==========================================================================
+   live.life.fully
+
+   An editorial reading of one number: how much of your money is genuinely
+   free to spend on living, once everything you have already promised is
+   accounted for.
+
+   The previous version was cinematic: a looping video, rotating scenes,
+   particles and grain, with the content sitting on cards above it. That is
+   gone. What remains is a document. Type carries the hierarchy, whitespace
+   carries the pacing, and hairlines carry the structure, so the figures are
+   the loudest thing on the page rather than the backdrop.
+
+   Rules this file holds to:
+     · No cards. Sections are separated by space and a single hairline.
+     · Two families only, Poppins for display and Inter for everything else.
+     · One accent, and it means one thing: money that is yours to decide
+       about. Everything already spoken for is ink.
+     · Motion is entrance and feedback only. Nothing loops, nothing floats.
+   ========================================================================== */
+
+.llf {
+  /* ---------------- palette ----------------
+     Warm off-white ground with near-black text, the same relationship the
+     rest of the product uses in light mode. Dark mode inverts below. */
+  --llf-bg:          #F4F2ED;
+  --llf-bg-sunk:     #EDEAE3;
+  --llf-ink:         #14171A;
+  --llf-ink-2:       #4A5257;
+  --llf-ink-3:       #838C91;
+  --llf-rule:        rgba(20, 23, 26, 0.13);
+  --llf-rule-soft:   rgba(20, 23, 26, 0.07);
+
+  /* Deepened so it holds contrast as text on a light ground. Fills do not
+     carry text, so they can use the brighter cyan. */
+  --llf-accent:      #00727F;
+  --llf-accent-fill: #12B0C4;
+  --llf-accent-soft: rgba(0, 114, 127, 0.10);
+  --llf-on-accent:   #FFFFFF;
+
+  /* Money already spoken for, in two weights: committed, and spent. */
+  --llf-seg-committed: #2A3034;
+  --llf-seg-spent:     #A7AEB2;
+  --llf-hatch: repeating-linear-gradient(135deg,
+                 var(--llf-seg-spent) 0 2px, transparent 2px 5px);
+
+  --llf-font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --llf-font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --llf-ease:  cubic-bezier(0.22, 1, 0.36, 1);
+  --llf-wrap:  1080px;
+  --llf-gut:   clamp(22px, 5vw, 64px);
+
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: var(--llf-bg);
+  color: var(--llf-ink);
+  font-family: var(--llf-font-body);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 420ms var(--llf-ease), transform 420ms var(--llf-ease);
+}
+
+[data-ov-theme="dark"] .llf,
+[data-theme="dark"] .llf {
+  --llf-bg:          #0B0D0E;
+  --llf-bg-sunk:     #111415;
+  --llf-ink:         #F2F5F6;
+  --llf-ink-2:       #99A3A8;
+  --llf-ink-3:       #6B7479;
+  --llf-rule:        rgba(255, 255, 255, 0.14);
+  --llf-rule-soft:   rgba(255, 255, 255, 0.07);
+  --llf-accent:      #35D9EC;
+  --llf-accent-fill: #35D9EC;
+  --llf-accent-soft: rgba(53, 217, 236, 0.12);
+  --llf-on-accent:   #06181C;
+  --llf-seg-committed: #8C969B;
+  --llf-seg-spent:     #434B4F;
+}
+
+.llf[hidden] { display: none; }
+.llf.is-open { opacity: 1; transform: none; }
+
+.llf *,
+.llf *::before,
+.llf *::after { box-sizing: border-box; }
+
+/* ==========================================================================
+   CHROME
+   A thin masthead. It scrolls away with the page rather than hovering over it,
+   because a fixed bar on a document is chrome for its own sake.
+   ========================================================================== */
+
+.llf__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px var(--llf-gut);
+  background: linear-gradient(var(--llf-bg) 62%, transparent);
+  pointer-events: none;
+}
+
+.llf__bar > * { pointer-events: auto; }
+
+.llf__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--llf-font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--llf-ink);
+}
+
+.llf__brand .mk-mark { width: 22px; height: 22px; display: block; flex-shrink: 0; }
+.llf__brand .mk-mark svg,
+.llf__brand .mk-mark img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.llf__ctrl {
+  margin-left: auto;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--llf-rule);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--llf-ink-2);
+  cursor: pointer;
+  transition: color 200ms var(--llf-ease), border-color 200ms var(--llf-ease);
+}
+
+.llf__ctrl:hover { color: var(--llf-ink); border-color: var(--llf-ink-3); }
+.llf__ctrl svg { width: 17px; height: 17px; }
+
+/* The scene dots belonged to the rotating backdrop. */
+.llf__dots, .llf__dot { display: none; }
+
+/* ==========================================================================
+   SCROLLER
+   ========================================================================== */
+
+.llf__scroll {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  padding: 0 var(--llf-gut) clamp(80px, 12vh, 140px);
+}
+
+.llf__scroll > * {
+  width: min(var(--llf-wrap), 100%);
+  margin-inline: auto;
+}
+
+/* ==========================================================================
+   MY FREEDOM BALANCE
+   One story, told down the page: the figure and what it means, how income
+   becomes it, what is shaping it, what would change it, and a plain reading.
+
+   The colour carries one meaning throughout. Cyan is the money that is yours
+   to decide about — the figure's marker, the last cut of the income bar, the
+   "left for you" row, the gain a lever would add. Everything already spoken
+   for is ink, in two weights. Nothing else is coloured, so the eye learns the
+   rule on the first screen and can read every later chart by it.
+   ========================================================================== */
+
+.llf-hero {
+  padding-top: clamp(96px, 13vh, 136px);
+}
+
+/* ---- Opening: the figure on the left, its reading on the right ---- */
+
+.llf-fb__open {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(32px, 5vw, 72px);
+}
+
+.llf-fb__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  font-family: var(--llf-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--llf-ink-2);
+}
+
+/* The legend swatch for the whole page: this colour means "yours". */
+.llf-fb__eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--llf-accent-fill);
+}
+
+.llf-fb__figure {
+  margin: 0;
+  font-weight: inherit;
+}
+
+.llf-fb__value {
+  display: block;
+  font-family: var(--llf-font-display);
+  font-size: clamp(56px, 9.4vw, 120px);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+  color: var(--llf-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* No figure yet: the definition takes its place, one size down. */
+.llf-fb__lead--definition {
+  max-width: 26ch;
+  margin-top: 0;
+  font-size: clamp(26px, 3.4vw, 42px);
+  line-height: 1.16;
+  color: var(--llf-ink);
+}
+
+.llf-fb__lead {
+  display: block;
+  max-width: 24ch;
+  margin-top: 14px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(21px, 2.5vw, 31px);
+  font-weight: 500;
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  color: var(--llf-ink-2);
+}
+
+/* The reading. A rule down its left edge is the only indicator of how the
+   position reads: cyan while there is healthy room, ink when there is not. */
+.llf-fb__reading {
+  max-width: 46ch;
+  padding: 2px 0 6px 22px;
+  border-left: 2px solid var(--llf-ink-3);
+}
+
+.llf-fb__reading[data-state="strong"],
+.llf-fb__reading[data-state="comfortable"] { border-left-color: var(--llf-accent-fill); }
+.llf-fb__reading[data-state="stretched"],
+.llf-fb__reading[data-state="overcommitted"],
+.llf-fb__reading[data-state="used_up"],
+.llf-fb__reading[data-state="protecting"] { border-left-color: var(--llf-ink); }
+
+.llf-fb__reading-title {
+  margin: 0 0 10px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(19px, 1.9vw, 23px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--llf-ink);
+}
+
+.llf-fb__reading-body {
+  margin: 0;
+  font-size: 15.5px;
+  line-height: 1.62;
+  color: var(--llf-ink-2);
+}
+
+.llf-fb__missing {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--llf-rule-soft);
+}
+
+.llf-fb__missing li {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--llf-rule-soft);
+  font-size: 15px;
+  color: var(--llf-ink);
+}
+
+.llf-fb__missing li::first-letter { text-transform: uppercase; }
+
+.llf-fb__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 24px;
+}
+
+/* ---- Flow: income, cut into what it becomes ---- */
+
+.llf-flow {
+  margin-top: clamp(44px, 6.5vh, 76px);
+  padding-top: clamp(22px, 3vh, 30px);
+  border-top: 1px solid var(--llf-rule);
+}
+
+.llf-flow__kicker {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--llf-ink-2);
+}
+
+.llf-flow__track { position: relative; }
+
+/* Room for the "Your income" marker's label above the bar. */
+.llf-flow--over .llf-flow__track { margin-top: 30px; }
+
+.llf-flow__bar {
+  display: flex;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--llf-rule-soft);
+  /* Fills left to right once, the way the money is spent. */
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1200ms var(--llf-ease) 200ms;
+}
+
+.llf-flow.is-in .llf-flow__bar { clip-path: inset(0 0 0 0); }
+
+.llf-flow__seg {
+  flex: 0 0 var(--w);
+  height: 100%;
+  box-shadow: inset -2px 0 0 var(--llf-bg);
+}
+
+.llf-flow__seg:last-child { box-shadow: none; }
+
+[data-seg="committed"].llf-flow__seg { background: var(--llf-seg-committed); }
+[data-seg="spent"].llf-flow__seg     { background: var(--llf-seg-spent); }
+[data-seg="held"].llf-flow__seg      { background: var(--llf-hatch); }
+[data-seg="free"].llf-flow__seg      { background: var(--llf-accent-fill); }
+
+/* Where the income runs out, in an over-committed month. */
+.llf-flow__limit {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: var(--at);
+  width: 2px;
+  margin-left: -1px;
+  background: var(--llf-ink);
+}
+
+.llf-flow__limit span {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--llf-ink-2);
+}
+
+/* The same cuts as a sum. Desktop reads left to right, a phone top to bottom. */
+.llf-flow__steps {
+  --op-gap: clamp(22px, 2.4vw, 34px);
+  display: grid;
+  grid-template-columns: var(--cols);
+  gap: 0 var(--op-gap);
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.llf-flow__step {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    "k"
+    "v"
+    "n";
+  align-content: start;
+}
+
+/* The operator sits in the gutter between two columns, so every column's
+   text starts on the same line as its cut of the bar above. */
+.llf-flow__op {
+  position: absolute;
+  top: 29px;
+  left: calc(var(--op-gap) / -2);
+  transform: translateX(-50%);
+  font-family: var(--llf-font-display);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--llf-ink-3);
+}
+
+.llf-flow__k {
+  grid-area: k;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--llf-ink-2);
+}
+
+/* Each label carries the swatch of its cut of the bar. */
+.llf-flow__k::before {
+  content: "";
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--llf-rule);
+}
+
+[data-seg="income"] > .llf-flow__k::before    { background: transparent; box-shadow: inset 0 0 0 1.5px var(--llf-ink-3); }
+[data-seg="committed"] > .llf-flow__k::before { background: var(--llf-seg-committed); }
+[data-seg="spent"] > .llf-flow__k::before     { background: var(--llf-seg-spent); }
+[data-seg="held"] > .llf-flow__k::before      { background: var(--llf-hatch); box-shadow: inset 0 0 0 1px var(--llf-seg-spent); }
+[data-seg="free"] > .llf-flow__k::before      { background: var(--llf-accent-fill); }
+[data-seg="short"] > .llf-flow__k::before     { background: var(--llf-ink); }
+
+.llf-flow__v {
+  grid-area: v;
+  margin-top: 6px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(21px, 2.2vw, 27px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--llf-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.llf-flow__step.is-free .llf-flow__v { color: var(--llf-accent); }
+
+.llf-flow__n {
+  grid-area: n;
+  margin-top: 6px;
+  font-size: 12.8px;
+  line-height: 1.5;
+  color: var(--llf-ink-3);
+}
+
+.llf-flow__step.is-result .llf-flow__n { color: var(--llf-ink-2); max-width: 34ch; }
+
+/* ---- Story sections below the fold ---- */
+
+.llf-fb-sec .llf-fb__head {
+  margin-bottom: clamp(18px, 3vh, 30px);
+  padding-top: clamp(26px, 3.5vh, 38px);
+  border-top: 1px solid var(--llf-rule);
+}
+
+.llf-fb-sec .llf-fb__h {
+  margin: 0 0 8px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(25px, 3vw, 36px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.03em;
+  color: var(--llf-ink);
+}
+
+.llf-fb-sec .llf-fb__sub {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--llf-ink-2);
+}
+
+/* ---- What's shaping it: a ranked ledger, each row against income ---- */
+
+.llf-shape {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.llf-shape .llf-break__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(120px, auto);
+  align-items: center;
+  gap: clamp(16px, 3vw, 40px);
+  padding: 15px 0;
+  border-bottom: 1px solid var(--llf-rule-soft);
+}
+
+.llf-break__label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--llf-ink);
+}
+
+.llf-break__note {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.8px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--llf-ink-3);
+}
+
+/* The full width of the track is the month's income, so every row shows how
+   much of it that one thing takes. */
+.llf-shape__track {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--llf-rule-soft);
+}
+
+.llf-shape__track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--w);
+  background: var(--llf-seg-committed);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 900ms var(--llf-ease);
+  transition-delay: calc(120ms + var(--i, 0) * 55ms);
+}
+
+.llf-shape.is-in .llf-shape__track i { transform: scaleX(1); }
+
+[data-kind="spent"] .llf-shape__track i { background: var(--llf-seg-spent); }
+[data-kind="held"] .llf-shape__track i  { background: var(--llf-hatch); box-shadow: inset 0 0 0 1px var(--llf-seg-spent); }
+[data-kind="free"] .llf-shape__track i  { background: var(--llf-accent-fill); }
+
+.llf-break__amt {
+  text-align: right;
+  font-family: var(--llf-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--llf-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.llf-shape__pct {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--llf-font-body);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--llf-ink-3);
+}
+
+.llf-shape .llf-shape__result {
+  padding-top: 20px;
+  border-top: 1px solid var(--llf-rule);
+  border-bottom: none;
+}
+
+.llf-shape__result .llf-break__label > span:first-child {
+  font-family: var(--llf-font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.llf-shape__result .llf-break__amt { font-size: 23px; letter-spacing: -0.03em; }
+.llf-shape__result[data-kind="free"] .llf-break__amt { color: var(--llf-accent); }
+
+/* ---- Want more breathing room? ---- */
+
+.llf-levers {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(28px, 5vw, 72px);
+}
+
+.llf-levers__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--llf-rule-soft);
+}
+
+.llf-lever {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 17px 2px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--llf-rule-soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.llf-lever:focus-visible {
+  outline: 2px solid var(--llf-accent);
+  outline-offset: 2px;
+}
+
+.llf-lever__tick {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--llf-ink-3);
+  border-radius: 5px;
+  transition: background 200ms var(--llf-ease), border-color 200ms var(--llf-ease);
+}
+
+.llf-lever__tick svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--llf-on-accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 16;
+  stroke-dashoffset: 16;
+  transition: stroke-dashoffset 260ms var(--llf-ease) 60ms;
+}
+
+.llf-lever:hover .llf-lever__tick { border-color: var(--llf-accent); }
+
+.llf-lever[aria-pressed="true"] .llf-lever__tick {
+  background: var(--llf-accent-fill);
+  border-color: var(--llf-accent-fill);
+}
+
+.llf-lever[aria-pressed="true"] .llf-lever__tick svg { stroke-dashoffset: 0; }
+
+.llf-lever__title {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--llf-ink);
+  transition: color 200ms var(--llf-ease);
+}
+
+.llf-lever:hover .llf-lever__title { color: var(--llf-accent); }
+
+.llf-lever__detail {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--llf-ink-3);
+}
+
+.llf-lever__effect {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.llf-lever__to {
+  display: block;
+  font-family: var(--llf-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--llf-ink);
+}
+
+.llf-lever__gain {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--llf-accent);
+}
+
+.llf-levers__result {
+  position: sticky;
+  top: 96px;
+}
+
+.llf-fb-sec .llf-levers__k {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--llf-ink-2);
+}
+
+.llf-fb-sec .llf-levers__v {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  max-width: none;
+  margin: 0;
+  font-family: var(--llf-font-display);
+  font-size: clamp(38px, 4.6vw, 54px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  color: var(--llf-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.llf-levers__delta {
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  color: var(--llf-accent);
+}
+
+.llf-levers__bar {
+  display: flex;
+  height: 8px;
+  margin: 22px 0 14px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--llf-rule-soft);
+}
+
+.llf-levers__now,
+.llf-levers__gain {
+  flex: 0 0 var(--w, 0%);
+  transition: flex-basis 560ms var(--llf-ease);
+}
+
+.llf-levers__now { background: var(--llf-accent-fill); }
+
+/* What a change would add: the same colour, drawn as not-yet-real. */
+.llf-levers__gain {
+  background: repeating-linear-gradient(135deg,
+    var(--llf-accent-fill) 0 2px, transparent 2px 5px);
+  box-shadow: inset 2px 0 0 var(--llf-bg);
+}
+
+.llf-fb-sec .llf-levers__note {
+  min-height: 3.1em;
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--llf-ink-2);
+}
+
+/* ---- What this means ---- */
+
+.llf-meaning { max-width: 760px; }
+
+.llf-fb-sec .llf-meaning__p {
+  max-width: none;
+  margin: 0 0 14px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--llf-ink-2);
+}
+
+.llf-fb-sec .llf-meaning__p.is-first {
+  margin-bottom: 20px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(19px, 1.9vw, 23px);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: var(--llf-ink);
+}
+
+.llf-fb-sec .llf-fb__provenance {
+  margin: 26px 0 0;
+  font-size: 12.8px;
+  line-height: 1.55;
+  color: var(--llf-ink-3);
+}
+
+.llf-fb-sec .llf-fb__provenance + .llf-fb__provenance { margin-top: 4px; }
+
+/* ---- "How is this worked out" ---- */
+
+.llf-why {
+  display: block;
+  margin-top: 18px;
+  padding: 0 0 3px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--llf-rule);
+  font-family: var(--llf-font-body);
+  font-size: 13px;
+  color: var(--llf-ink-2);
+  cursor: pointer;
+  transition: color 200ms var(--llf-ease), border-color 200ms var(--llf-ease);
+}
+
+.llf-why:hover { color: var(--llf-accent); border-color: var(--llf-accent); }
+
+.llf-why__body {
+  margin-top: 16px;
+  padding: 18px 20px;
+  background: var(--llf-bg-sunk);
+  border-left: 2px solid var(--llf-accent);
+  font-size: 12.6px;
+  line-height: 1.75;
+  color: var(--llf-ink-2);
+  white-space: pre-wrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   LIVE. LIFE. FULLY
+   The identity, now the hinge between knowing the number and using it.
+   ========================================================================== */
+
+.llf-bridge { padding-top: clamp(88px, 13vh, 150px); }
+
+.llf-sec .llf-hero__eyebrow {
+  max-width: none;
+  margin: 0 0 18px;
+  padding-top: clamp(30px, 4vh, 44px);
+  border-top: 1px solid var(--llf-rule);
+  font-family: var(--llf-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--llf-accent);
+}
+
+.llf-sec .llf-bridge__title {
+  margin: 0 0 20px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(44px, 7.2vw, 88px);
+  font-weight: 600;
+  line-height: 0.96;
+  letter-spacing: -0.05em;
+  color: var(--llf-ink);
+}
+
+.llf-bridge__title span { color: var(--llf-accent); }
+
+/* The tagline arrives as two sentences in separate spans, so they are set as
+   two lines rather than run together. */
+.llf-hero__sub span { display: block; }
+
+.llf-sec .llf-hero__sub {
+  max-width: 56ch;
+  margin: 0;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.66;
+  color: var(--llf-ink-2);
+}
+
+@keyframes llfFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Status marks, used by the moment's evidence. Text with a dot, not pills. */
+.llf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.6px;
+  letter-spacing: 0.01em;
+  color: var(--llf-ink-2);
+}
+
+.llf-chip::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--llf-ink-3);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   SECTIONS
+   ========================================================================== */
+
+.llf-sec {
+  padding: clamp(56px, 8vh, 96px) 0 0;
+}
+
+.llf-sec[hidden] { display: none; }
+
+.llf-sec__label {
+  display: block;
+  margin: 0 0 20px;
+  padding-top: clamp(26px, 3.5vh, 38px);
+  border-top: 1px solid var(--llf-rule);
+  font-family: var(--llf-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--llf-ink-3);
+}
+
+.llf-sec h2,
+.llf-moment__title,
+.llf-check__title,
+.llf-reco__head {
+  margin: 0 0 14px;
+  font-family: var(--llf-font-display);
+  font-size: clamp(25px, 3.4vw, 38px);
+  font-weight: 600;
+  line-height: 1.14;
+  letter-spacing: -0.032em;
+  color: var(--llf-ink);
+}
+
+.llf-sec p,
+.llf-moment__msg,
+.llf-check__sub,
+.llf-stash__sub {
+  max-width: 64ch;
+  font-size: 15px;
+  line-height: 1.68;
+  color: var(--llf-ink-2);
+}
+
+/* Cards are retired: what used to be a card is now a ruled block.
+
+   NOTE: .llf-portal is deliberately NOT in this list. It used to be, back when
+   it was styled down to nothing — but it is a sidebar button now and needs its
+   own box model. Adding it here again would hand every block on this page the
+   button's display:flex and padding, which collapses the whole layout into a
+   single scattered row. */
+.llf-card,
+.llf-moment,
+.llf-adv,
+.llf-stash__item,
+.llf-cat,
+.llf-check__panel,
+.llf-reco,
+.llf-verdict,
+.llf-tradeoff {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+/* Your Freedom Balance — the sidebar entry into live.life.fully.
+
+   It sits last in the nav, under Reports, and is a real button rather than the
+   run of plain text it had become: the rules below deliberately mirror
+   .navitem in css/styles.css so it reads as the item after Reports. It cannot
+   simply *be* a .navitem, because app.js wires every .navitem to switchView()
+   and a #view-* section, and this opens a full-screen overlay instead. */
+.llf-portal {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 11px 12px;
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.llf-portal:hover { background: var(--primary-tint); color: var(--nav-hover-text); }
+.llf-portal[hidden] { display: none; }
+.llf-portal__text { white-space: nowrap; }
+
+/* ---- Moment ---- */
+
+.llf-moment { padding: 4px 0 0; }
+
+.llf-moment__ev {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--llf-ink-3);
+}
+
+.llf-moment__needs {
+  font-family: var(--llf-font-display);
+  font-weight: 600;
+  color: var(--llf-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.llf-moment__actions,
+.llf-stash__actions,
+.llf-sheet__acts,
+.llf-check__quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* The preset amounts under "Can I afford it?". These are buttons, and were
+   previously grouped with their own container, which left them with no
+   appearance at all — the browser default painted white boxes on a black page. */
+.llf-quick {
+  padding: 9px 15px;
+  background: transparent;
+  border: 1px solid var(--llf-rule);
+  border-radius: 999px;
+  color: var(--llf-ink-2);
+  font-family: var(--llf-font-body);
+  font-size: 13.4px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 180ms var(--llf-ease), color 180ms var(--llf-ease),
+              transform 180ms var(--llf-ease), background 180ms var(--llf-ease);
+}
+.llf-quick:hover {
+  border-color: var(--llf-accent);
+  color: var(--llf-accent);
+  background: var(--llf-accent-soft);
+  transform: translateY(-2px);
+}
+.llf-quick:active { transform: translateY(0); }
+
+/* ---- Adventure and stash: a ruled list, one row per item ---- */
+
+.llf-adv,
+.llf-stash__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--llf-rule-soft);
+}
+
+/* Printed twice by the renderer: once as a faint backdrop for a card design
+   that no longer exists, once as the real icon. Only the icon is wanted. */
+.llf-cat__bg-emoji { display: none; }
+
+.llf-adv__emoji,
+.llf-stash__emoji,
+.llf-cat__emoji,
+.llf-portal__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.llf-adv__emoji,
+.llf-stash__emoji,
+.llf-cat__emoji {
+  font-size: 26px;
+  line-height: 1;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+/* The stash's title row: an emoji beside the name, not a heading of its own. */
+.llf-stash__head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0 0 14px;
+}
+.llf-portal__icon svg { width: 18px; height: 18px; display: block; }
+
+.llf-adv__name,
+.llf-stash__name {
+  font-family: var(--llf-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--llf-ink);
+}
+
+.llf-adv__date,
+.llf-stash__meta,
+.llf-adv__pathnote,
+.llf-stash__kind {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.8px;
+  line-height: 1.5;
+  color: var(--llf-ink-3);
+}
+
+.llf-adv__num,
+.llf-adv__count,
+.llf-stash__saved,
+.llf-stash__target,
+.llf-cat__saved,
+.llf-reco__amount {
+  font-family: var(--llf-font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--llf-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.llf-adv__unit,
+.llf-cat__of,
+.llf-stash__target,
+.llf-adv__pathtitle {
+  font-size: 12.6px;
+  font-weight: 400;
+  color: var(--llf-ink-3);
+}
+
+/* The markup reads "<saved><span>of <target></span>", so the separating space
+   has to come from here or the two run together as "1,45,000of 4,00,000". */
+.llf-cat__of,
+.llf-stash__target { margin-left: 7px; }
+
+.llf-adv__ready { color: var(--llf-accent); }
+
+/* ---- Progress: a hairline that fills, no track chrome ---- */
+
+.llf-cat__bar {
+  position: relative;
+  margin-top: 12px;
+  height: 2px;
+  background: var(--llf-rule);
+  overflow: hidden;
+}
+
+.llf-cat__bar > i {
+  display: block;
+  height: 100%;
+  background: var(--llf-accent);
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+  transition: transform 1100ms var(--llf-ease);
+}
+
+/* ---- The journey line ----
+   Each stash draws the shape of its own ambition — a flight arc, a road, a
+   wave, a trail — with a marker sitting exactly as far along it as the money
+   is. These are SVG paths, so they need a stroke and an explicit fill:none;
+   the rules here had been replaced by HTML-bar styling, which left the paths
+   at the SVG default of solid black — the dark smear beside each stash. */
+.llf-prog {
+  position: relative;
+  margin-top: 18px;
+  padding-top: 6px;
+}
+.llf-prog svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.llf-prog__track,
+.llf-prog__fill {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.llf-prog__track { stroke: var(--llf-rule); }
+.llf-prog__fill {
+  stroke: var(--llf-tint, var(--llf-accent));
+  transition: stroke-dashoffset 1400ms var(--llf-ease);
+}
+.llf-prog__marker {
+  fill: var(--llf-tint, var(--llf-accent));
+  transition: transform 1400ms var(--llf-ease);
+}
+.llf-prog__pct {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-family: var(--llf-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--llf-tint, var(--llf-accent));
+  font-variant-numeric: tabular-nums;
+}
+
+.llf-prog__cap {
+  margin: 10px 0 0;
+  font-size: 12.4px;
+  color: var(--llf-ink-3);
+}
+
+/* ---- Categories ---- */
+
+.llf-cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: clamp(22px, 3vw, 44px);
+  margin-top: 8px;
+}
+
+.llf-cat {
+  padding-top: 20px;
+  border-top: 1px solid var(--llf-rule);
+}
+
+.llf-cat__name {
+  display: block;
+  font-family: var(--llf-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--llf-ink);
+}
+
+.llf-cat__blurb {
+  margin: 6px 0 0;
+  font-size: 13.4px;
+  line-height: 1.6;
+  color: var(--llf-ink-2);
+}
+
+.llf-cat__stat { margin-top: 12px; }
+
+.llf-cat__cta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--llf-accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.llf-cat__cta:hover { text-decoration: underline; }
+
+/* ---- Check ---- */
+
+.llf-check { padding-top: 4px; }
+
+.llf-check__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 24px;
+  max-width: 560px;
+}
+
+.llf-check__input,
+.llf-sheet input,
+.llf-sheet select {
+  flex: 1 1 200px;
+  min-width: 0;
+  height: 50px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--llf-rule);
+  border-radius: 4px;
+  color: var(--llf-ink);
+  font-family: var(--llf-font-body);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 200ms var(--llf-ease), box-shadow 200ms var(--llf-ease);
+}
+
+.llf-check__input:focus,
+.llf-sheet input:focus,
+.llf-sheet select:focus {
+  border-color: var(--llf-accent);
+  box-shadow: 0 0 0 3px var(--llf-accent-soft);
+}
+
+.llf-check__input::placeholder,
+.llf-sheet input::placeholder { color: var(--llf-ink-3); }
+
+/* ---- Tradeoff slider ----
+   Fully custom: a native range control cannot be themed, and its default white
+   track and blue thumb were the one thing on this page that looked like it
+   belonged to a different product. The filled portion is a gradient whose stop
+   follows --llf-fill, which live-life.js sets from the current value. */
+.llf-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin: 22px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--llf-accent) 0%,
+    var(--llf-accent) var(--llf-fill, 0%),
+    var(--llf-rule) var(--llf-fill, 0%),
+    var(--llf-rule) 100%);
+  cursor: pointer;
+  outline: none;
+}
+.llf-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--llf-accent);
+  border: 3px solid var(--llf-bg);
+  box-shadow: 0 0 0 1px var(--llf-accent), 0 2px 10px rgba(0, 0, 0, 0.5);
+  cursor: grab;
+  transition: transform 160ms var(--llf-ease);
+}
+.llf-slider::-webkit-slider-thumb:hover { transform: scale(1.18); }
+.llf-slider:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.06); }
+.llf-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--llf-accent);
+  border: 3px solid var(--llf-bg);
+  box-shadow: 0 0 0 1px var(--llf-accent);
+  cursor: grab;
+}
+.llf-slider::-moz-range-track { height: 4px; background: transparent; }
+.llf-slider:focus-visible { box-shadow: 0 0 0 4px var(--llf-accent-soft); }
+
+/* ---- Verdict ---- */
+
+.llf-verdict {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--llf-rule);
+  animation: llfFade 520ms var(--llf-ease) both;
+}
+
+.llf-verdict__head {
+  font-family: var(--llf-font-display);
+  font-size: clamp(21px, 2.6vw, 28px);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  color: var(--llf-ink);
+  margin: 0 0 10px;
+}
+
+.llf-verdict__tag {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-family: var(--llf-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--llf-accent);
+}
+
+.llf-verdict__detail {
+  max-width: 64ch;
+  font-size: 14.6px;
+  line-height: 1.68;
+  color: var(--llf-ink-2);
+}
+
+.llf-verdict__impacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px 32px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--llf-rule-soft);
+}
+
+.llf-tradeoff__label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 11.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--llf-ink-3);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.llf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  border-radius: 4px;
+  border: 1px solid var(--llf-rule);
+  background: transparent;
+  color: var(--llf-ink);
+  font-family: var(--llf-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms var(--llf-ease);
+}
+
+.llf-btn:hover {
+  border-color: var(--llf-ink-3);
+  transform: translateY(-2px);
+}
+.llf-btn:active { transform: translateY(0); }
+.llf-btn--primary:hover {
+  border-color: var(--llf-accent);
+  box-shadow: 0 6px 20px var(--llf-accent-soft);
+}
+
+/* ==========================================================================
+   BLOCK SEPARATION
+
+   The recommendation, the tradeoff slider and auto-sweeps are three separate
+   blocks inside one section, and all three are stripped to padding:0 by the
+   "cards are retired" reset above. With nothing between them, a button in one
+   block sat directly against the heading of the next. A rule and a generous
+   gap give them the same rhythm the sections have.
+   ========================================================================== */
+.llf-reco + .llf-reco,
+.llf-reco + .llf-tradeoff,
+.llf-tradeoff + .llf-reco {
+  margin-top: clamp(40px, 5.5vh, 62px);
+  padding-top: clamp(28px, 3.5vh, 40px);
+  border-top: 1px solid var(--llf-rule);
+}
+
+/* ==========================================================================
+   INTERACTION
+
+   The page is a document, so hover is a small, quick acknowledgement rather
+   than a transformation: the accent arrives, the emoji leans in, the arrow
+   moves the way you are about to go. Nothing bounces and nothing loops.
+   ========================================================================== */
+
+.llf-cat {
+  position: relative;
+  padding-top: 22px;
+  border-top: 1px solid var(--llf-rule-soft);
+  transition: border-color 220ms var(--llf-ease);
+}
+.llf-cat:hover { border-top-color: var(--llf-tint, var(--llf-accent)); }
+
+.llf-cat__emoji,
+.llf-stash__emoji,
+.llf-adv__emoji {
+  transition: transform 260ms var(--llf-ease);
+}
+.llf-cat:hover .llf-cat__emoji,
+.llf-stash__item:hover .llf-stash__emoji { transform: scale(1.14) rotate(-6deg); }
+
+.llf-cat__name { transition: color 200ms var(--llf-ease); }
+.llf-cat:hover .llf-cat__name { color: var(--llf-tint, var(--llf-accent)); }
+
+.llf-cat__cta { transition: color 200ms var(--llf-ease); }
+.llf-cat__cta span {
+  display: inline-block;
+  transition: transform 240ms var(--llf-ease);
+}
+.llf-cat:hover .llf-cat__cta span { transform: translateX(5px); }
+
+.llf-stash__item { transition: border-color 220ms var(--llf-ease); }
+
+.llf-btn--primary {
+  background: var(--llf-accent);
+  border-color: var(--llf-accent);
+  color: var(--llf-on-accent);
+}
+
+.llf-btn--primary:hover { filter: brightness(1.08); }
+
+.llf-btn--ghost { border-color: transparent; color: var(--llf-ink-2); padding-inline: 4px; }
+.llf-btn--ghost:hover { color: var(--llf-accent); border-color: transparent; }
+
+.llf-btn:disabled,
+.llf-btn:disabled:hover {
+  opacity: 0.42;
+  transform: none;
+  border-color: var(--llf-rule);
+  box-shadow: none;
+  cursor: default;
+}
+
+.llf-btn span[aria-hidden] { transition: transform 220ms var(--llf-ease); }
+.llf-btn:not(:disabled):hover span[aria-hidden] { transform: translateX(4px); }
+
+/* ==========================================================================
+   SHEET
+   ========================================================================== */
+
+.llf-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(10, 12, 13, 0.55);
+}
+
+.llf-sheet[hidden] { display: none; }
+
+.llf-sheet__panel {
+  width: 100%;
+  max-width: 460px;
+  padding: clamp(26px, 4vw, 38px);
+  background: var(--llf-bg);
+  border: 1px solid var(--llf-rule);
+  border-radius: 8px;
+  animation: llfFade 300ms var(--llf-ease) both;
+}
+
+.llf-sheet__title {
+  margin: 0 0 8px;
+  font-family: var(--llf-font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--llf-ink);
+}
+
+.llf-sheet__sub {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--llf-ink-2);
+}
+
+.llf-sheet__err {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #C0392B;
+}
+
+.llf-sheet__actions,
+.llf-sheet__acts { display: flex; gap: 10px; margin-top: 24px; }
+
+/* ==========================================================================
+   REVEALS
+   One entrance, used everywhere, so the page reads as one document being
+   set rather than a series of separate effects.
+   ========================================================================== */
+
+.llf-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 700ms var(--llf-ease), transform 700ms var(--llf-ease);
+}
+
+.llf-reveal.is-in { opacity: 1; transform: none; }
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .llf-fb__open { grid-template-columns: 1fr; align-items: start; gap: 30px; }
+  .llf-levers { grid-template-columns: 1fr; gap: 0; }
+
+  /* Stacked, the result would sit below every lever and out of sight at the
+     moment one is tapped. Pinned to the bottom while the levers are on
+     screen, the answer stays next to the question. */
+  .llf-levers__result {
+    position: sticky;
+    top: auto;
+    bottom: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 16px;
+    padding: 14px 0 16px;
+    background: var(--llf-bg);
+    border-top: 1px solid var(--llf-rule);
+  }
+  .llf-fb-sec .llf-levers__k { grid-column: 1 / -1; margin-bottom: 6px; }
+  .llf-fb-sec .llf-levers__v { grid-column: 1; font-size: 32px; }
+  .llf-levers__delta { font-size: 15px; }
+  .llf-levers__result .llf-btn { grid-column: 2; grid-row: 2; height: 40px; padding: 0 14px; font-size: 13px; }
+  .llf-levers__bar { grid-column: 1 / -1; margin: 12px 0 10px; height: 6px; }
+  .llf-fb-sec .llf-levers__note { grid-column: 1 / -1; min-height: 0; margin: 0; font-size: 13px; }
+}
+
+@media (max-width: 720px) {
+  .llf__bar { padding: 16px var(--llf-gut); }
+  .llf-hero { padding-top: 84px; }
+  .llf-fb__reading { padding-left: 16px; }
+
+  /* The sum turns from a row of columns into a short ledger. */
+  .llf-flow__steps {
+    grid-template-columns: 1fr;
+    margin-top: 18px;
+    border-top: 1px solid var(--llf-rule-soft);
+  }
+  .llf-flow__op { position: static; transform: none; }
+  .llf-flow__step {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "op k v"
+      ".  n n";
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--llf-rule-soft);
+  }
+  .llf-flow__op { font-size: 18px; }
+  .llf-flow__k { font-size: 14px; color: var(--llf-ink); }
+  .llf-flow__v { margin-top: 0; font-size: 18px; text-align: right; }
+  .llf-flow__n { margin-top: 3px; }
+  .llf-flow__step.is-result { border-bottom: none; }
+  .llf-flow__step.is-result .llf-flow__v { font-size: 22px; }
+
+  .llf-shape .llf-break__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "label amt"
+      "track track";
+    gap: 10px 16px;
+  }
+  .llf-shape .llf-break__label { grid-area: label; }
+  .llf-shape .llf-break__amt   { grid-area: amt; align-self: start; }
+  .llf-shape .llf-shape__track { grid-area: track; }
+  .llf-shape .llf-shape__result .llf-shape__track:empty { display: none; }
+
+  .llf-lever { grid-template-columns: 22px minmax(0, 1fr); row-gap: 8px; }
+  .llf-lever__effect { grid-column: 2; text-align: left; display: flex; gap: 10px; align-items: baseline; }
+  .llf-lever__gain { margin-top: 0; }
+
+  .llf-adv,
+  .llf-stash__item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .llf-check__form { flex-direction: column; align-items: stretch; }
+  .llf-check__form .llf-btn { width: 100%; }
+  .llf-cats { grid-template-columns: 1fr; }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   Every entrance resolves to its finished state.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .llf,
+  .llf * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .llf-reveal { opacity: 1; transform: none; }
+  .llf-flow__bar { clip-path: none; }
+  .llf-shape__track i { transform: none; }
+}
+
+
+/* ==========================================================================
+   DEVANAGARI TYPOGRAPHY
+   The eyebrows and labels are set as tracked uppercase, which is a Latin
+   convention. Devanagari has no case, and letter-spacing pulls its conjuncts
+   apart, so in Hindi those rules are relaxed: normal tracking, no transform,
+   and a little more line height for the taller matras.
+   ========================================================================== */
+
+[data-lang="hi"] .mk-eyebrow,
+[data-lang="hi"] .mk-fbar__desc,
+[data-lang="hi"] .mk-cap__k,
+[data-lang="hi"] .mk-sec__label,
+[data-lang="hi"] .mk-tile__k,
+[data-lang="hi"] .mk-readout__label,
+[data-lang="hi"] .mk-brain__num,
+[data-lang="hi"] .mk-step__n,
+[data-lang="hi"] .canvas-kicker,
+[data-lang="hi"] .mk-post__cat,
+[data-lang="hi"] .auth-eyebrow,
+[data-lang="hi"] .mk-field > span,
+[data-lang="hi"] .step-count,
+[data-lang="hi"] .eyebrow,
+[data-lang="hi"] .llf-hero__eyebrow,
+[data-lang="hi"] .llf-sec__label,
+[data-lang="hi"] .llf-fb__eyebrow,
+[data-lang="hi"] .llf-verdict__tag,
+[data-lang="hi"] .llf-tradeoff__label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* Headlines are tightened for Latin; Devanagari needs that tracking back. */
+[data-lang="hi"] .mk-hero__title,
+[data-lang="hi"] .mk-h1,
+[data-lang="hi"] .mk-h2,
+[data-lang="hi"] .mk-phero__title,
+[data-lang="hi"] .auth-title,
+[data-lang="hi"] .llf-bridge__title,
+[data-lang="hi"] .llf-fb__lead,
+[data-lang="hi"] .llf-sec h2 {
+  letter-spacing: -0.005em;
+  line-height: 1.24;
+}

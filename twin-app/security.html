@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security &amp; Privacy | MoneyKal</title>
+  <meta name="description" content="How MoneyKal handles authentication, sessions, your financial data and third party connections. Only what is actually implemented.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html" class="is-current">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <section class="mk-section mk-section--top">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Security &amp; Privacy</p>
+          <h1 class="mk-h2">Nothing we hold can be used to take your money</h1>
+          <p class="mk-sub">We hold the least information that still lets us give you a useful answer,
+            every piece of it is locked to your account alone, and nothing we hold can be used to take
+            your money.</p>
+        </header>
+
+        <ul class="mk-caps mk-caps--three" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Your money</span>
+            <h3>We never hold it or move it</h3>
+            <p>No payment integration, no mandate, no instruction we can send to a bank. Even in the
+              worst compromise of our systems, nobody gains the ability to move a rupee through us.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Credentials</span>
+            <h3>We never ask for them</h3>
+            <p>We do not ask for your net-banking password, card number or CVV, and there is nowhere in
+              our system to put them even if you offered.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Connections</span>
+            <h3>Permission to read, never to act</h3>
+            <p>Anything you connect is read-only, and you can withdraw the permission from your own
+              account settings without involving us.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Mechanisms</p>
+          <h2 class="mk-h2">How your account is protected</h2>
+          <p class="mk-sub">Each of these is implemented today.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Passwords</span>
+            <h3>Stored one way, never readable</h3>
+            <p>Put through bcrypt with a random value unique to your account. We store only the result,
+              so neither we nor anyone holding a copy of our database can work back to your password.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Sessions</span>
+            <h3>A signed pass, checked every request</h3>
+            <p>Identity is proved by signature rather than by claim, so a forged pass is rejected before
+              any data is read. The pass that keeps you signed in cannot be used to do anything else, and
+              on phones it lives in the device keychain behind your screen lock.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Isolation</span>
+            <h3>Locked to your account</h3>
+            <p>Our servers work out whose account it is from the verified pass, then restrict every
+              database lookup to that owner. A request for someone else&rsquo;s record returns nothing at
+              all, not an error confirming it exists.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">In transit</span>
+            <h3>HTTPS, and no pass in a web address</h3>
+            <p>Addresses end up in browser history and server logs, so your session pass never goes into
+              one. Connections to outside services use a separate ticket that expires in two minutes and
+              can do only the one thing it was created for.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">The assistant</span>
+            <h3>One account&rsquo;s context at a time</h3>
+            <p>The AI has no database access of its own and reaches information through a single door
+              that checks authorisation on every request. It cannot talk its way into another account,
+              because what it claims is not what we check.</p>
+          </li>
+        </ul>
+
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Where we stand</h3>
+            <p>We are not a bank and not regulated by the RBI, and we are not a registered investment
+              adviser &mdash; MoneyKal models scenarios in your own numbers, it does not tell you what to
+              buy. We are a Data Fiduciary under the DPDP Act, 2023, and building to its
+              requirements.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Incidents</p>
+          <h2 class="mk-h2">If something goes wrong</h2>
+          <p class="mk-sub">What we can do immediately, what we will tell you, and the part of this we
+            are weakest at.</p>
+        </header>
+
+        <ul class="mk-caps mk-caps--three" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Containment</span>
+            <h3>Every session, invalidated at once</h3>
+            <p>We can invalidate every active session across the entire platform immediately. It signs
+              everybody out, which is disruptive, and that is the point &mdash; our first response to a
+              suspected compromise does not have to wait for us to understand it fully.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Notification</span>
+            <h3>You hear it from us</h3>
+            <p>After containment we work out what was reached and whose data was involved. If your data
+              was affected we will tell you what happened, what it means for you and what to do about it
+              &mdash; and we will tell you even when the news is embarrassing for us. Under the DPDP Act
+              we also notify the Data Protection Board, and a qualifying incident is reported to CERT-In
+              within six hours.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Detection</span>
+            <h3>The weakest link, and we know it</h3>
+            <p>Improving our ability to detect a problem in the first place, rather than being told
+              about one, is an active piece of work. It is honest to say that a small pre-launch
+              team&rsquo;s detection capability is the weakest link in any incident plan, including
+              ours.</p>
+          </li>
+        </ul>
+
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Found a security problem?</h3>
+            <p>Please tell us before you tell anyone else, and we will not threaten you for it. Write to
+              us with enough detail to reproduce the issue. We will acknowledge you within three working
+              days, keep you updated, and credit you when it is fixed if you would like us to.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Data</p>
+          <h2 class="mk-h2">What we collect, and what we never will</h2>
+          <p class="mk-sub">Every field on the left exists because a feature uses it; if something
+            stopped driving an answer we would stop collecting it. There is no field anywhere in MoneyKal
+            for anything on the right, so that is not a policy we could drift away from &mdash; the place
+            to store it does not exist.</p>
+        </header>
+
+        <div class="mk-claims" data-reveal>
+          <div class="mk-claims__col mk-claims__col--yes">
+            <span class="mk-claims__k">What we collect</span>
+            <ul>
+              <li>Your email address and a one-way hash of your password</li>
+              <li>Income, expenses, savings, loans, debt and the goals you set</li>
+              <li>Transaction amounts, categories, dates and descriptions</li>
+              <li>Bills, EMIs, card dues and subscriptions, with their due dates</li>
+              <li>Business details such as stage, headcount and burn, for startup accounts only</li>
+              <li>Your conversations with the assistant, and the reasoning behind each answer</li>
+              <li>A WhatsApp number, only if you choose to add one</li>
+              <li>A read-only permission for Gmail or accounting software, if you connect one</li>
+            </ul>
+          </div>
+          <div class="mk-claims__col mk-claims__col--no">
+            <span class="mk-claims__k">What we never collect</span>
+            <ul>
+              <li>Net-banking usernames or passwords</li>
+              <li>Debit or credit card numbers, expiry dates or CVVs</li>
+              <li>UPI PINs or any payment credential</li>
+              <li>Aadhaar numbers</li>
+              <li>PAN details</li>
+              <li>Bank account numbers as a required field</li>
+              <li>Biometric data of any kind</li>
+              <li>Your location or your contacts list</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--ai">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Artificial intelligence</p>
+          <h2 class="mk-h2">What leaves MoneyKal when the AI answers</h2>
+          <p class="mk-sub">Every number in the product is calculated here, on our own servers, by
+            code you can read the working of. Language models are used to <em>phrase</em> an answer
+            around figures that were already computed &mdash; never to produce a figure. That still
+            means something leaves, and this is exactly what.</p>
+        </header>
+
+        <div class="mk-claims" data-reveal>
+          <div class="mk-claims__col mk-claims__col--yes">
+            <span class="mk-claims__k">What is sent to a model provider</span>
+            <ul>
+              <li>A pseudonymous snapshot of your figures: income, expenses, savings, loans,
+                monthly surplus, buffer in months, and a goal&rsquo;s title, target and progress</li>
+              <li>The question you typed, and the recent turns of that conversation</li>
+              <li>For a startup account, the same for revenue, burn, runway and headcount</li>
+              <li>If you use voice, the audio clip of what you said, for transcription only</li>
+            </ul>
+          </div>
+          <div class="mk-claims__col mk-claims__col--no">
+            <span class="mk-claims__k">What is never sent</span>
+            <ul>
+              <li>Your name, email address or phone number</li>
+              <li>Your password, in any form</li>
+              <li>Your account identifier, or anything that maps back to you</li>
+              <li>Your individual transactions, bills or Hisaab ledger rows</li>
+              <li>Any connected mailbox&rsquo;s contents</li>
+            </ul>
+          </div>
+        </div>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Recipients</span>
+            <h3>Google and Groq, from our server only</h3>
+            <p>Google (Gemini) phrases simulation recommendations, reads uploaded statements and
+              summarises market news. Groq phrases the assistant&rsquo;s replies and turns voice into
+              text. Both are reached over their commercial APIs from our backend &mdash; your browser
+              never contacts them, and neither is given a way to identify you.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Precision</span>
+            <h3>Pseudonymous, which is not the same as anonymous</h3>
+            <p>Nothing we send names you. We are not claiming the figures themselves could never be
+              recognised by someone who already knew a great deal about your finances. That is a real
+              distinction and we would rather state it than blur it.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Limits</span>
+            <h3>What happens next is not ours to promise</h3>
+            <p>Once a request reaches a provider, retention and handling are governed by that
+              provider&rsquo;s terms rather than ours. We do not hold an agreement with either that
+              excludes your data from their standard API handling, and we do not claim one.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Opting out</span>
+            <h3>Everything else sends nothing outward</h3>
+            <p>The AI features are the assistant, simulation wording, statement import and market
+              summaries. Overview, Hisaab, Money Splits, the tax engine, goals and reports are all
+              computed on our own servers. If you do not use the assistant, nothing of yours reaches a
+              model provider at all.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Your control</p>
+          <h2 class="mk-h2">It is your data, and you can take it back</h2>
+          <p class="mk-sub">You are lending it to us so we can be useful to you, and lending implies you
+            can end it.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Correct</span>
+            <h3>Everything is editable</h3>
+            <p>Anything you have entered can be reviewed and changed in the app at any time.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Disconnect</span>
+            <h3>You can cut us off without asking</h3>
+            <p>Disconnect Gmail or your accounting software from your dashboard, or revoke us directly
+              from your Google account settings. Your ability to cut us off does not depend on us
+              behaving well.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Delete</span>
+            <h3>Manual today, self-serve in build</h3>
+            <p>Deleting your account removes your profile, transactions, bills, goals, conversation
+              history and any connection permissions. Today you ask us and we do it by hand; a delete
+              button and a machine-readable export are both in the current build.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Retention</span>
+            <h3>Until you ask us to remove it</h3>
+            <p>Your data stays until you ask. A published retention schedule is part of the same piece of
+              work &mdash; data we no longer hold cannot leak, so it is a security measure too.</p>
+          </li>
+        </ul>
+
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Who can see your data</h3>
+            <p>Nobody here can see your password; it is one-way hashed, so the information is not there
+              to look at. Engineers currently have the database access that building the product
+              requires. Least-privilege roles and access logging come with the move to managed
+              infrastructure, and until then what protects you is a small team and a clear rule, not a
+              system.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Straight answers</p>
+          <h2 class="mk-h2">Security Questions</h2>
+          <p class="mk-sub">The questions people actually ask before trusting an app with this.</p>
+        </header>
+
+        <div class="mk-faq" data-reveal>
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq1" id="sq1-btn">
+                <span>Can MoneyKal take money out of my account?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq1" role="region" aria-labelledby="sq1-btn">
+              <div class="mk-faq__inner">
+                <p>No. There is no payment integration in the product, no mandate, and no instruction we
+                  can send to a bank. We can read information you have shared with us; we can never move
+                  funds.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq2" id="sq2-btn">
+                <span>Do you ask for my bank password?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq2" role="region" aria-labelledby="sq2-btn">
+              <div class="mk-faq__inner">
+                <p>Never. If anything claiming to be MoneyKal asks for your net-banking password, your
+                  card PIN or an OTP, it is not us. Please report it to us at once.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq3" id="sq3-btn">
+                <span>You connect to my Gmail. Can you read all my email?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq3" role="region" aria-labelledby="sq3-btn">
+              <div class="mk-faq__inner">
+                <p>We ask Google for read-only access, and we use it to spot bank alerts and bill
+                  notifications so your transactions appear without manual entry. MoneyKal cannot send,
+                  modify or delete a single email, because we never requested the permission to do so
+                  &mdash; that is enforced by Google, not by our good intentions. You can revoke it from
+                  your Google account at any time.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq4" id="sq4-btn">
+                <span>Is my voice being recorded?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq4" role="region" aria-labelledby="sq4-btn">
+              <div class="mk-faq__inner">
+                <p>No. Voice conversations are not written into your chat history or stored in our
+                  database. That is how the app ships, not a setting you have to go and find. Varta is a
+                  way of talking to the same assistant, not a separate system with its own memory.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq5" id="sq5-btn">
+                <span>Is my financial data used to train AI models?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq5" role="region" aria-labelledby="sq5-btn">
+              <div class="mk-faq__inner">
+                <p>Not by us &mdash; we do not train models at all, and nothing you tell the assistant
+                  makes anything smarter about anyone else. We send questions to hosted models and get
+                  answers back. Binding those providers contractually to no training and zero retention
+                  is work we have not yet completed, and we would rather say so than let you assume it is
+                  done.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq6" id="sq6-btn">
+                <span>Is my data stored in India?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq6" role="region" aria-labelledby="sq6-btn">
+              <div class="mk-faq__inner">
+                <p>Your account and financial records sit in our own database. The AI and voice providers
+                  that help produce answers operate outside India, so parts of a question you ask are
+                  processed abroad. This is lawful for Indian users&rsquo; data, and we would rather you
+                  heard it from this page than worked it out later.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mk-faq__item">
+            <h3 class="mk-faq__q">
+              <button type="button" class="mk-faq__btn" aria-expanded="false" aria-controls="sq7" id="sq7-btn">
+                <span>Do you sell my data?</span>
+                <svg class="mk-faq__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </button>
+            </h3>
+            <div class="mk-faq__panel" id="sq7" role="region" aria-labelledby="sq7-btn">
+              <div class="mk-faq__inner">
+                <p>No. We never have and we will not rent, lease or sell your information to third
+                  parties. Our business is a product you pay for, not an audience we sell.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-pcta">
+      <div class="mk-wrap">
+        <h2>Start today</h2>
+        <p>Build the picture once, then let MoneyKal keep it current.</p>
+        <div class="mk-pcta__row">
+          <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+            Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+        </div>
+        <div class="mk-more">
+        <a href="hisaab.html">Hisaab</a>
+        <a href="taxes.html">Taxes</a>
+        <a href="intelligence.html">Intelligence</a>
+        <a href="app.html">App</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

@@ -1,0 +1,864 @@
+/* ==========================================================================
+   MoneyKal — feature bar, compact homepage blocks, and the dedicated pages
+
+   Loaded alongside home.css, which owns the tokens, the nav, the buttons and
+   the type scale. Nothing here redefines a token; this file only adds the
+   components the shorter homepage and the seven feature pages need, so the two
+   stay one system rather than two.
+   ========================================================================== */
+
+/* ==========================================================================
+   FEATURE BAR
+   Sits directly under the hero. It is navigation: each item opens its own
+   page rather than scrolling to a section, which is what keeps the homepage
+   short.
+   ========================================================================== */
+
+.mk-fbar-wrap {
+  padding: 0 0 clamp(56px, 8vh, 96px);
+}
+
+.mk-fbar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+
+.mk-fbar__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 14px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid transparent;
+  transition:
+    background 240ms var(--mk-ease),
+    border-color 240ms var(--mk-ease),
+    transform 240ms var(--mk-ease);
+}
+
+.mk-fbar__item:hover {
+  background: var(--mk-bg-tint);
+  border-color: var(--mk-line);
+  transform: translateY(-2px);
+}
+
+.mk-fbar__icon {
+  width: 26px;
+  height: 26px;
+  color: var(--mk-accent);
+  margin-bottom: 2px;
+}
+
+.mk-fbar__icon svg { width: 100%; height: 100%; display: block; }
+
+.mk-fbar__name {
+  font-family: var(--mk-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--mk-ink);
+}
+
+.mk-fbar__desc {
+  font-size: 11.8px;
+  line-height: 1.4;
+  color: var(--mk-ink-3);
+}
+
+/* Current page in the global nav. home.css styles .mk-nav__links a; this only
+   marks which one you are on. */
+.mk-nav__links a.is-current {
+  color: var(--mk-accent);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   COMPACT HOMEPAGE BLOCKS
+   Two-column "explain then show one example" pattern, used by Tathya and
+   Varta so neither becomes a full feature section on the homepage.
+   ========================================================================== */
+
+.mk-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+
+.mk-duo--flip .mk-head { order: 2; }
+.mk-duo--flip .mk-mini { order: 1; }
+
+.mk-mini {
+  padding: 26px 28px 28px;
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+
+.mk-mini__label {
+  margin: 0 0 12px;
+  font-family: var(--mk-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+}
+
+.mk-mini__title {
+  margin: 0 0 10px;
+  font-family: var(--mk-display);
+  font-size: clamp(19px, 2vw, 23px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--mk-ink);
+}
+
+.mk-mini__body {
+  margin: 0 0 16px;
+  font-size: 14.6px;
+  line-height: 1.6;
+  color: var(--mk-ink-2);
+}
+
+.mk-mini__body b { color: var(--mk-ink); font-weight: 600; }
+
+.mk-mini__basis {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--mk-line);
+  font-size: 12px;
+  color: var(--mk-ink-3);
+}
+
+/* ---- The Financial Brain: three steps, no cards ---- */
+
+.mk-brain {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 56px);
+  margin: 56px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.mk-brain__step {
+  padding-top: 22px;
+  border-top: 1px solid var(--mk-line);
+}
+
+.mk-brain__num {
+  display: block;
+  margin-bottom: 14px;
+  font-family: var(--mk-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--mk-accent);
+}
+
+.mk-brain__step h3 {
+  margin: 0 0 8px;
+  font-family: var(--mk-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+}
+
+.mk-brain__step p {
+  margin: 0;
+  font-size: 14.4px;
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+}
+
+/* ==========================================================================
+   FEATURE PAGE SHELL
+   Every dedicated page uses this: a stated hero, then plain content sections.
+   ========================================================================== */
+
+.mk-phero {
+  position: relative;
+  padding-top: clamp(124px, 16vh, 172px);
+  padding-bottom: clamp(48px, 7vh, 78px);
+  overflow: hidden;
+}
+
+.mk-phero::before {
+  content: "";
+  position: absolute;
+  top: -30%; right: -10%;
+  width: min(680px, 62vw);
+  height: min(680px, 62vw);
+  background: radial-gradient(circle, var(--mk-accent-glow) 0%, transparent 62%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.mk-phero__inner { position: relative; z-index: 1; max-width: 720px; }
+
+.mk-phero__title {
+  margin: 0 0 18px;
+  font-family: var(--mk-display);
+  font-size: clamp(38px, 5.4vw, 66px);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: var(--mk-ink);
+}
+
+.mk-phero__lede {
+  margin: 0 0 30px;
+  font-size: clamp(16px, 1.35vw, 18.5px);
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+  max-width: 60ch;
+}
+
+/* These sections handed their demo to the hero, so their header is now the
+   last thing in them. .mk-head carries a large bottom margin meant to separate
+   it from the visual that followed; without that visual it reads as a hole at
+   the foot of the section. */
+.mk-head--solo { margin-bottom: 0; }
+
+/* A page that opens straight into a section rather than a hero: .mk-nav is
+   fixed, so the first block has to supply the clearance the hero used to. */
+.mk-section--top { padding-top: clamp(124px, 16vh, 172px); }
+
+
+/* The section's own demo, standing where the lede used to. It is a sibling of
+   .mk-phero__inner rather than a child because that column is capped at 720px
+   and these demos are built for 900-1000px; z-index lifts it over the hero's
+   radial glow, the same way the text column is lifted. */
+.mk-phero__visual {
+  position: relative;
+  z-index: 1;
+  margin-top: clamp(26px, 4vh, 44px);
+}
+
+/* Breadcrumb back to the homepage */
+.mk-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  font-size: 12.5px;
+  color: var(--mk-ink-3);
+  text-decoration: none;
+  transition: color 200ms var(--mk-ease);
+}
+
+.mk-crumb:hover { color: var(--mk-accent); }
+
+/* ---- Capability list: the substance of each page ---- */
+
+.mk-caps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(26px, 3.4vw, 48px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mk-caps--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.mk-cap {
+  padding-top: 22px;
+  border-top: 1px solid var(--mk-line);
+}
+
+.mk-cap__k {
+  display: block;
+  margin-bottom: 12px;
+  font-family: var(--mk-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+}
+
+.mk-cap h3 {
+  margin: 0 0 9px;
+  font-family: var(--mk-display);
+  font-size: 18.5px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+}
+
+.mk-cap p {
+  margin: 0;
+  font-size: 14.4px;
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+}
+
+/* ---- Ordered workflow ---- */
+
+.mk-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0;
+  max-width: 840px;
+}
+
+.mk-step {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 22px;
+  padding: 26px 0;
+  border-bottom: 1px solid var(--mk-line);
+}
+
+.mk-step:first-child { border-top: 1px solid var(--mk-line); }
+
+.mk-step__n {
+  font-family: var(--mk-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--mk-accent);
+  padding-top: 3px;
+}
+
+.mk-step h3 {
+  margin: 0 0 7px;
+  font-family: var(--mk-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--mk-ink);
+}
+
+.mk-step p {
+  margin: 0;
+  font-size: 14.4px;
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+}
+
+/* ---- Honest status note, for anything not fully built ---- */
+
+.mk-note {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  max-width: 780px;
+  padding: 20px 22px;
+  border: 1px solid var(--mk-line);
+  border-left: 2px solid var(--mk-accent);
+  border-radius: 0 12px 12px 0;
+  background: var(--mk-bg-tint);
+}
+
+.mk-note__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--mk-accent);
+  margin-top: 2px;
+}
+
+.mk-note__icon svg { width: 100%; height: 100%; display: block; }
+
+.mk-note h3 {
+  margin: 0 0 6px;
+  font-family: var(--mk-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--mk-ink);
+}
+
+.mk-note p {
+  margin: 0;
+  font-size: 13.8px;
+  line-height: 1.6;
+  color: var(--mk-ink-2);
+}
+
+/* ---- Simple key/value spec table ---- */
+
+.mk-spec {
+  width: 100%;
+  border-collapse: collapse;
+  max-width: 840px;
+  font-size: 14.2px;
+}
+
+.mk-spec th,
+.mk-spec td {
+  text-align: left;
+  padding: 15px 16px 15px 0;
+  border-bottom: 1px solid var(--mk-line);
+  vertical-align: top;
+}
+
+.mk-spec th {
+  width: 34%;
+  font-family: var(--mk-display);
+  font-weight: 600;
+  color: var(--mk-ink);
+}
+
+.mk-spec td { color: var(--mk-ink-2); line-height: 1.6; }
+
+/* ==========================================================================
+   SECURITY & PRIVACY
+   Four small components this page needs, built from the existing tokens so it
+   reads as part of the site rather than a document pasted into it.
+   ========================================================================== */
+
+/* The two-sided claim list. Both columns are the same component; only the
+   marker and its colour separate what is built from what is not. */
+.mk-claims {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(26px, 3.4vw, 48px);
+}
+
+.mk-claims__col { padding-top: 22px; border-top: 1px solid var(--mk-line); }
+
+.mk-claims__k {
+  display: block;
+  margin-bottom: 16px;
+  font-family: var(--mk-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+}
+.mk-claims__col--no .mk-claims__k { color: var(--mk-ink-3); }
+
+.mk-claims ul {
+  display: grid;
+  gap: 13px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mk-claims li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 11px;
+  font-size: 14.4px;
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+}
+
+.mk-claims li::before {
+  content: "\2014";
+  color: var(--mk-ink-3);
+}
+.mk-claims__col--yes li::before { content: "\2713"; color: var(--mk-accent); }
+
+/* ---- Security questions ---- */
+
+.mk-faq { max-width: 880px; }
+
+.mk-faq__item { border-top: 1px solid var(--mk-line); }
+.mk-faq__item:last-child { border-bottom: 1px solid var(--mk-line); }
+
+.mk-faq__q { margin: 0; }
+
+.mk-faq__btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  width: 100%;
+  padding: 21px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--mk-display);
+  font-size: 16.5px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  line-height: 1.4;
+  color: var(--mk-ink);
+  transition: color 0.18s ease;
+}
+.mk-faq__btn:hover { color: var(--mk-accent); }
+.mk-faq__btn:focus-visible { outline: 2px solid var(--mk-accent); outline-offset: 3px; }
+
+.mk-faq__chev {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--mk-ink-3);
+  transition: transform 0.3s ease, color 0.18s ease;
+}
+.mk-faq__btn:hover .mk-faq__chev { color: var(--mk-accent); }
+.mk-faq__item.is-open .mk-faq__chev { transform: rotate(180deg); color: var(--mk-accent); }
+
+/* Height animates via grid-template-rows rather than a guessed max-height, so
+   an answer of any length opens to exactly its own height. */
+.mk-faq__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s ease;
+}
+.mk-faq__item.is-open .mk-faq__panel { grid-template-rows: 1fr; }
+
+/* visibility, not display, so the panel can transition; it still keeps a
+   collapsed answer out of the tab order and the accessibility tree. */
+.mk-faq__inner { overflow: hidden; visibility: hidden; transition: visibility 0.32s; }
+.mk-faq__item.is-open .mk-faq__inner { visibility: visible; }
+
+.mk-faq__inner p {
+  margin: 0;
+  padding: 0 0 23px;
+  max-width: 70ch;
+  font-size: 14.6px;
+  line-height: 1.68;
+  color: var(--mk-ink-2);
+}
+
+/* ---- Closing CTA shared by the feature pages ---- */
+
+.mk-pcta {
+  padding: clamp(64px, 9vh, 110px) 0;
+  border-top: 1px solid var(--mk-line);
+  text-align: center;
+}
+
+.mk-pcta h2 {
+  margin: 0 0 14px;
+  font-family: var(--mk-display);
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  color: var(--mk-ink);
+}
+
+.mk-pcta p {
+  margin: 0 auto 28px;
+  max-width: 52ch;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--mk-ink-2);
+}
+
+.mk-pcta__row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Cross links to the other feature pages */
+.mk-more {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 34px;
+  justify-content: center;
+}
+
+.mk-more a {
+  padding: 9px 15px;
+  border: 1px solid var(--mk-line);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--mk-ink-2);
+  text-decoration: none;
+  transition: all 200ms var(--mk-ease);
+}
+
+.mk-more a:hover {
+  border-color: var(--mk-accent);
+  color: var(--mk-accent);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 1080px) {
+  /* Seven across stops being legible well before the nav collapses. */
+  .mk-fbar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mk-duo { grid-template-columns: 1fr; gap: 34px; }
+  .mk-duo--flip .mk-head { order: 0; }
+  .mk-duo--flip .mk-mini { order: 0; }
+  .mk-brain { grid-template-columns: 1fr; gap: 26px; margin-top: 40px; }
+  .mk-caps--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  .mk-fbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 10px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+  .mk-fbar__item { padding: 14px 12px 15px; }
+  .mk-caps, .mk-caps--three { grid-template-columns: 1fr; gap: 26px; }
+  .mk-claims { grid-template-columns: 1fr; gap: 26px; }
+  .mk-faq__btn { font-size: 15.5px; gap: 16px; }
+  .mk-phero__title { font-size: 34px; }
+  .mk-step { grid-template-columns: 38px minmax(0, 1fr); gap: 14px; }
+  .mk-spec th, .mk-spec td { display: block; width: 100%; }
+  .mk-spec th { border-bottom: 0; padding-bottom: 4px; }
+}
+
+@media (max-width: 480px) {
+  /* One column keeps the label and description readable at this width. */
+  .mk-fbar { grid-template-columns: 1fr; }
+  .mk-fbar__item { flex-direction: row; align-items: center; gap: 12px; padding: 12px; }
+  .mk-fbar__icon { width: 22px; height: 22px; margin: 0; }
+  .mk-fbar__name { flex: 1; }
+  .mk-fbar__desc { display: none; }
+  .mk-mini { padding: 20px; }
+  .mk-pcta__row .mk-btn { flex: 1; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-fbar__item:hover { transform: none; }
+  .mk-faq__panel,
+  .mk-faq__inner,
+  .mk-faq__chev { transition: none; }
+}
+
+
+/* ==========================================================================
+   VARTA VOICE ORB
+   Lifted verbatim from css/styles.css (the signed-in app), so the marketing
+   page shows the same orb, the same pulse rings and the same state
+   choreography the product actually uses. Scoped under .mk-orb so nothing
+   here can affect the app.
+   ========================================================================== */
+
+.mk-orb .voice-orb-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 48px;
+}
+.mk-orb .voice-orb {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #4facfe, #00f2fe);
+  box-shadow: 0 0 40px rgba(79, 172, 254, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.5);
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 2;
+}
+
+/* Pulse rings for Listening state */
+.mk-orb .voice-orb-ring {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 2px solid rgba(79, 172, 254, 0.5);
+  opacity: 0;
+  z-index: 1;
+}
+
+/* States */
+.mk-orb .state-listening .voice-orb {
+  animation: orb-breathe 2s ease-in-out infinite alternate;
+}
+.mk-orb .state-listening .voice-orb-ring {
+  animation: ripple 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.mk-orb .state-listening .voice-orb-ring.delay {
+  animation-delay: 1s;
+}
+
+.mk-orb .state-processing .voice-orb {
+  animation: orb-spin 1.5s linear infinite;
+  background: radial-gradient(circle at 50% 0%, #ff0844, #ffb199);
+  box-shadow: 0 0 40px rgba(255, 8, 68, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+/* Speaking is handled dynamically by JS (scale transform) + rapid breathing */
+.mk-orb .state-speaking .voice-orb {
+  background: radial-gradient(circle at 70% 30%, #43e97b, #38f9d7);
+  box-shadow: 0 0 60px rgba(67, 233, 123, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.5);
+  /* Transform scale is modified by JS inline styles */
+}
+
+@keyframes orb-breathe {
+  0% { transform: scale(1); box-shadow: 0 0 40px rgba(79, 172, 254, 0.4); }
+  100% { transform: scale(1.05); box-shadow: 0 0 60px rgba(79, 172, 254, 0.6); }
+}
+
+@keyframes ripple {
+  0% { width: 140px; height: 140px; opacity: 1; }
+  100% { width: 300px; height: 300px; opacity: 0; border-width: 0px; }
+}
+
+@keyframes orb-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(0.95); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+
+/* Cyan recolour, exactly as css/app-theme.css applies it in the app. */
+.mk-orb .voice-orb {
+  background: radial-gradient(circle at 30% 30%, #d7fbff, #00e5ff);
+  box-shadow: 0 0 40px rgba(0,229,255,0.40), inset 0 0 20px rgba(255,255,255,0.35);
+}
+.mk-orb .voice-orb-ring { border-color: rgba(0,229,255,0.5); }
+.mk-orb .state-processing .voice-orb {
+  background: radial-gradient(circle at 50% 0%, #ffffff, #00b8cc);
+  box-shadow: 0 0 40px rgba(0,229,255,0.45), inset 0 0 20px rgba(255,255,255,0.35);
+}
+.mk-orb .state-speaking .voice-orb {
+  background: radial-gradient(circle at 70% 30%, #eafdff, #00c8dc);
+  box-shadow: 0 0 60px rgba(0,229,255,0.60), inset 0 0 20px rgba(255,255,255,0.35);
+}
+/* Same name, later in the cascade, so the blue glow is dropped. */
+@keyframes orb-breathe {
+  0%   { transform: scale(1);    box-shadow: 0 0 40px rgba(0,229,255,0.40); }
+  100% { transform: scale(1.05); box-shadow: 0 0 60px rgba(0,229,255,0.60); }
+}
+
+/* Page framing for the orb. The orb itself is untouched. */
+.mk-orb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(30px, 5vw, 56px) 0 clamp(10px, 2vw, 24px);
+}
+
+.mk-orb__status {
+  margin: 0 0 8px;
+  font-family: var(--mk-display);
+  font-size: clamp(20px, 2.4vw, 27px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--mk-ink);
+  text-align: center;
+  min-height: 1.2em;
+}
+
+.mk-orb__hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mk-ink-3);
+  text-align: center;
+  min-height: 1.4em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-orb .voice-orb,
+  .mk-orb .voice-orb-ring { animation: none !important; }
+  .mk-orb .voice-orb-ring { opacity: 0.35; }
+}
+
+/* ==========================================================================
+   HERO CAPABILITY ROW
+   Five words that state the scope of the platform in the first viewport,
+   set as plain type rather than another row of cards.
+   ========================================================================== */
+
+.mk-hero__does {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 0;
+  margin: 0 0 30px;
+  padding: 0;
+  list-style: none;
+  animation: mkFadeUp 800ms var(--mk-ease) 700ms both;
+}
+
+.mk-hero__does li {
+  font-family: var(--mk-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--mk-ink-2);
+  white-space: nowrap;
+}
+
+/* A hairline separator between items, drawn rather than typed, so no dash
+   characters appear in the copy. */
+.mk-hero__does li + li::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin: 0 12px;
+  border-radius: 50%;
+  background: var(--mk-accent);
+  vertical-align: middle;
+}
+
+@media (max-width: 480px) {
+  .mk-hero__does { gap: 8px 0; margin-bottom: 24px; }
+  .mk-hero__does li { font-size: 12.5px; }
+  .mk-hero__does li + li::before { margin: 0 9px; }
+}
+
+
+/* ==========================================================================
+   DEVANAGARI TYPOGRAPHY
+   The eyebrows and labels are set as tracked uppercase, which is a Latin
+   convention. Devanagari has no case, and letter-spacing pulls its conjuncts
+   apart, so in Hindi those rules are relaxed: normal tracking, no transform,
+   and a little more line height for the taller matras.
+   ========================================================================== */
+
+[data-lang="hi"] .mk-eyebrow,
+[data-lang="hi"] .mk-fbar__desc,
+[data-lang="hi"] .mk-cap__k,
+[data-lang="hi"] .mk-sec__label,
+[data-lang="hi"] .mk-tile__k,
+[data-lang="hi"] .mk-readout__label,
+[data-lang="hi"] .mk-brain__num,
+[data-lang="hi"] .mk-step__n,
+[data-lang="hi"] .canvas-kicker,
+[data-lang="hi"] .mk-post__cat,
+[data-lang="hi"] .auth-eyebrow,
+[data-lang="hi"] .mk-field > span,
+[data-lang="hi"] .step-count,
+[data-lang="hi"] .eyebrow,
+[data-lang="hi"] .llf-hero__eyebrow,
+[data-lang="hi"] .llf-sec__label,
+[data-lang="hi"] .llf-freedom__label,
+[data-lang="hi"] .llf-break__title,
+[data-lang="hi"] .llf-verdict__tag,
+[data-lang="hi"] .llf-tradeoff__label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* Headlines are tightened for Latin; Devanagari needs that tracking back. */
+[data-lang="hi"] .mk-hero__title,
+[data-lang="hi"] .mk-h1,
+[data-lang="hi"] .mk-h2,
+[data-lang="hi"] .mk-phero__title,
+[data-lang="hi"] .auth-title,
+[data-lang="hi"] .llf-hero__title,
+[data-lang="hi"] .llf-sec h2 {
+  letter-spacing: -0.005em;
+  line-height: 1.24;
+}

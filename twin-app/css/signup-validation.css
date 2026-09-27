@@ -1,0 +1,52 @@
+/* ==========================================================================
+   MoneyKal — sign-up field errors
+
+   The visual half of js/signup-rules.js. Loaded after css/login.css on
+   register.html and uses only its tokens: --mk-danger for the failure state,
+   the same red css/terms.css uses for the Terms consent error, so every
+   "this needs your attention" in the auth flow looks the same.
+   ========================================================================== */
+
+body.auth-page .mk-field.is-invalid .ob-input,
+body.auth-page .mk-field.is-invalid .ob-input:hover:not(:focus) {
+  border-color: var(--mk-danger);
+}
+
+body.auth-page .mk-field.is-invalid .ob-input:focus {
+  border-color: var(--mk-danger);
+  box-shadow: 0 0 0 3px var(--mk-danger-12);
+}
+
+/* The label follows the field: red while invalid, even while focused, so the
+   eye goes from the message straight back to what needs fixing. */
+.mk-field.is-invalid > span:first-child,
+.mk-field.is-invalid:focus-within > span:first-child {
+  color: var(--mk-danger);
+}
+
+/* Scoped through .mk-field on purpose: the message is a <span> inside the
+   field, and css/login.css styles `.mk-field > span` (and its :focus-within
+   variant) as the uppercase label. These selectors out-rank both. */
+.mk-field > .mk-field__error,
+.mk-field:focus-within > .mk-field__error,
+.mk-field.is-invalid:focus-within > .mk-field__error {
+  display: block;
+  margin-top: -2px;
+  font-family: var(--mk-body);
+  font-size: 12.4px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--mk-danger);
+  animation: mkFieldErrorIn 0.22s var(--mk-ease) both;
+}
+
+@keyframes mkFieldErrorIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-field > .mk-field__error { animation: none; }
+}

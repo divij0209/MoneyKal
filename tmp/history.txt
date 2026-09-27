@@ -1,0 +1,9 @@
+77f6a10054b1 -> 7d3d78c3ca00 (head), add_raw_inputs_to_profiles
+65e5f09943e9 -> 77f6a10054b1, add gst_number to startup_profiles
+54c4d08832d8 -> 65e5f09943e9, add enterprise profiles
+c8d2e4f6a7b9 -> 54c4d08832d8, add gmail connections
+b7c1d9e2f3a4 -> c8d2e4f6a7b9, Add startup_weekly_reports table
+a1b2c3d4e5f6 -> b7c1d9e2f3a4, Add source/updated_at to startup_transactions
+924c02a1e5cb -> a1b2c3d4e5f6, Add startup journey tables
+f86cb78ea0d2 -> 924c02a1e5cb, Add chat sessions
+<base> -> f86cb78ea0d2, Initial PostgreSQL schema

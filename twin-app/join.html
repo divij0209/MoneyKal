@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You have been invited | Money Splits</title>
+  <meta name="description" content="Someone invited you to split expenses on MoneyKal. Accept the invitation to see what you owe and what you are owed.">
+  <meta name="robots" content="noindex">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <!-- The public-page stylesheet, so this reads as part of the marketing site
+       rather than the logged-in app. Everything below uses its --mk- tokens. -->
+  <link rel="stylesheet" href="css/home.css?v=4">
+
+  <script>
+    // Match the rest of the public site: honour the saved theme before paint so
+    // a refresh does not flash the wrong palette.
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+
+  <style>
+    /* Scoped to this page only. It is a single-purpose landing card, so it does
+       not reuse the marketing section rhythm — that layout is built for long
+       scrolling pages and would leave this stranded at the top of a tall page. */
+    .jn-page{
+      min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:28px 20px;
+      background:var(--mk-bg);
+    }
+    .jn-card{
+      width:100%; max-width:460px;
+      background:var(--mk-surface);
+      border:1px solid var(--mk-line);
+      border-radius:18px;
+      padding:34px 32px 32px;
+      box-shadow:var(--mk-shadow);
+    }
+    .jn-brand{
+      display:flex; align-items:center; gap:9px;
+      font-family:'Poppins',sans-serif; font-weight:600; font-size:16px;
+      color:var(--mk-ink); margin-bottom:26px; text-decoration:none;
+    }
+    .jn-brand svg,
+    .jn-brand img{ width:26px; height:26px; object-fit:contain; }
+
+    /* Money Splits accents. Same restraint as the feature itself: the page is
+       neutral, and the only colour is the accent on the one action that
+       matters plus green where money is genuinely coming to someone. */
+    .jn-card{ --jn-green:#00A97A; }
+    [data-theme="dark"] .jn-card{ --jn-green:#2EE6A8; }
+
+    .jn-eyebrow{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+      font-weight:800; color:var(--mk-accent);
+      background:var(--mk-accent-tint);
+      border:1px solid var(--mk-line-strong);
+      border-radius:999px; padding:5px 12px; margin-bottom:14px;
+    }
+    .jn-title span{ color:var(--mk-accent); }
+    .jn-props{
+      list-style:none; padding:0; margin:0 0 24px;
+      display:flex; flex-direction:column; gap:9px;
+    }
+    .jn-props li{
+      display:flex; align-items:flex-start; gap:9px;
+      font-size:13px; line-height:1.5; color:var(--mk-ink-2);
+    }
+    .jn-props b{ color:var(--mk-ink); font-weight:600; }
+    .jn-props span{ flex-shrink:0; font-size:15px; line-height:1.35;
+      font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif; }
+    .jn-title{
+      font-family:'Poppins',sans-serif;
+      font-size:26px; line-height:1.25; font-weight:600;
+      color:var(--mk-ink); letter-spacing:-0.02em; margin:0 0 12px;
+    }
+    .jn-lede{ font-size:14.5px; line-height:1.6; color:var(--mk-ink-2); margin:0 0 24px; }
+    .jn-lede b{ color:var(--mk-ink); font-weight:600; }
+
+    .jn-group{
+      display:flex; align-items:center; gap:13px;
+      background:var(--mk-bg-tint);
+      border:1px solid var(--mk-line);
+      border-radius:12px;
+      padding:14px 16px; margin-bottom:24px;
+    }
+    .jn-group{ position:relative; overflow:hidden; }
+    .jn-group::after{
+      content:""; position:absolute; inset:0 auto 0 0; width:2px;
+      background:var(--mk-accent);
+    }
+    .jn-group__icon{
+      width:46px; height:46px; border-radius:13px;
+      background:var(--mk-surface); border:1px solid var(--mk-line);
+      display:flex; align-items:center; justify-content:center; font-size:23px;
+      flex-shrink:0;
+      font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+    }
+    .jn-group__name{ font-weight:600; font-size:15px; color:var(--mk-ink); }
+    .jn-group__meta{ font-size:12.5px; color:var(--mk-ink-3); margin-top:2px; }
+
+    .jn-tabs{ display:flex; gap:4px; border-bottom:1px solid var(--mk-line); margin-bottom:20px; }
+    .jn-tab{
+      appearance:none; background:none; border:none;
+      border-bottom:2px solid transparent; margin-bottom:-1px;
+      padding:10px 14px; font-size:13.5px; font-weight:500;
+      color:var(--mk-ink-3); cursor:pointer; font-family:inherit;
+    }
+    .jn-tab.is-active{ color:var(--mk-accent); border-bottom-color:var(--mk-accent); }
+
+    .jn-field{ margin-bottom:14px; }
+    .jn-field label{
+      display:block; font-size:12px; font-weight:500;
+      color:var(--mk-ink-2); margin-bottom:6px;
+    }
+    .jn-field input{
+      width:100%; box-sizing:border-box;
+      background:var(--mk-bg-tint);
+      border:1px solid var(--mk-line-strong);
+      border-radius:9px; padding:11px 13px;
+      color:var(--mk-ink); font-size:14.5px; font-family:inherit;
+    }
+    .jn-field input:focus{ outline:none; border-color:var(--mk-accent); }
+    .jn-field input[readonly]{ color:var(--mk-ink-3); }
+
+    .jn-btn{
+      appearance:none; width:100%;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      background:var(--mk-accent);
+      color:var(--mk-on-accent);
+      border:1px solid transparent; border-radius:12px;
+      padding:14px 20px; font-size:14.5px; font-weight:650;
+      cursor:pointer; font-family:inherit; margin-top:8px;
+      box-shadow:0 8px 22px var(--mk-accent-glow);
+      transition:transform .15s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease;
+    }
+    .jn-btn:hover{ transform:translateY(-2px); box-shadow:0 14px 30px var(--mk-accent-glow); }
+    .jn-btn:active{ transform:translateY(0) scale(.99); }
+    .jn-btn:disabled{ opacity:.55; cursor:progress; }
+    .jn-btn--ghost{
+      background:transparent; color:var(--mk-ink-2);
+      border-color:var(--mk-line-strong);
+    }
+    .jn-btn--ghost:hover{ background:var(--mk-bg-tint); color:var(--mk-ink); }
+
+    .jn-msg{
+      font-size:13px; line-height:1.55; border-radius:9px;
+      padding:11px 13px; margin-bottom:16px;
+      background:var(--mk-accent-tint);
+      border:1px solid var(--mk-line);
+      border-left:3px solid var(--mk-accent);
+      color:var(--mk-ink-2);
+    }
+    .jn-foot{
+      font-size:12.5px; color:var(--mk-ink-3);
+      margin-top:20px; padding-top:18px;
+      border-top:1px solid var(--mk-line); line-height:1.6;
+    }
+    .jn-foot a{ color:var(--mk-accent); }
+    [hidden]{ display:none !important; }
+  
+    .jn-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .jn-lang {
+      border:1px solid var(--mk-line, rgba(128,128,128,.3)); background:transparent;
+      color:inherit; border-radius:6px; padding:4px 9px; font:inherit; font-size:12px;
+      cursor:pointer; white-space:nowrap;
+    }
+    .jn-lang:hover { border-color: var(--mk-accent, #06b6d4); }
+  </style>
+</head>
+
+<body class="mk">
+  <div class="jn-page">
+    <div class="jn-card">
+      <div class="jn-head">
+        <a class="jn-brand" href="index.html">
+          <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+          <span>MoneyKal</span>
+        </a>
+        <!-- Same control and same stored preference as every other page. An
+             invite is often someone's first contact with MoneyKal, so the
+             choice has to be available before they have an account. -->
+        <button type="button" class="lang-toggle jn-lang" aria-label="Switch to Hindi"><b>EN</b> | हिं</button>
+      </div>
+
+      <div id="jnBody">
+        <p class="jn-lede">Checking your invitation…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Must load before any script that calls the API: it resolves the
+       backend base URL for local, tunnelled and deployed builds alike. -->
+  <script src="js/config.js?v=1"></script>
+  <!-- Money Splits invites are opened by people who may never have seen
+       the product before, and often on a phone. The same engine and the
+       same stored preference as every other page. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/api.js?v=7"></script>
+  <script>
+  /* ==========================================================================
+     Invitation landing page.
+
+     The token in the URL is the whole credential, and it is deliberately weak:
+     GET /split/invite/{token} is unauthenticated and returns only who invited
+     you and the group's name — never its expenses or balances. Everything that
+     reveals money requires a signed-in account that is actually a member.
+
+     Sign-up and sign-in are inline rather than a redirect to register.html,
+     because bouncing away would either lose the token or require stashing it
+     somewhere; keeping the whole flow on one page means the invitation is
+     accepted in the same breath as the account is created.
+     ========================================================================== */
+  (function () {
+    'use strict';
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const body = document.getElementById('jnBody');
+
+    function esc(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function session() {
+      try { return JSON.parse(localStorage.getItem('twin_session') || '{}'); }
+      catch (e) { return {}; }
+    }
+
+    function fail(title, text) {
+      body.innerHTML = `
+        <h1 class="jn-title">${esc(title)}</h1>
+        <p class="jn-lede">${esc(text)}</p>
+        <a class="jn-btn jn-btn--ghost" href="index.html" style="text-decoration:none">Go to MoneyKal</a>`;
+    }
+
+    async function start() {
+      if (!token) return fail('No invitation found', 'This link is missing its invitation code. Ask whoever invited you to send it again.');
+
+      let invite;
+      try {
+        invite = await window.api.split.previewInvite(token);
+      } catch (e) {
+        return fail('This invitation is not valid', e.message || 'It may have been revoked or have expired.');
+      }
+      render(invite);
+    }
+
+    function render(invite) {
+      const groupBlock = invite.group ? `
+        <div class="jn-group">
+          <div class="jn-group__icon">${esc(invite.group.emoji || '👥')}</div>
+          <div>
+            <div class="jn-group__name">${esc(invite.group.name)}</div>
+            <div class="jn-group__meta">Shared expense group</div>
+          </div>
+        </div>` : '';
+
+      // Three lines answering the only questions someone who has never heard of
+      // MoneyKal actually has at this moment: what is this, does it cost me
+      // anything, and what happens to what is already recorded against my name.
+      const props = `
+        <ul class="jn-props">
+          <li><span aria-hidden="true">💚</span><div>See exactly <b>who owes what</b> — worked out from real expenses, not guesses.</div></li>
+          <li><span aria-hidden="true">✨</span><div>Splitting is <b>free</b>, for you and everyone you split with.</div></li>
+          <li><span aria-hidden="true">🔗</span><div>Your balance <b>comes with you</b> — no duplicate account.</div></li>
+        </ul>`;
+
+      const lede = invite.group
+        ? `<b>${esc(invite.invited_by)}</b> has added you to <b>${esc(invite.group.name)}</b> on Money Splits. Any expenses already recorded against your name are waiting for you.`
+        : `<b>${esc(invite.invited_by)}</b> wants to split expenses with you on Money Splits.`;
+
+      const sess = session();
+
+      if (sess.token) {
+        body.innerHTML = `
+          <div class="jn-eyebrow"><span aria-hidden="true">💸</span> Money Splits</div>
+          <h1 class="jn-title"><span>${esc(invite.invited_by)}</span> invited you</h1>
+          <p class="jn-lede">${lede}</p>
+          ${groupBlock}
+          <div id="jnMsg"></div>
+          <button class="jn-btn" id="jnAccept">🎉 Accept invitation</button>
+          <div class="jn-foot">
+            Signed in as ${esc(sess.username || 'your account')}.
+            <a href="#" id="jnSwitch">Use a different account</a>.
+          </div>`;
+        document.getElementById('jnAccept').addEventListener('click', accept);
+        document.getElementById('jnSwitch').addEventListener('click', ev => {
+          ev.preventDefault();
+          localStorage.removeItem('twin_session');
+          render(invite);
+        });
+        return;
+      }
+
+      body.innerHTML = `
+        <div class="jn-eyebrow"><span aria-hidden="true">💸</span> Money Splits</div>
+        <h1 class="jn-title"><span>${esc(invite.invited_by)}</span> invited you</h1>
+        <p class="jn-lede">${lede}</p>
+        ${groupBlock}
+        ${props}
+        <div class="jn-tabs">
+          <button class="jn-tab is-active" data-mode="register">Create an account</button>
+          <button class="jn-tab" data-mode="login">I already have one</button>
+        </div>
+        <div id="jnMsg"></div>
+        <form id="jnForm">
+          <div class="jn-field">
+            <label for="jnEmail">Email address</label>
+            <input id="jnEmail" type="email" autocomplete="username"
+                   value="${esc(invite.invited_email || '')}" placeholder="you@example.com" required>
+          </div>
+          <div class="jn-field">
+            <label for="jnPass">Password</label>
+            <input id="jnPass" type="password" autocomplete="current-password"
+                   placeholder="At least 8 characters" required>
+          </div>
+          <button class="jn-btn" type="submit" id="jnGo">🎉 Create account and join</button>
+        </form>
+        <div class="jn-foot" id="jnHint">
+          ${invite.invited_email
+            ? `Sign up with <b>${esc(invite.invited_email)}</b> and everything already recorded against your name — every expense and balance — comes with you automatically. No duplicate account is created.`
+            : 'Creating an account joins you to this group straight away.'}
+        </div>`;
+
+      let mode = 'register';
+      document.querySelectorAll('.jn-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          mode = tab.dataset.mode;
+          document.querySelectorAll('.jn-tab').forEach(t =>
+            t.classList.toggle('is-active', t.dataset.mode === mode));
+          document.getElementById('jnGo').textContent =
+            mode === 'register' ? '🎉 Create account and join' : '🎉 Sign in and join';
+          document.getElementById('jnPass').setAttribute(
+            'autocomplete', mode === 'register' ? 'new-password' : 'current-password');
+          document.getElementById('jnMsg').innerHTML = '';
+        });
+      });
+
+      document.getElementById('jnForm').addEventListener('submit', async ev => {
+        ev.preventDefault();
+        const btn = document.getElementById('jnGo');
+        const msg = document.getElementById('jnMsg');
+        const username = document.getElementById('jnEmail').value.trim();
+        const password = document.getElementById('jnPass').value;
+        msg.innerHTML = '';
+        btn.disabled = true;
+
+        try {
+          const res = await fetch(`${API_BASE}/auth/${mode}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.detail || (mode === 'register'
+            ? 'Could not create that account' : 'Those credentials were not recognised'));
+
+          // Exactly the shape js/auth.js writes — camelCase userId/profileKey.
+          // login.html and register.html both branch on sess.profileKey, so a
+          // session stored in any other shape sends the user round the
+          // onboarding loop for ever.
+          localStorage.setItem('twin_session', JSON.stringify({
+            token: data.access_token,
+            userId: data.user_id,
+            username: data.username,
+            profileKey: data.profile_key
+          }));
+          await accept(data.profile_key);
+        } catch (e) {
+          btn.disabled = false;
+          msg.innerHTML = `<div class="jn-msg">${esc(e.message)}</div>`;
+        }
+      });
+    }
+
+    async function accept(profileKey) {
+      const msg = document.getElementById('jnMsg');
+      const btn = document.getElementById('jnAccept') || document.getElementById('jnGo');
+      if (btn) btn.disabled = true;
+      if (profileKey === undefined) profileKey = session().profileKey;
+
+      try {
+        const r = await window.api.split.acceptInvite(token);
+
+        // Land the user on the group they were invited to, not a generic
+        // dashboard — the invitation is the context, and losing it makes the
+        // first thing they see feel unrelated to why they clicked.
+        //
+        // A brand-new account has no profile yet, and dashboard.html signs
+        // such a user straight back out to login.html. So they go where every
+        // other new account goes — the onboarding wizard — with the group
+        // parked in localStorage for split.js to pick up on the far side.
+        if (r.group_id) {
+          try { localStorage.setItem('moneykal_split_pending_group', String(r.group_id)); }
+          catch (e) { /* private mode: they just land on the Split home instead */ }
+        }
+        const onboarded = profileKey && String(profileKey).trim() !== '';
+        window.location.href = onboarded
+          ? (r.group_id ? `dashboard.html?split_group=${encodeURIComponent(r.group_id)}` : 'dashboard.html')
+          : 'register.html?resume=true';
+      } catch (e) {
+        if (btn) btn.disabled = false;
+        if (msg) msg.innerHTML = `<div class="jn-msg">${esc(e.message)}</div>`;
+      }
+    }
+
+    start();
+  })();
+  </script>
+</body>
+
+</html>

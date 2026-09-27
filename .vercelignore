@@ -1,0 +1,26 @@
+# Vercel serves twin-app/ (the project's Root Directory is "twin-app"), so
+# everything below is uploaded for nothing. The API, the Expo app and the local
+# tooling are deployed elsewhere -- Railway and EAS -- and none of it is ever
+# read by this static site.
+backend/
+alembic/
+alembic.ini
+mobile/
+tests/
+scripts/
+docs/
+backups/
+.tools/
+Dockerfile
+railway.toml
+render.yaml
+migrate.py
+voice_tunnel.py
+*.log
+
+# Superseded page drafts kept for reference, not for serving. auth.js and
+# register.html in here still call http://127.0.0.1:8000 directly, which on a
+# deployed site points at the visitor's own machine, so publishing them would
+# put a dead -- and confusing -- login and signup page on the public origin
+# alongside the real ones.
+twin-app/.redesign-backup/

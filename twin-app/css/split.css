@@ -1,0 +1,1273 @@
+/* ==========================================================================
+   Money Splits
+
+   Scoped entirely to #view-split and the .sp-* elements this feature appends
+   to <body> (modal, inbox, toast), so load order relative to styles.css /
+   app-theme.css / overview.css does not matter and nothing here can reach
+   another view.
+
+   COLOUR — three colours, each with one job
+   ----------------------------------------
+   The surface is neutral. Roughly nine tenths of what is on screen is dark
+   charcoal, off-white type and hairline borders; colour appears only where it
+   carries meaning, and never as decoration.
+
+     cyan    #00E5FF   the primary action — add, record, confirm
+     green   #2EE6A8   money coming back to you, and nothing else
+     coral   #FF8A5B   money you owe, and error states, and nothing else
+
+   There are no other accent hues, and no gradients at all. Depth comes from
+   borders, spacing, shadow and type weight; coloured light is never painted
+   behind a card. The test of any colour here is whether removing it would lose
+   information — if not, it should not be there.
+
+   Emoji carry the warmth instead. They make the product feel social without
+   spending the palette on it, which is why they survived the tone-down.
+
+   The tokens are declared on <body> rather than inside #view-split because the
+   modal, the notification inbox and the toast are portalled to <body> and
+   would otherwise fall outside the scope that defines them.
+   ========================================================================== */
+
+/* ============ Dark — the default ============ */
+html:not([data-ov-theme="light"]) body{
+  --sp-bg:#0A0C0F;
+  --sp-surface:#131619;
+  --sp-surface-2:#191D22;
+  --sp-surface-3:#21262C;
+  --sp-line:rgba(255,255,255,0.08);
+  --sp-line-2:rgba(255,255,255,0.14);
+
+  --sp-ink:#FFFFFF;
+  --sp-ink-2:#A7B0B9;
+  --sp-ink-3:#6B7480;
+
+  --sp-cyan:#00E5FF;
+  --sp-cyan-soft:rgba(0,229,255,0.10);
+  --sp-cyan-line:rgba(0,229,255,0.32);
+  --sp-on-cyan:#00181C;
+
+  --sp-green:#2EE6A8;
+  --sp-green-soft:rgba(46,230,168,0.10);
+  --sp-green-line:rgba(46,230,168,0.30);
+
+  --sp-coral:#FF8A5B;
+  --sp-coral-soft:rgba(255,138,91,0.10);
+  --sp-coral-line:rgba(255,138,91,0.30);
+
+  --sp-shadow:0 12px 30px rgba(0,0,0,0.42);
+  --sp-shadow-lift:0 20px 48px rgba(0,0,0,0.58);
+}
+
+/* ============ Light — the same three hues, darkened for an off-white ground
+   The hue is held constant so the meaning of a colour never changes between
+   themes; only lightness moves, because #2EE6A8 on off-white is unreadable
+   while #00A97A carries the identical "money coming to you" signal. */
+html[data-ov-theme="light"] body{
+  --sp-bg:#EDF1E9;
+  --sp-surface:#FFFFFF;
+  --sp-surface-2:#F5F7F2;
+  --sp-surface-3:#E9EDE4;
+  --sp-line:rgba(27,32,28,0.10);
+  --sp-line-2:rgba(27,32,28,0.18);
+
+  --sp-ink:#141915;
+  --sp-ink-2:#535C52;
+  --sp-ink-3:#7E877C;
+
+  --sp-cyan:#0093A8;
+  --sp-cyan-soft:rgba(0,147,168,0.09);
+  --sp-cyan-line:rgba(0,147,168,0.32);
+  --sp-on-cyan:#FFFFFF;
+
+  --sp-green:#00A97A;
+  --sp-green-soft:rgba(0,169,122,0.10);
+  --sp-green-line:rgba(0,169,122,0.30);
+
+  --sp-coral:#D9601F;
+  --sp-coral-soft:rgba(217,96,31,0.10);
+  --sp-coral-line:rgba(217,96,31,0.28);
+
+  --sp-shadow:0 8px 24px rgba(38,46,36,0.08);
+  --sp-shadow-lift:0 16px 40px rgba(38,46,36,0.13);
+}
+
+#view-split{
+  --sp-radius:16px;
+  --sp-radius-sm:12px;
+  color:var(--sp-ink);
+}
+
+#view-split *{ box-sizing:border-box; }
+
+/* Emoji are load-bearing here, so they get an explicit colour-emoji stack.
+   Without it Chrome sometimes resolves them through the UI font and paints a
+   flat monochrome glyph, which loses the one thing they were added for.
+   Applied to the dedicated emoji slots and to the decorative spans the
+   templates mark aria-hidden, which is exactly the set that holds an emoji. */
+#view-split [aria-hidden="true"],
+.sp-modal [aria-hidden="true"],
+.sp-inbox [aria-hidden="true"],
+.sp-toast__emoji,
+.sp-burst__ring,
+.sp-emoji,
+.sp-gcard__emoji,
+.sp-ghead__emoji,
+.sp-row__emoji,
+.sp-act__emoji,
+.sp-note__emoji,
+.sp-mode__emoji,
+.sp-tab__emoji,
+.sp-empty__emoji,
+.sp-pcard__emoji{
+  font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',
+              'Twemoji Mozilla','Segoe UI Symbol', sans-serif;
+  font-variant-emoji:emoji;
+}
+
+.sp-wrap{ max-width:1240px; margin:0 auto; }
+
+/* ==========================================================================
+   THE SHARED TOPBAR, WHILE MONEY SPLITS IS OPEN
+
+   Every other view uses the topbar to say which view you are in. Money Splits
+   has its own hero that already does that, so the heading would be the product
+   name printed twice, six lines apart. The heading is dropped and the bar
+   collapses to the controls it still needs to carry — the notification bell,
+   the theme toggle, sign out — with its rule and its lower padding removed so
+   nothing is left standing where the title used to be.
+
+   Toggled by app.js on switchView, so it applies to this view only and every
+   other screen keeps its heading untouched.
+   ========================================================================== */
+body.is-money-splits .topbar__title{ display:none; }
+body.is-money-splits .topbar{
+  justify-content:flex-end;
+  align-items:center;
+  padding-bottom:0;
+  margin-bottom:0;
+  border-bottom:none;
+  min-height:0;
+}
+
+/* ==========================================================================
+   HERO
+   Type and space do the work. No painted background, no gradient wordmark —
+   the only colour is the primary button.
+   ========================================================================== */
+
+.sp-hero{
+  padding:8px 0 34px;
+  margin-bottom:30px;
+  border-bottom:1px solid var(--sp-line);
+}
+.sp-hero__eyebrow{
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:700;
+  color:var(--sp-ink-3);
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line);
+  border-radius:999px;
+  padding:6px 13px;
+  margin-bottom:18px;
+}
+.sp-hero__title{
+  font-family:'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size:clamp(36px, 5vw, 56px);
+  line-height:1.02;
+  letter-spacing:-0.038em;
+  font-weight:700;
+  color:var(--sp-ink);
+  margin:0 0 14px;
+}
+.sp-hero__sub{
+  font-size:16.5px;
+  line-height:1.6;
+  color:var(--sp-ink-2);
+  max-width:520px;
+  margin:0 0 26px;
+}
+.sp-hero__cta{ display:flex; gap:11px; flex-wrap:wrap; }
+
+/* ==========================================================================
+   BUTTONS
+   One filled button — the primary action. Everything else is an outline, so
+   the eye always knows where the main action is on a screen.
+   ========================================================================== */
+
+.sp-btn{
+  appearance:none;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:12px 20px;
+  border-radius:11px;
+  font-size:14px; font-weight:600;
+  font-family:inherit;
+  border:1px solid transparent;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:transform .14s cubic-bezier(.2,.8,.3,1), box-shadow .18s ease,
+             background .18s ease, border-color .18s ease, color .18s ease;
+}
+.sp-btn:active{ transform:translateY(1px) scale(.985); }
+
+.sp-btn--primary{
+  background:var(--sp-cyan);
+  color:var(--sp-on-cyan);
+  box-shadow:0 4px 16px rgba(0,229,255,0.16);
+}
+.sp-btn--primary:hover{ transform:translateY(-1px); box-shadow:0 8px 22px rgba(0,229,255,0.24); }
+
+/* The second action on a screen. Outlined in cyan so it reads as a sibling of
+   the primary rather than a different kind of thing. */
+.sp-btn--secondary{
+  background:transparent;
+  border-color:var(--sp-cyan-line);
+  color:var(--sp-cyan);
+}
+.sp-btn--secondary:hover{ background:var(--sp-cyan-soft); border-color:var(--sp-cyan); transform:translateY(-1px); }
+
+.sp-btn--ghost{
+  background:var(--sp-surface-2);
+  border-color:var(--sp-line-2);
+  color:var(--sp-ink-2);
+}
+.sp-btn--ghost:hover{ color:var(--sp-ink); border-color:var(--sp-ink-3); transform:translateY(-1px); }
+
+.sp-btn--lg{ padding:14px 26px; font-size:15px; border-radius:12px; }
+.sp-btn--sm{ padding:8px 14px; font-size:12.5px; border-radius:9px; }
+.sp-btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* ==========================================================================
+   SUMMARY STATS
+   Neutral cards. The figure is the only thing that carries colour, because
+   the figure is the only thing whose sign means something.
+   ========================================================================== */
+
+.sp-summary{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:16px;
+  margin-bottom:30px;
+}
+.sp-stat{
+  background:var(--sp-surface);
+  border:1px solid var(--sp-line);
+  border-radius:var(--sp-radius);
+  padding:20px 22px;
+  transition:border-color .18s ease, box-shadow .2s ease;
+}
+.sp-stat:hover{ border-color:var(--sp-line-2); box-shadow:var(--sp-shadow); }
+
+.sp-stat__label{
+  display:flex; align-items:center; gap:7px;
+  font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:700;
+  color:var(--sp-ink-3);
+  margin-bottom:12px;
+}
+.sp-stat__amount{
+  font-size:clamp(27px, 3.2vw, 34px);
+  font-weight:700;
+  line-height:1.05;
+  letter-spacing:-0.032em;
+  font-variant-numeric:tabular-nums;
+  color:var(--sp-ink);
+}
+.sp-stat--owed .sp-stat__amount{ color:var(--sp-green); }
+.sp-stat--owe .sp-stat__amount{ color:var(--sp-coral); }
+/* Net position is deliberately neutral: it is a summary, not a direction. */
+.sp-stat--flat .sp-stat__amount{ color:var(--sp-ink); }
+.sp-stat__sub{ font-size:12.5px; color:var(--sp-ink-3); margin-top:9px; }
+
+/* A freshly rendered figure counts in rather than appearing, so a balance
+   changing after an expense is added is something you notice. */
+.sp-pop{ animation:spPop .38s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes spPop{
+  from{ opacity:0; transform:translateY(6px); }
+  to{ opacity:1; transform:none; }
+}
+
+/* ==========================================================================
+   TABS
+   ========================================================================== */
+
+.sp-tabs{
+  display:inline-flex;
+  gap:3px;
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line);
+  border-radius:13px;
+  padding:4px;
+  margin-bottom:28px;
+  max-width:100%;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.sp-tabs::-webkit-scrollbar{ display:none; }
+.sp-tab{
+  appearance:none; background:none; border:none;
+  display:inline-flex; align-items:center; gap:7px;
+  padding:10px 17px;
+  border-radius:10px;
+  font-size:13.5px; font-weight:600; font-family:inherit;
+  color:var(--sp-ink-3);
+  cursor:pointer;
+  white-space:nowrap;
+  transition:color .16s ease, background .16s ease;
+}
+.sp-tab:hover{ color:var(--sp-ink); }
+.sp-tab.is-active{
+  background:var(--sp-surface);
+  color:var(--sp-ink);
+  box-shadow:0 1px 6px rgba(0,0,0,.16);
+}
+.sp-tab__emoji{ font-size:15px; line-height:1; }
+
+.sp-panel{ display:none; }
+.sp-panel.is-active{ display:block; }
+
+/* ==========================================================================
+   SECTION HEADS
+   ========================================================================== */
+
+.sp-sec{ margin-bottom:34px; }
+.sp-sec__head{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; margin-bottom:14px; flex-wrap:wrap;
+}
+.sp-sec__title{
+  display:flex; align-items:center; gap:8px;
+  font-size:12px; letter-spacing:.1em; text-transform:uppercase; font-weight:700;
+  color:var(--sp-ink-3);
+}
+.sp-sec__action{
+  appearance:none; background:none; border:none;
+  color:var(--sp-cyan); font-size:13px; font-weight:600;
+  cursor:pointer; padding:0; font-family:inherit;
+  transition:opacity .15s ease;
+}
+.sp-sec__action:hover{ opacity:.75; text-decoration:underline; }
+
+/* ==========================================================================
+   GROUP CARDS
+   Neutral cards that lift on hover. The balance state is carried by a single
+   hairline down the left edge and by the balance pill — enough to scan a wall
+   of groups by, without turning the grid into a colour chart.
+   ========================================================================== */
+
+.sp-gcards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(310px, 1fr));
+  gap:16px;
+}
+.sp-gcard{
+  position:relative;
+  background:var(--sp-surface);
+  border:1px solid var(--sp-line);
+  border-left:2px solid var(--sp-accent, var(--sp-line-2));
+  border-radius:var(--sp-radius);
+  padding:22px;
+  cursor:pointer;
+  transition:transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .22s ease, border-color .18s ease;
+}
+.sp-gcard:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--sp-shadow-lift);
+  border-top-color:var(--sp-line-2);
+  border-right-color:var(--sp-line-2);
+  border-bottom-color:var(--sp-line-2);
+}
+.sp-gcard--owed{ --sp-accent:var(--sp-green); }
+.sp-gcard--owe{  --sp-accent:var(--sp-coral); }
+.sp-gcard--flat{ --sp-accent:var(--sp-line-2); }
+
+.sp-gcard__top{ display:flex; align-items:flex-start; gap:14px; margin-bottom:16px; }
+.sp-gcard__emoji{
+  width:50px; height:50px; flex-shrink:0;
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:25px; line-height:1;
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line);
+  transition:transform .22s cubic-bezier(.2,.8,.3,1);
+}
+.sp-gcard:hover .sp-gcard__emoji{ transform:scale(1.07) rotate(-4deg); }
+.sp-gcard__name{
+  font-size:17px; font-weight:650; letter-spacing:-0.015em;
+  color:var(--sp-ink);
+  line-height:1.25;
+  word-break:break-word;
+}
+.sp-gcard__meta{ font-size:12.5px; color:var(--sp-ink-3); margin-top:4px; }
+
+/* A line, not a pill. A filled panel inside an already-bordered card was one
+   container too many, and the sentence reads perfectly well without it. */
+.sp-gcard__balance{
+  display:flex; align-items:center; gap:8px;
+  font-size:15px; font-weight:650;
+  padding:0;
+  margin-bottom:16px;
+  background:transparent;
+  color:var(--sp-ink-2);
+  font-variant-numeric:tabular-nums;
+}
+.sp-gcard__balance.is-owed{ color:var(--sp-green); }
+.sp-gcard__balance.is-owe{  color:var(--sp-coral); }
+.sp-gcard__balance.is-flat{ color:var(--sp-ink-3); font-weight:600; }
+
+.sp-gcard__people{
+  display:flex; align-items:center; gap:9px;
+  margin-bottom:14px;
+  min-height:26px;
+}
+.sp-gcard__names{
+  font-size:12.5px; color:var(--sp-ink-3);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.sp-gcard__foot{
+  display:flex; align-items:center; justify-content:space-between;
+  padding-top:13px;
+  border-top:1px solid var(--sp-line);
+  font-size:12.5px; color:var(--sp-ink-3);
+}
+.sp-gcard__arrow{
+  color:var(--sp-ink-3); font-size:16px;
+  transition:transform .2s cubic-bezier(.2,.8,.3,1), color .2s ease;
+}
+.sp-gcard:hover .sp-gcard__arrow{ transform:translateX(4px); color:var(--sp-cyan); }
+
+/* "Create a group" card, styled as a dashed sibling so the grid never has a
+   hole in it and the primary action is always the last card. */
+.sp-gcard--new{
+  border:1.5px dashed var(--sp-line-2);
+  background:transparent;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
+  min-height:206px;
+  gap:8px;
+}
+.sp-gcard--new:hover{ border-color:var(--sp-cyan-line); background:var(--sp-cyan-soft); transform:translateY(-3px); }
+.sp-gcard--new__icon{ font-size:28px; }
+.sp-gcard--new__title{ font-size:15px; font-weight:650; color:var(--sp-ink); }
+.sp-gcard--new__sub{ font-size:12.5px; color:var(--sp-ink-3); max-width:220px; line-height:1.5; }
+
+/* ==========================================================================
+   AVATARS
+   ========================================================================== */
+
+.sp-av{
+  width:34px; height:34px; flex-shrink:0;
+  border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700;
+  color:var(--sp-on-cyan);
+  background:var(--sp-cyan);
+  letter-spacing:.02em;
+}
+.sp-av--xs{ width:22px; height:22px; font-size:9px; }
+.sp-av--sm{ width:28px; height:28px; font-size:10.5px; }
+.sp-av--lg{ width:56px; height:56px; font-size:18px; }
+.sp-av--guest{
+  background:transparent;
+  border:1.5px dashed var(--sp-line-2);
+  color:var(--sp-ink-3);
+}
+.sp-avs{ display:flex; align-items:center; }
+.sp-avs .sp-av{ margin-left:-9px; border:2px solid var(--sp-surface); }
+.sp-avs .sp-av:first-child{ margin-left:0; }
+.sp-avs__more{
+  margin-left:-9px;
+  border:2px solid var(--sp-surface);
+  background:var(--sp-surface-3);
+  color:var(--sp-ink-2);
+}
+
+/* ==========================================================================
+   GROUP DETAIL
+   ========================================================================== */
+
+.sp-back{
+  appearance:none; background:none; border:none;
+  color:var(--sp-ink-3); font-size:13px; font-weight:600;
+  cursor:pointer; padding:0; margin-bottom:16px;
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:inherit;
+  transition:color .15s ease, transform .15s ease;
+}
+.sp-back:hover{ color:var(--sp-cyan); transform:translateX(-3px); }
+
+.sp-ghead{
+  display:flex; align-items:center; gap:20px;
+  padding:22px 24px;
+  margin-bottom:24px;
+  background:var(--sp-surface);
+  border:1px solid var(--sp-line);
+  border-radius:var(--sp-radius);
+  flex-wrap:wrap;
+}
+.sp-ghead__emoji{
+  width:62px; height:62px; flex-shrink:0;
+  border-radius:17px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:31px; line-height:1;
+  background:var(--sp-surface-2);
+}
+.sp-ghead__main{ flex:1; min-width:200px; }
+.sp-ghead__name{
+  font-family:'Poppins', sans-serif;
+  font-size:26px; font-weight:650; letter-spacing:-0.03em;
+  color:var(--sp-ink); line-height:1.15;
+}
+.sp-ghead__sub{ font-size:13px; color:var(--sp-ink-3); margin-top:6px; }
+.sp-ghead__actions{ display:flex; gap:9px; flex-wrap:wrap; }
+
+/* ==========================================================================
+   BALANCE CHIPS — "Harshit owes you ₹750" as an object, not a sentence
+   ========================================================================== */
+
+.sp-bals{ display:flex; flex-direction:column; }
+.sp-bal{
+  display:flex; align-items:center; gap:12px;
+  padding:13px 12px;
+  border-radius:9px;
+  border-bottom:1px solid var(--sp-line);
+  background:transparent;
+  transition:background .15s ease;
+}
+.sp-bal:last-child{ border-bottom:none; }
+.sp-bal:hover{ background:var(--sp-surface); }
+.sp-bal__body{ flex:1; min-width:0; }
+.sp-bal__text{ font-size:13.5px; color:var(--sp-ink-2); line-height:1.4; }
+.sp-bal__text b{ color:var(--sp-ink); font-weight:650; }
+.sp-bal__amt{
+  font-size:15px; font-weight:700; font-variant-numeric:tabular-nums;
+  white-space:nowrap; color:var(--sp-ink);
+}
+.sp-bal--owed .sp-bal__amt{ color:var(--sp-green); }
+.sp-bal--owe .sp-bal__amt{ color:var(--sp-coral); }
+.sp-bal--flat .sp-bal__amt{ color:var(--sp-ink-3); }
+
+/* Settle-up suggestion — a balance chip with an action on it. */
+.sp-settle{
+  display:flex; align-items:center; gap:12px;
+  padding:13px 12px;
+  border-radius:9px;
+  border-bottom:1px solid var(--sp-line);
+  background:transparent;
+  flex-wrap:wrap;
+  transition:background .15s ease;
+}
+.sp-settle:last-of-type{ border-bottom:none; }
+.sp-settle:hover{ background:var(--sp-surface); }
+.sp-settle__text{ flex:1; min-width:150px; font-size:13.5px; color:var(--sp-ink-2); }
+.sp-settle__text b{ color:var(--sp-ink); font-weight:650; }
+.sp-settle__amt{
+  font-size:15px; font-weight:700; color:var(--sp-ink);
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+}
+
+/* ==========================================================================
+   EXPENSE ROWS
+   ========================================================================== */
+
+/* A list, not a stack of cards. Every expense used to sit in its own bordered,
+   filled box; twenty of them turned a screen into a wall of containers. A
+   hairline between rows separates them just as well and lets the type and the
+   amounts carry the page, which is what a ledger should look like. Only things
+   that are genuinely objects — a group, a summary figure, the Premium block —
+   keep a card around them. */
+.sp-list{ list-style:none; margin:0; padding:0; }
+.sp-row{
+  display:flex; align-items:center; gap:14px;
+  padding:13px 12px;
+  border:none;
+  border-bottom:1px solid var(--sp-line);
+  border-radius:9px;
+  background:transparent;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.sp-row:last-child{ border-bottom:none; }
+.sp-row:hover{ background:var(--sp-surface); }
+.sp-row--static{ cursor:default; }
+.sp-row--static:hover{ background:transparent; }
+
+.sp-row__emoji{
+  width:38px; height:38px; flex-shrink:0;
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:19px;
+  background:var(--sp-surface-2);
+}
+.sp-row__body{ flex:1; min-width:0; }
+.sp-row__title{
+  font-size:14.5px; font-weight:600; color:var(--sp-ink);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sp-row__meta{ font-size:12.5px; color:var(--sp-ink-3); margin-top:3px; }
+.sp-row__right{ text-align:right; flex-shrink:0; }
+.sp-row__amount{
+  font-size:15px; font-weight:700;
+  font-variant-numeric:tabular-nums; white-space:nowrap;
+  color:var(--sp-ink);
+}
+.sp-row__amount.is-owed{ color:var(--sp-green); }
+.sp-row__amount.is-owe{ color:var(--sp-coral); }
+.sp-row__amount.is-flat{ color:var(--sp-ink-3); font-weight:600; }
+.sp-row__note{ font-size:11px; color:var(--sp-ink-3); margin-top:3px; }
+
+/* ==========================================================================
+   ACTIVITY FEED
+   ========================================================================== */
+
+.sp-feed{ display:flex; flex-direction:column; }
+.sp-act{
+  display:flex; gap:14px;
+  padding:14px 12px;
+  border-radius:9px;
+  border-bottom:1px solid var(--sp-line);
+  transition:background .15s ease;
+}
+.sp-act:last-child{ border-bottom:none; }
+.sp-act:hover{ background:var(--sp-surface); }
+.sp-act__emoji{
+  width:38px; height:38px; flex-shrink:0;
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:19px;
+  background:var(--sp-surface-2);
+}
+.sp-act__body{ flex:1; min-width:0; }
+.sp-act__text{ font-size:14px; color:var(--sp-ink); line-height:1.45; }
+.sp-act__text b{ font-weight:650; }
+.sp-act__where{ font-size:12.5px; color:var(--sp-ink-3); margin-top:3px; }
+/* The one coloured element in a feed row, because it is the one part that
+   says what the entry did to your money. */
+.sp-act__impact{
+  display:inline-block; margin-top:8px;
+  font-size:12.5px; font-weight:650;
+  padding:4px 10px; border-radius:999px;
+  font-variant-numeric:tabular-nums;
+  background:var(--sp-surface-3); color:var(--sp-ink-2);
+}
+.sp-act__impact.is-owed{ background:var(--sp-green-soft); color:var(--sp-green); }
+.sp-act__impact.is-owe{ background:var(--sp-coral-soft); color:var(--sp-coral); }
+.sp-act__time{ font-size:11.5px; color:var(--sp-ink-3); flex-shrink:0; white-space:nowrap; }
+.sp-act__amt{
+  font-size:14px; font-weight:700; flex-shrink:0;
+  font-variant-numeric:tabular-nums; color:var(--sp-ink);
+}
+
+/* ==========================================================================
+   CHARTS — CSS bars, no library
+   ========================================================================== */
+
+.sp-bars{ display:flex; flex-direction:column; gap:13px; }
+.sp-bar__top{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:13px; margin-bottom:6px; gap:10px;
+}
+.sp-bar__label{ color:var(--sp-ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sp-bar__value{ color:var(--sp-ink); font-weight:650; font-variant-numeric:tabular-nums; }
+.sp-bar__track{
+  height:6px; border-radius:3px;
+  background:var(--sp-surface-3);
+  overflow:hidden;
+}
+/* Both bar sets are reference data rather than actions, so neither is painted
+   at full accent strength — a stack of full-width saturated bars would spend
+   more of the colour budget than a chart deserves. Member totals keep a dimmed
+   cyan to stay recognisably "yours"; category spend drops to neutral grey. */
+.sp-bar__fill{
+  height:100%; border-radius:3px;
+  background:var(--sp-cyan);
+  opacity:.55;
+  transition:width .5s cubic-bezier(.22,1,.36,1);
+}
+.sp-bar__fill--muted{ background:var(--sp-ink-3); opacity:.7; }
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+
+.sp-field{ margin-bottom:18px; }
+.sp-field__label{
+  display:flex; align-items:center; gap:7px;
+  font-size:12.5px; font-weight:650;
+  color:var(--sp-ink-2); margin-bottom:8px;
+}
+.sp-input, .sp-select, .sp-textarea{
+  width:100%;
+  background:var(--sp-surface-2);
+  border:1.5px solid var(--sp-line);
+  border-radius:11px;
+  padding:12px 14px;
+  color:var(--sp-ink);
+  font-size:14.5px;
+  font-family:inherit;
+  transition:border-color .16s ease, box-shadow .16s ease;
+}
+.sp-input::placeholder, .sp-textarea::placeholder{ color:var(--sp-ink-3); }
+.sp-input:focus, .sp-select:focus, .sp-textarea:focus{
+  outline:none;
+  border-color:var(--sp-cyan);
+  box-shadow:0 0 0 3px var(--sp-cyan-soft);
+}
+.sp-textarea{ min-height:76px; resize:vertical; }
+.sp-select{ cursor:pointer; }
+
+/* The amount field is the hero of the Add Expense sheet. */
+.sp-amount{
+  display:flex; align-items:center; gap:10px;
+  background:var(--sp-surface-2);
+  border:1.5px solid var(--sp-line);
+  border-radius:14px;
+  padding:14px 18px;
+  transition:border-color .16s ease, box-shadow .16s ease;
+}
+.sp-amount:focus-within{ border-color:var(--sp-cyan); box-shadow:0 0 0 3px var(--sp-cyan-soft); }
+.sp-amount__symbol{
+  font-size:29px; font-weight:600; color:var(--sp-ink-3); line-height:1;
+}
+.sp-input--amount{
+  flex:1; min-width:0;
+  background:none; border:none; padding:0;
+  font-size:37px; font-weight:700; letter-spacing:-0.03em;
+  color:var(--sp-ink);
+  font-variant-numeric:tabular-nums;
+  font-family:inherit;
+}
+.sp-input--amount:focus{ outline:none; box-shadow:none; border:none; }
+
+.sp-row2{ display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.sp-hint{ font-size:12px; color:var(--sp-ink-3); margin-top:7px; line-height:1.5; }
+
+/* Coral doubles as the error colour. It is the only warm hue in the palette,
+   and an error is the one other thing on this screen that genuinely needs to
+   stop you — it is never used decoratively. */
+.sp-err{
+  display:flex; align-items:flex-start; gap:9px;
+  font-size:13px; line-height:1.5;
+  color:var(--sp-ink);
+  background:var(--sp-coral-soft);
+  border:1px solid var(--sp-coral-line);
+  border-radius:11px;
+  padding:11px 14px;
+  margin-bottom:16px;
+  animation:spShake .32s cubic-bezier(.36,.07,.19,.97) both;
+}
+@keyframes spShake{
+  10%,90%{ transform:translateX(-1px); }
+  20%,80%{ transform:translateX(2px); }
+  30%,50%,70%{ transform:translateX(-3px); }
+  40%,60%{ transform:translateX(3px); }
+}
+
+/* ---- Split-mode selector: cards, not a dropdown ------------------------- */
+.sp-modes{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(96px, 1fr));
+  gap:8px;
+  margin-bottom:16px;
+}
+.sp-mode{
+  appearance:none;
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  background:var(--sp-surface-2);
+  border:1.5px solid var(--sp-line);
+  border-radius:12px;
+  padding:12px 8px;
+  font-size:11.5px; font-weight:600; font-family:inherit;
+  color:var(--sp-ink-3);
+  cursor:pointer;
+  text-align:center;
+  transition:transform .15s cubic-bezier(.2,.8,.3,1), border-color .16s ease,
+             background .16s ease, color .16s ease;
+}
+.sp-mode__emoji{ font-size:19px; line-height:1; }
+.sp-mode:hover{ transform:translateY(-2px); color:var(--sp-ink); border-color:var(--sp-line-2); }
+.sp-mode.is-active{
+  background:var(--sp-cyan-soft);
+  border-color:var(--sp-cyan);
+  color:var(--sp-cyan);
+}
+
+/* ---- Per-person split rows --------------------------------------------- */
+.sp-splits{
+  border:1px solid var(--sp-line);
+  border-radius:13px;
+  overflow:hidden;
+  background:var(--sp-surface-2);
+}
+.sp-split{
+  display:flex; align-items:center; gap:11px;
+  padding:11px 14px;
+  border-bottom:1px solid var(--sp-line);
+}
+.sp-split:last-child{ border-bottom:none; }
+.sp-split__name{
+  flex:1; min-width:0; font-size:13.5px; color:var(--sp-ink);
+  display:flex; align-items:center; gap:9px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.sp-split__input{
+  width:106px; flex-shrink:0;
+  background:var(--sp-surface);
+  border:1.5px solid var(--sp-line);
+  border-radius:9px;
+  padding:8px 10px;
+  color:var(--sp-ink);
+  font-size:13.5px; text-align:right; font-family:inherit;
+  font-variant-numeric:tabular-nums;
+  transition:border-color .16s ease;
+}
+.sp-split__input:focus{ outline:none; border-color:var(--sp-cyan); }
+/* A computed share is a neutral fact — it is not money moving toward or away
+   from the reader, so it is not green. */
+.sp-split__computed{
+  min-width:96px; text-align:right; flex-shrink:0;
+  font-size:14.5px; font-weight:700;
+  font-variant-numeric:tabular-nums;
+  color:var(--sp-ink);
+}
+.sp-split__unit{ font-size:12.5px; color:var(--sp-ink-3); width:15px; flex-shrink:0; }
+
+.sp-tally{
+  display:flex; justify-content:space-between; align-items:center; gap:12px;
+  font-size:12.5px;
+  padding:12px 14px;
+  border-top:1.5px solid var(--sp-line);
+  background:var(--sp-surface-3);
+  color:var(--sp-ink-2);
+}
+.sp-tally b{ font-variant-numeric:tabular-nums; color:var(--sp-ink); font-size:14px; }
+.sp-tally.is-bad{ background:var(--sp-coral-soft); color:var(--sp-coral); }
+.sp-tally.is-bad b{ color:var(--sp-coral); }
+
+/* ---- Participant toggles ------------------------------------------------ */
+.sp-people{ display:flex; flex-wrap:wrap; gap:8px; }
+.sp-person{
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--sp-surface-2);
+  border:1.5px solid var(--sp-line);
+  border-radius:999px;
+  padding:5px 14px 5px 5px;
+  font-size:12.5px; font-weight:600; font-family:inherit;
+  color:var(--sp-ink-3);
+  cursor:pointer;
+  transition:transform .14s ease, border-color .16s ease, background .16s ease, color .16s ease;
+}
+.sp-person:hover{ transform:translateY(-1px); color:var(--sp-ink); }
+.sp-person.is-on{
+  border-color:var(--sp-cyan);
+  color:var(--sp-ink);
+  background:var(--sp-cyan-soft);
+}
+.sp-person--plain{ padding:7px 14px; }
+
+/* ---- Emoji picker ------------------------------------------------------- */
+.sp-emojis{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(46px, 1fr));
+  gap:7px;
+  max-height:170px; overflow-y:auto;
+  padding:11px;
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line);
+  border-radius:12px;
+}
+.sp-emoji{
+  appearance:none;
+  aspect-ratio:1;
+  display:flex; align-items:center; justify-content:center;
+  font-size:21px;
+  background:transparent;
+  border:1.5px solid transparent;
+  border-radius:10px;
+  cursor:pointer;
+  transition:transform .14s cubic-bezier(.2,.8,.3,1), background .14s ease, border-color .14s ease;
+}
+.sp-emoji:hover{ transform:scale(1.16); background:var(--sp-surface-3); }
+.sp-emoji.is-on{ background:var(--sp-cyan-soft); border-color:var(--sp-cyan); transform:scale(1.06); }
+
+/* ---- Itemized builder --------------------------------------------------- */
+.sp-item{
+  border:1px solid var(--sp-line);
+  border-radius:13px;
+  padding:14px;
+  margin-bottom:10px;
+  background:var(--sp-surface-2);
+}
+.sp-item__top{ display:flex; gap:9px; margin-bottom:11px; }
+.sp-item__top .sp-input{ background:var(--sp-surface); }
+.sp-item__name{ flex:1; min-width:0; }
+.sp-item__amt{ width:124px; flex-shrink:0; }
+.sp-item__del{
+  appearance:none; flex-shrink:0;
+  background:transparent; border:1.5px solid var(--sp-line);
+  border-radius:9px; color:var(--sp-ink-3);
+  width:42px; cursor:pointer; font-size:17px; font-family:inherit;
+  transition:color .16s ease, border-color .16s ease, background .16s ease;
+}
+.sp-item__del:hover{ color:var(--sp-coral); border-color:var(--sp-coral-line); background:var(--sp-coral-soft); }
+
+/* ==========================================================================
+   MODAL
+   ========================================================================== */
+
+.sp-modal{
+  position:fixed; inset:0;
+  background:rgba(4,6,9,.7);
+  backdrop-filter:blur(6px);
+  display:flex; align-items:center; justify-content:center;
+  z-index:99998;
+  padding:22px;
+  opacity:0; pointer-events:none;
+  transition:opacity .2s ease;
+}
+.sp-modal.is-open{ opacity:1; pointer-events:auto; }
+.sp-modal__card{
+  background:var(--sp-surface);
+  border:1px solid var(--sp-line-2);
+  border-radius:20px;
+  width:100%; max-width:540px;
+  max-height:88vh; overflow-y:auto;
+  padding:26px 28px 28px;
+  box-shadow:var(--sp-shadow-lift);
+  transform:translateY(16px) scale(.98);
+  transition:transform .26s cubic-bezier(.2,.9,.3,1);
+}
+.sp-modal.is-open .sp-modal__card{ transform:none; }
+.sp-modal__card--wide{ max-width:680px; }
+.sp-modal__head{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:14px; margin-bottom:22px;
+}
+.sp-modal__title{
+  display:flex; align-items:center; gap:10px;
+  font-family:'Poppins', sans-serif;
+  font-size:20px; font-weight:650; letter-spacing:-0.02em;
+  color:var(--sp-ink);
+}
+.sp-modal__x{
+  appearance:none; background:var(--sp-surface-2); border:1px solid var(--sp-line);
+  width:34px; height:34px; border-radius:10px; flex-shrink:0;
+  color:var(--sp-ink-3); font-size:19px; line-height:1; cursor:pointer;
+  transition:color .16s ease, background .16s ease, transform .16s ease;
+}
+.sp-modal__x:hover{ color:var(--sp-ink); background:var(--sp-surface-3); transform:rotate(90deg); }
+.sp-modal__foot{
+  display:flex; gap:11px; justify-content:flex-end; align-items:center;
+  margin-top:24px; padding-top:20px;
+  border-top:1px solid var(--sp-line);
+  flex-wrap:wrap;
+}
+
+/* ==========================================================================
+   FLOATING ADD BUTTON
+   ========================================================================== */
+
+.sp-fab{
+  position:fixed; right:34px; bottom:34px;
+  width:56px; height:56px; border-radius:50%;
+  background:var(--sp-cyan);
+  color:var(--sp-on-cyan);
+  border:none;
+  font-size:27px; line-height:1; font-weight:400;
+  cursor:pointer;
+  box-shadow:0 8px 26px rgba(0,229,255,.26);
+  display:flex; align-items:center; justify-content:center;
+  z-index:900;
+  transition:transform .2s cubic-bezier(.2,.8,.3,1), box-shadow .22s ease;
+}
+.sp-fab:hover{ transform:scale(1.07) rotate(90deg); box-shadow:0 12px 34px rgba(0,229,255,.36); }
+.sp-fab:active{ transform:scale(.96) rotate(90deg); }
+
+/* ==========================================================================
+   EMPTY STATES
+   ========================================================================== */
+
+.sp-empty{
+  display:flex; flex-direction:column; align-items:center;
+  text-align:center;
+  border:1.5px dashed var(--sp-line-2);
+  border-radius:var(--sp-radius);
+  padding:52px 28px;
+  background:var(--sp-surface-2);
+}
+.sp-empty__emoji{
+  font-size:44px; line-height:1; margin-bottom:16px;
+  animation:spFloat 3.4s ease-in-out infinite;
+}
+@keyframes spFloat{
+  0%,100%{ transform:translateY(0); }
+  50%{ transform:translateY(-6px); }
+}
+.sp-empty__title{
+  font-family:'Poppins', sans-serif;
+  font-size:18px; font-weight:650; color:var(--sp-ink); margin-bottom:8px;
+  letter-spacing:-0.02em;
+}
+.sp-empty__text{
+  font-size:13.5px; color:var(--sp-ink-3);
+  max-width:400px; line-height:1.65; margin-bottom:20px;
+}
+
+/* ==========================================================================
+   PREMIUM
+   Cyan, like every other affordance. Premium is set apart by the ring around
+   the block and by the tag, not by a hue of its own.
+   ========================================================================== */
+
+.sp-premium{
+  border:1px solid var(--sp-cyan-line);
+  border-radius:var(--sp-radius);
+  padding:26px;
+  background:var(--sp-surface);
+  margin-bottom:20px;
+}
+.sp-premium__tag{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; font-weight:800;
+  color:var(--sp-cyan);
+  background:var(--sp-cyan-soft);
+  border:1px solid var(--sp-cyan-line);
+  border-radius:999px;
+  padding:5px 12px;
+  margin-bottom:14px;
+}
+.sp-premium__title{
+  font-family:'Poppins', sans-serif;
+  font-size:21px; font-weight:650; letter-spacing:-0.025em;
+  color:var(--sp-ink); margin-bottom:8px;
+}
+.sp-premium__text{ font-size:14px; color:var(--sp-ink-2); line-height:1.65; max-width:520px; }
+
+.sp-pcards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(215px, 1fr));
+  gap:13px;
+  margin-top:20px;
+}
+.sp-pcard{
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line);
+  border-radius:14px;
+  padding:17px;
+  transition:transform .18s cubic-bezier(.2,.8,.3,1), border-color .18s ease;
+}
+.sp-pcard:hover{ transform:translateY(-3px); border-color:var(--sp-cyan-line); }
+.sp-pcard__emoji{ font-size:23px; line-height:1; margin-bottom:11px; }
+.sp-pcard__title{ font-size:14px; font-weight:650; color:var(--sp-ink); margin-bottom:5px; }
+.sp-pcard__text{ font-size:12.5px; color:var(--sp-ink-3); line-height:1.55; }
+
+.sp-flist{
+  list-style:none; padding:0; margin:18px 0 0;
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:9px;
+}
+.sp-flist li{
+  display:flex; align-items:flex-start; gap:9px;
+  font-size:13px; color:var(--sp-ink-2); line-height:1.5;
+}
+.sp-flist li::before{ content:"✓"; color:var(--sp-cyan); font-weight:700; flex-shrink:0; }
+
+.sp-lock{
+  display:inline-flex; align-items:center;
+  font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:800;
+  color:var(--sp-cyan);
+  background:var(--sp-cyan-soft);
+  border:1px solid var(--sp-cyan-line);
+  border-radius:4px; padding:2px 6px; margin-left:7px;
+  vertical-align:middle;
+}
+
+/* ==========================================================================
+   NOTIFICATION BELL + INBOX
+   ========================================================================== */
+
+.sp-bell{
+  position:relative;
+  appearance:none; background:none; border:none;
+  color:var(--ink, #fff); cursor:pointer; padding:0;
+  display:inline-flex; align-items:center;
+  transition:transform .18s cubic-bezier(.2,.8,.3,1);
+}
+.sp-bell:hover{ transform:scale(1.1); }
+.sp-bell__dot{
+  position:absolute; top:-4px; right:-6px;
+  min-width:17px; height:17px; padding:0 5px;
+  border-radius:9px;
+  background:var(--sp-cyan);
+  color:var(--sp-on-cyan);
+  font-size:10px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+}
+.sp-bell__dot[hidden]{ display:none; }
+
+.sp-inbox{
+  position:absolute; top:52px; right:22px;
+  width:390px; max-width:calc(100vw - 40px);
+  max-height:70vh; overflow-y:auto;
+  background:var(--sp-surface);
+  border:1px solid var(--sp-line-2);
+  border-radius:16px;
+  box-shadow:var(--sp-shadow-lift);
+  z-index:9000;
+  padding:9px;
+  animation:spDrop .18s cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes spDrop{
+  from{ opacity:0; transform:translateY(-8px); }
+  to{ opacity:1; transform:none; }
+}
+.sp-inbox__head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 13px 13px;
+  border-bottom:1px solid var(--sp-line);
+  margin-bottom:7px;
+}
+.sp-note{
+  display:flex; gap:12px;
+  padding:12px 13px;
+  border-radius:11px;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.sp-note:hover{ background:var(--sp-surface-2); }
+.sp-note.is-unread{ background:var(--sp-cyan-soft); }
+.sp-note__emoji{
+  width:34px; height:34px; flex-shrink:0;
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px;
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line);
+}
+.sp-note__body{ flex:1; min-width:0; }
+.sp-note__title{ font-size:13px; font-weight:600; color:var(--sp-ink); line-height:1.45; }
+.sp-note__text{ font-size:12.5px; color:var(--sp-ink-2); margin-top:3px; }
+.sp-note__time{ font-size:11px; color:var(--sp-ink-3); margin-top:4px; }
+
+/* ==========================================================================
+   TOAST + SUCCESS CONFIRMATION
+   ========================================================================== */
+
+.sp-toast{
+  position:fixed; bottom:30px; left:50%;
+  transform:translateX(-50%) translateY(14px);
+  display:flex; align-items:center; gap:10px;
+  background:var(--sp-surface);
+  border:1px solid var(--sp-line-2);
+  color:var(--sp-ink);
+  padding:13px 20px;
+  border-radius:13px;
+  font-size:13.5px; font-weight:500;
+  z-index:99999;
+  opacity:0; pointer-events:none;
+  transition:opacity .2s ease, transform .26s cubic-bezier(.2,.9,.3,1);
+  box-shadow:var(--sp-shadow-lift);
+  max-width:min(540px, calc(100vw - 40px));
+}
+.sp-toast.is-on{ opacity:1; transform:translateX(-50%) translateY(0); }
+.sp-toast__emoji{ font-size:17px; line-height:1; flex-shrink:0; }
+
+/* Brief confirmation after money is booked. Short by design — it marks the
+   moment and gets out of the way rather than staging a celebration. */
+.sp-burst{
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; z-index:99999;
+}
+.sp-burst__ring{
+  width:92px; height:92px; border-radius:50%;
+  border:2px solid var(--sp-cyan);
+  display:flex; align-items:center; justify-content:center;
+  font-size:38px;
+  background:var(--sp-surface);
+  animation:spBurst .66s cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes spBurst{
+  0%{ opacity:0; transform:scale(.5); }
+  40%{ opacity:1; transform:scale(1.04); }
+  70%{ opacity:1; transform:scale(1); }
+  100%{ opacity:0; transform:scale(1.1); }
+}
+
+/* ==========================================================================
+   INVITE LINK BOX
+   ========================================================================== */
+
+.sp-link{
+  display:flex; gap:9px; align-items:center;
+  background:var(--sp-surface-2);
+  border:1px solid var(--sp-line-2);
+  border-radius:11px;
+  padding:10px 12px;
+  margin-top:13px;
+}
+.sp-link input{
+  flex:1; min-width:0;
+  background:none; border:none; color:var(--sp-ink-2);
+  font-size:12.5px; font-family:inherit;
+}
+.sp-link input:focus{ outline:none; }
+
+/* ==========================================================================
+   RESPONSIVE
+   Web-only, but "web" spans a 1600px desktop and a 380px phone browser. The
+   group view is two columns on a wide screen with the money summary docked on
+   the right where it stays visible while the expense list scrolls; below
+   1080px it stacks, which is also what every narrow panel assumes.
+   ========================================================================== */
+
+.sp-two{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 350px;
+  gap:30px;
+  align-items:start;
+}
+.sp-two__side{ position:sticky; top:22px; }
+
+@media (max-width:1080px){
+  .sp-two{ grid-template-columns:1fr; }
+  .sp-two__side{ position:static; }
+}
+
+@media (max-width:860px){
+  .sp-gcards{ grid-template-columns:1fr; }
+}
+
+@media (max-width:720px){
+  .sp-hero{ padding:4px 0 24px; margin-bottom:22px; }
+  .sp-hero__cta{ flex-direction:column; }
+  .sp-hero__cta .sp-btn{ width:100%; }
+  .sp-summary{ grid-template-columns:1fr; gap:12px; }
+  .sp-row2{ grid-template-columns:1fr; }
+  .sp-tabs{ width:100%; }
+  .sp-tab{ flex:1; justify-content:center; padding:10px 12px; }
+  .sp-ghead{ padding:18px; gap:14px; }
+  .sp-ghead__name{ font-size:22px; }
+  .sp-ghead__actions{ width:100%; }
+  .sp-ghead__actions .sp-btn{ flex:1; }
+  .sp-fab{ right:18px; bottom:18px; width:52px; height:52px; font-size:24px; }
+  .sp-inbox{ right:10px; width:calc(100vw - 20px); }
+  .sp-input--amount{ font-size:30px; }
+  .sp-modes{ grid-template-columns:repeat(3, 1fr); }
+  .sp-modal{ padding:0; align-items:flex-end; }
+  .sp-modal__card{
+    max-width:none; max-height:93vh;
+    border-radius:20px 20px 0 0;
+    padding:22px 20px 24px;
+  }
+  .sp-item__top{ flex-wrap:wrap; }
+  .sp-item__amt{ width:100%; }
+}
+
+/* Respect the OS setting. Everything above still works, it just stops moving. */
+@media (prefers-reduced-motion: reduce){
+  #view-split *, .sp-modal *, .sp-inbox *, .sp-toast, .sp-burst *{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+  .sp-gcard:hover, .sp-stat:hover, .sp-row:hover, .sp-btn:hover{ transform:none; }
+}

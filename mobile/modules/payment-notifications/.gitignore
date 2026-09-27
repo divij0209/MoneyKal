@@ -1,0 +1,7 @@
+# Gradle output for this local module.
+#
+# mobile/.gitignore ignores "/android", but that pattern is anchored to the
+# project root, so it does not cover modules/*/android/build. Without this the
+# module's compiled classes and merged manifests would be committed.
+android/build/
+.gradle/

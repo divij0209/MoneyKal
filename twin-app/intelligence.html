@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligence: how MoneyKal reasons | MoneyKal</title>
+  <meta name="description" content="The intelligence layer behind MoneyKal: deterministic computation, a staged agent pipeline, simulation and a health score you can audit.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html" class="is-current">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <section class="mk-phero">
+      <div class="mk-wrap mk-phero__inner">
+        <a class="mk-crumb" href="index.html"><span aria-hidden="true">&larr;</span> MoneyKal</a>
+        <h1 class="mk-phero__title">Intelligence</h1>
+      </div>
+
+      <div class="mk-wrap mk-phero__visual">
+        <div class="mk-sim" data-reveal>
+          <div class="mk-sim__choices" role="tablist" aria-label="Choose a scenario">
+            <button class="mk-sim__choice is-active" role="tab" aria-selected="true" data-sim="car">Buy a car</button>
+            <button class="mk-sim__choice" role="tab" aria-selected="false" data-sim="loan">Take a loan</button>
+            <button class="mk-sim__choice" role="tab" aria-selected="false" data-sim="save">Increase savings</button>
+            <button class="mk-sim__choice" role="tab" aria-selected="false" data-sim="spend">Cut spending</button>
+          </div>
+
+          <div class="mk-sim__panel">
+            <div class="mk-sim__side">
+              <p class="mk-eyebrow">Current path</p>
+              <p class="mk-sim__figure" data-sim-base="412000" data-prefix="₹">₹0</p>
+              <p class="mk-sim__note">Where you land in 12 months if nothing changes.</p>
+            </div>
+
+            <div class="mk-sim__arrow" aria-hidden="true">
+              <svg viewBox="0 0 60 24" fill="none">
+                <path d="M2 12h50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  stroke-dasharray="4 5" />
+                <path d="M46 6l7 6-7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="mk-sim__side mk-sim__side--result">
+              <p class="mk-eyebrow" id="mkSimLabel">With this decision</p>
+              <p class="mk-sim__figure mk-sim__figure--accent" id="mkSimFigure" data-prefix="₹">₹0</p>
+              <p class="mk-sim__note" id="mkSimNote">Sets you back, but the buffer holds.</p>
+            </div>
+          </div>
+
+          <!-- The trade-off, stated rather than buried. Two proportions as bars,
+               three absolutes as figures — each moves when the scenario does. -->
+          <div class="mk-sim__meters">
+            <div class="mk-meter">
+              <span class="mk-meter__label">Emergency buffer</span>
+              <span class="mk-meter__track"><i id="mkMeterBuffer"></i></span>
+              <span class="mk-meter__value" id="mkMeterBufferVal">…</span>
+            </div>
+            <div class="mk-meter">
+              <span class="mk-meter__label">Goal progress</span>
+              <span class="mk-meter__track"><i id="mkMeterGoal"></i></span>
+              <span class="mk-meter__value" id="mkMeterGoalVal">…</span>
+            </div>
+          </div>
+
+          <div class="mk-sim__stats">
+            <div class="mk-stat">
+              <span class="mk-stat__label">Goal timeline</span>
+              <b class="mk-stat__value" id="mkSimMonths">…</b>
+              <span class="mk-stat__delta" id="mkSimMonthsDelta"></span>
+            </div>
+            <div class="mk-stat">
+              <span class="mk-stat__label">Monthly cash flow</span>
+              <b class="mk-stat__value" id="mkSimFlow">…</b>
+              <span class="mk-stat__delta" id="mkSimFlowDelta"></span>
+            </div>
+            <div class="mk-stat">
+              <span class="mk-stat__label">Financial health</span>
+              <b class="mk-stat__value" id="mkSimHealth">…</b>
+              <span class="mk-stat__bar"><i id="mkSimHealthBar"></i></span>
+            </div>
+          </div>
+
+          <p class="mk-demo__note">Illustrative figures. In the product every number comes from your own data.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">What the layer does</p>
+          <h2 class="mk-h2">From information to decision</h2>
+          <p class="mk-sub">The intelligence is in the arithmetic and the checks around it, not in confident language.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Computation</span>
+            <h3>Figures are computed, not produced</h3>
+            <p>Position, cash flow, buffer months, runway and financial health are calculated from your ledger and profile. A language model may phrase an answer, but it does not decide the numbers in it.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Pipeline</span>
+            <h3>A staged, visible process</h3>
+            <p>A question moves through named stages: your data is retrieved, a recommendation is computed, the inputs are validated for risk, and the underlying concept is explained. Each stage reports what it did, so an answer arrives with its own audit trail.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Simulation</span>
+            <h3>Run the decision before you make it</h3>
+            <p>Describe a decision and MoneyKal projects it forward against your real figures, showing the effect on savings, goal timeline, monthly cash flow and buffer together rather than one at a time.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Scoring</span>
+            <h3>A health score with a breakdown</h3>
+            <p>Financial health is scored out of a hundred with the components that produced it shown, so the number can be argued with rather than simply accepted.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Context</span>
+            <h3>Market signal filtered to you</h3>
+            <p>Market Pulse scores headlines against what you actually hold and what you are saving toward, then keeps the few that change something for your position.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Guardrails</span>
+            <h3>It declines rather than guesses</h3>
+            <p>Where the data does not support a conclusion, MoneyKal says so and names what is missing instead of returning a confident number built on defaults.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">At a glance</p>
+          <h2 class="mk-h2">Which part is which</h2>
+          <p class="mk-sub">A short reference for how much weight to put on each kind of output.</p>
+        </header>
+
+        <table class="mk-spec" data-reveal>
+          <tbody>
+            <tr><th>Readings and insights</th><td>Deterministic rules over your ledger, marked as rules generated</td></tr>
+            <tr><th>Health score</th><td>Computed, with a component breakdown you can open</td></tr>
+            <tr><th>Simulations</th><td>Projected from your stored figures over a chosen horizon</td></tr>
+            <tr><th>Answer phrasing</th><td>A language model, given figures it is not allowed to change</td></tr>
+            <tr><th>Missing data</th><td>Named explicitly, with the affected figure marked unreliable</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+
+    <section class="mk-section" id="simulate">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--solo" data-reveal>
+          <p class="mk-eyebrow">See Tomorrow · What-If</p>
+          <h2 class="mk-h2">Run the decision first.</h2>
+          <p class="mk-sub">
+            Pick a decision and watch the same position resolve differently across savings, goal
+            timeline, monthly cash flow and financial health, all moving together.
+          </p>
+        </header>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint" id="news">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Market Pulse</p>
+          <h2 class="mk-h2">
+            Not a news feed.<br>
+            <span class="mk-muted-text">The news that moves <em>your</em> money.</span>
+          </h2>
+          <p class="mk-sub">
+            Every headline is scored against what you actually hold, what you are saving toward
+            and where you spend, then filtered down to the few that change something for you.
+          </p>
+        </header>
+
+        <div class="mk-news" data-reveal data-demo="news">
+          <aside class="mk-news__context">
+            <p class="mk-eyebrow">Scored against</p>
+            <ul class="mk-news__chips" id="mkNewsChips"></ul>
+            <p class="mk-news__hint">Your own position, nothing generic.</p>
+          </aside>
+
+          <div class="mk-news__feed">
+            <div class="mk-panel__bar">
+              <span class="mk-panel__title">Signals for you</span>
+              <span class="mk-panel__meta"><b id="mkNewsCount">0</b> relevant</span>
+            </div>
+            <ul class="mk-news__list" id="mkNewsList"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="mk-section" id="cfo">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">For founders · CFO intelligence</p>
+          <h2 class="mk-h2">
+            The same engine,<br>
+            <span class="mk-muted-text">pointed at a company.</span>
+          </h2>
+          <p class="mk-sub">
+            Runway, burn, revenue trend and financial health, computed period over period, with
+            the observation that actually matters written underneath.
+          </p>
+        </header>
+
+        <div class="mk-cfo" data-reveal data-demo="cfo">
+          <div class="mk-cfo__timeline" role="tablist" aria-label="Choose a quarter">
+            <button class="mk-cfo__q is-active" role="tab" aria-selected="true" data-q="0">Q1</button>
+            <button class="mk-cfo__q" role="tab" aria-selected="false" data-q="1">Q2</button>
+            <button class="mk-cfo__q" role="tab" aria-selected="false" data-q="2">Q3</button>
+            <button class="mk-cfo__q" role="tab" aria-selected="false" data-q="3">Q4</button>
+            <span class="mk-cfo__progress" id="mkCfoProgress" aria-hidden="true"></span>
+          </div>
+
+          <div class="mk-cfo__body">
+            <div class="mk-cfo__metrics">
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Revenue</span>
+                <b class="mk-stat__value" id="mkCfoRevenue">…</b>
+                <span class="mk-stat__delta" id="mkCfoRevenueD"></span>
+              </div>
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Net burn</span>
+                <b class="mk-stat__value" id="mkCfoBurn">…</b>
+                <span class="mk-stat__delta" id="mkCfoBurnD"></span>
+              </div>
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Runway</span>
+                <b class="mk-stat__value" id="mkCfoRunway">…</b>
+                <span class="mk-stat__delta" id="mkCfoRunwayD"></span>
+              </div>
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Financial health</span>
+                <b class="mk-stat__value" id="mkCfoHealth">…</b>
+                <span class="mk-stat__bar"><i id="mkCfoHealthBar"></i></span>
+              </div>
+            </div>
+
+            <!-- Revenue against burn, quarter by quarter. Bars grow as the
+                 quarter becomes current, so the trend is watched, not read. -->
+            <div class="mk-cfo__chart" aria-hidden="true">
+              <div class="mk-cfo__legend">
+                <span class="is-rev">Revenue</span>
+                <span class="is-burn">Burn</span>
+              </div>
+              <div class="mk-cfo__bars" id="mkCfoBars"></div>
+            </div>
+          </div>
+
+          <p class="mk-cfo__insight" id="mkCfoInsight">
+            <span class="mk-cfo__insighttag">Key insight</span>
+            <span class="mk-cfo__insighttext"></span>
+          </p>
+
+          <p class="mk-demo__note">Illustrative company. The engine behind it is the one that runs your reports.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-pcta">
+      <div class="mk-wrap">
+        <h2>Start today</h2>
+        <p>Build the picture once, then let MoneyKal keep it current.</p>
+        <div class="mk-pcta__row">
+          <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+            Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+        </div>
+        <div class="mk-more">
+        <a href="hisaab.html">Hisaab</a>
+        <a href="taxes.html">Taxes</a>
+        <a href="app.html">App</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="security.html">Security &amp; Privacy</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

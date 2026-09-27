@@ -1,0 +1,42 @@
+fastapi==0.111.0
+uvicorn==0.30.1
+sqlalchemy>=2.0.30
+pydantic>=2.12.5
+python-jose==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+apscheduler==3.10.4
+pandas
+google-genai==2.18.1
+groq==1.6.0
+httpx>=0.28.1
+python-dotenv==1.0.1
+yfinance==0.2.40
+redis==5.0.4
+psycopg2-binary
+PyPDF2==3.0.1
+openpyxl==3.1.2
+PyJWT
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.126.0
+pillow
+
+# --- Added after a clean-checkout audit found them imported but undeclared ---
+# Each of these was already used by the code below; a fresh clone installed
+# from this file and then failed at import or at first use.
+alembic>=1.13.0            # migrations: `alembic upgrade head` is the documented setup step
+bcrypt>=4.1.0              # imported directly by backend/routers/auth.py, not only via passlib
+pymupdf>=1.24.0            # PDF statement import (imported as `fitz`)
+requests>=2.31.0           # used by the market-intelligence HTTP clients
+
+# --- Optional -----------------------------------------------------------------
+# chromadb powers the RAG knowledge lookup. Every call site imports it lazily
+# inside a try/except and degrades to "no tip found", so the app runs correctly
+# without it. Left commented rather than required because it pulls a large
+# dependency tree that is not worth imposing on someone who only wants the API.
+# chromadb>=0.5.0
+
+# --- Development / test only ---------------------------------------------------
+# pytest>=8.0.0
+# selenium>=4.20.0

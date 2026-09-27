@@ -1,0 +1,182 @@
+/* ==========================================================================
+   MoneyKal — the Terms dialog on the public site
+
+   The footer's "Terms & Conditions" opens the same document the sign-in page
+   shows: js/legal-terms.js is the content, js/terms-consent.js builds the
+   dialog (#termsModal), css/terms.css styles its body. Nothing about the
+   document is duplicated.
+
+   What css/terms.css cannot do on its own here is supply its colour tokens and
+   the base `.mk-modal` shell — on login.html both come from css/login.css. That
+   file cannot be loaded on the public pages: it defines tokens such as
+   --mk-line and --mk-ease at :root under the same names css/home.css uses,
+   with different values, so it would silently restyle the whole page.
+
+   So this file declares those tokens ON #termsModal ONLY and reproduces the
+   modal shell under the same scope. The values are login.css's, so the dialog
+   looks the same wherever it opens, and not one rule reaches outside it.
+
+   The shell rules use :where(#termsModal), which adds no specificity. That
+   keeps them exactly as strong as login.css's own, so css/terms.css — loaded
+   AFTER this file — overrides them the same way it does on the sign-in page
+   (the wider document panel, the title spacing).
+   ========================================================================== */
+
+/* ---- Tokens, scoped to the dialog. Light is the public site's default. ---- */
+#termsModal {
+  --mk-elev:         #FBFAF7;
+  --mk-off:          #14171A;
+  --mk-off-dim:      rgba(20, 23, 26, 0.62);
+  --mk-off-faint:    rgba(20, 23, 26, 0.45);
+  --mk-off-ghost:    rgba(20, 23, 26, 0.32);
+  --mk-cyan:         #00808F;
+  --mk-cyan-06:      rgba(0, 128, 143, 0.06);
+  --mk-cyan-20:      rgba(0, 128, 143, 0.22);
+  --mk-line:         rgba(20, 23, 26, 0.11);
+  --mk-line-soft:    rgba(20, 23, 26, 0.07);
+  --mk-line-strong:  rgba(20, 23, 26, 0.22);
+  --mk-wash-2:       rgba(20, 23, 26, 0.042);
+  --mk-scrim:        rgba(20, 23, 26, 0.42);
+  --mk-modal-shadow: 0 40px 90px -34px rgba(20, 23, 26, 0.34);
+  --mk-danger:       #C4362F;
+  --mk-danger-12:    rgba(196, 54, 47, 0.10);
+  --mk-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-mono:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-ease:    cubic-bezier(0.22, 1, 0.36, 1);
+  --mk-radius:  6px;
+}
+
+:root[data-theme="dark"] #termsModal {
+  --mk-elev:         #101315;
+  --mk-off:          #F2F5F6;
+  --mk-off-dim:      rgba(242, 245, 246, 0.62);
+  --mk-off-faint:    rgba(242, 245, 246, 0.40);
+  --mk-off-ghost:    rgba(242, 245, 246, 0.16);
+  --mk-cyan:         #00E5FF;
+  --mk-cyan-06:      rgba(0, 229, 255, 0.06);
+  --mk-cyan-20:      rgba(0, 229, 255, 0.20);
+  --mk-line:         rgba(242, 245, 246, 0.09);
+  --mk-line-soft:    rgba(242, 245, 246, 0.05);
+  --mk-line-strong:  rgba(242, 245, 246, 0.18);
+  --mk-wash-2:       rgba(242, 245, 246, 0.050);
+  --mk-scrim:        rgba(0, 0, 0, 0.78);
+  --mk-modal-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9);
+  --mk-danger:       #FF5A5A;
+  --mk-danger-12:    rgba(255, 90, 90, 0.12);
+}
+
+/* ---- The modal shell, as in css/login.css, scoped to the dialog. ---- */
+:where(#termsModal).mk-modal {
+  position: fixed;
+  inset: 0;
+  /* Above the public site's sticky nav (100) and progress bar (120). */
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  font-family: var(--mk-body);
+  transition: opacity 0.28s var(--mk-ease), visibility 0.28s var(--mk-ease);
+}
+
+:where(#termsModal).mk-modal.is-open { opacity: 1; visibility: visible; }
+
+:where(#termsModal) .mk-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--mk-scrim);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+:where(#termsModal) .mk-modal__panel {
+  position: relative;
+  width: 100%;
+  max-width: 452px;
+  background: var(--mk-elev);
+  border: 1px solid var(--mk-line);
+  border-radius: 10px;
+  padding: clamp(26px, 4vw, 36px);
+  box-shadow: var(--mk-modal-shadow);
+  transform: translateY(14px) scale(0.985);
+  transition: transform 0.32s var(--mk-ease);
+}
+
+:where(#termsModal).mk-modal.is-open .mk-modal__panel { transform: translateY(0) scale(1); }
+
+:where(#termsModal) .mk-modal__panel::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 26px;
+  right: 26px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mk-cyan), transparent);
+  opacity: 0.7;
+}
+
+:where(#termsModal) .mk-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--mk-off-faint);
+  cursor: pointer;
+  transition: all 0.2s var(--mk-ease);
+}
+
+:where(#termsModal) .mk-modal__close:hover {
+  color: var(--mk-off);
+  border-color: var(--mk-line);
+  background: var(--mk-wash-2);
+}
+
+:where(#termsModal) .mk-modal__title {
+  font-family: var(--mk-display);
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--mk-off);
+  margin: 0 0 10px;
+}
+
+/* The dialog's Close button. The public site has its own `.mk-btn--ghost`, so
+   this is pinned to the dialog to keep login.css's look. */
+:where(#termsModal) .mk-btn--ghost {
+  width: 100%;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: transparent;
+  color: var(--mk-off-dim);
+  border: 1px solid var(--mk-line);
+  border-radius: var(--mk-radius);
+  font-family: var(--mk-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transform: none;
+  transition: all 0.22s var(--mk-ease);
+}
+
+:where(#termsModal) .mk-btn--ghost:hover {
+  color: var(--mk-off);
+  border-color: var(--mk-line-strong);
+  background: var(--mk-wash-2);
+}
+
+@media (max-width: 480px) {
+  :where(#termsModal).mk-modal { padding: 16px; }
+  :where(#termsModal) .mk-modal__panel { padding: 26px 20px; }
+}

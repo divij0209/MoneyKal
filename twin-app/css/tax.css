@@ -1,0 +1,2094 @@
+/* ==========================================================================
+   TAX CALCULATOR — Individual persona
+
+   A form, not a dashboard. The screen is one continuous filing workflow:
+   a flat page, hairline rules, and typography doing the work that borders
+   and cards used to do. There is no panel chrome anywhere in this file —
+   sections are separated by 1px rules and whitespace, and the only elevated
+   surface is the field-help tooltip, which has to float by definition.
+
+   Every rule is scoped to #view-tax (or the body-level .tax-help__tip), so
+   this file cannot affect any other view. It reuses the app's tokens
+   (--surface, --line, --ink, --primary, ...) so it follows light and dark
+   without a second source of truth.
+   ========================================================================== */
+
+#view-tax {
+  /* One measure for the whole workflow. A tax form read edge-to-edge on a
+     wide monitor is a tax form nobody finishes. */
+  max-width: 1240px;
+
+  /* Local geometry. Radii stay near-zero on purpose: this is a filing form,
+     not a card deck. */
+  --tx-radius: 3px;
+  --tx-input-h: 42px;
+  --tx-gutter: 32px;
+}
+
+/* The page's depth comes from four tones, not from containers: a hover wash,
+   an open-section wash carrying a trace of the accent, a field fill, and the
+   muted accent the section numbers are set in. Each is deliberately weak —
+   the composition does the work, these only mark state. */
+html:not([data-ov-theme="light"]) #view-tax {
+  --tx-hover: rgba(255, 255, 255, 0.026);
+  --tx-open: rgba(0, 229, 255, 0.045);
+  --tx-field-bg: rgba(255, 255, 255, 0.038);
+  --tx-field-line: rgba(255, 255, 255, 0.14);
+  --tx-field-line-hover: rgba(255, 255, 255, 0.30);
+  --tx-num: rgba(0, 229, 255, 0.55);
+  --tx-ring: rgba(0, 229, 255, 0.16);
+}
+
+html[data-ov-theme="light"] #view-tax {
+  --tx-hover: rgba(27, 32, 28, 0.028);
+  --tx-open: rgba(3, 137, 158, 0.045);
+  --tx-field-bg: #ffffff;
+  --tx-field-line: rgba(27, 32, 28, 0.16);
+  --tx-field-line-hover: rgba(27, 32, 28, 0.34);
+  --tx-num: rgba(3, 137, 158, 0.62);
+  --tx-ring: rgba(3, 137, 158, 0.14);
+}
+
+/* The scripts hide fields and blocks with the `hidden` attribute. Flex and
+   grid display rules would otherwise out-specify it, so honour it once here
+   and let every layout rule below be written without that caveat. */
+#view-tax [hidden] { display: none !important; }
+
+/* Figures are read in columns and compared against each other, so every
+   number on the screen is tabular. */
+#view-tax .tax-head__amount,
+#view-tax .tax-summary__total-value,
+#view-tax .tax-summary__head-net,
+#view-tax .tax-summary__head-sub,
+#view-tax .tax-summary__row--tds,
+#view-tax .tax-summary__detail li,
+#view-tax .tax-compare__liability,
+#view-tax .tax-compare__rows li,
+#view-tax .tax-compare__total,
+#view-tax .tax-compare__paid,
+#view-tax .tax-compare__net,
+#view-tax .tax-compare__detail li,
+#view-tax .tax-ded-total strong,
+#view-tax .tax-ded-item__amount,
+#view-tax .tax-hra__result-value,
+#view-tax .tax-hra__limb-amount,
+#view-tax .tax-hra__taxable,
+#view-tax .tax-tds-list li,
+#view-tax .tax-rec__saving,
+#view-tax .tax-deduction__limit,
+#view-tax .tax-filing-step__number,
+#view-tax .tax-head__index,
+#view-tax input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================================================
+   1 — HEADER
+   Tax year, the Act it is computed under, and the save state. A top bar,
+   not a toolbar of pills.
+   ========================================================================== */
+
+#view-tax .tax-topbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  padding: 0;
+  margin: 0 0 36px;
+}
+
+/* The label sits over the value rather than beside it, so the year reads as
+   the subject of the screen under the view's own title. */
+#view-tax .tax-topbar__year {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  min-width: 0;
+}
+
+#view-tax .tax-topbar__year label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* The year reads as the page's subject, so it is set as text with a rule
+   under it rather than boxed like a form control. */
+#view-tax .tax-topbar__year .ob-input {
+  width: auto;
+  min-width: 172px;
+  margin-bottom: 0;
+  min-height: 0;
+  padding: 2px 24px 5px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+#view-tax .tax-topbar__year .ob-input:hover { border-bottom-color: var(--ink-faint); }
+
+#view-tax .tax-topbar__year .ob-input:focus {
+  outline: none;
+  border-bottom-color: var(--primary);
+  box-shadow: none;
+}
+
+/* Drawn caret — the select is the group's last child, so it can be anchored
+   to the group and never needs a wrapper element of its own. */
+#view-tax .tax-topbar__year::after {
+  content: '';
+  position: absolute;
+  right: 4px;
+  bottom: 15px;
+  width: 6px;
+  height: 6px;
+  border-right: 1.4px solid var(--ink-faint);
+  border-bottom: 1.4px solid var(--ink-faint);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+/* The Act the year is computed under: reference information, set as a note
+   beside the year rather than a badge. */
+#view-tax .tax-act-badge {
+  align-self: flex-end;
+  padding: 0 0 8px 28px;
+  border-left: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  max-width: 46ch;
+}
+
+#view-tax .tax-act-badge:empty { display: none; }
+
+#view-tax .tax-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+
+#view-tax .tax-save-state {
+  font-size: 12px;
+  color: var(--ink-faint);
+  min-width: 88px;
+  text-align: right;
+}
+
+/* ---------- filing progress ----------
+   A label, a count and a 2px rule: the thinnest thing that can still answer
+   "how far in am I". The width comes from --tax-progress, which
+   js/tax-progress.js sets from the figures already on the section headers. */
+
+/* Sits last in the header and doubles as its bottom rule, which is why the
+   bar spans the full measure and the header carries no border of its own. */
+#view-tax .tax-progress {
+  flex: 1 0 100%;
+  margin-top: 6px;
+}
+
+#view-tax .tax-progress__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+#view-tax .tax-progress__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-progress__count {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+#view-tax .tax-progress__track {
+  position: relative;
+  height: 2px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+#view-tax .tax-progress__fill {
+  display: block;
+  height: 100%;
+  width: var(--tax-progress, 0%);
+  background: var(--primary);
+  transition: width 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+/* Wrapped, the header stacks flush left: a dividing rule with nothing to its
+   left reads as a stray mark, and the actions belong with the rest. */
+@media (max-width: 720px) {
+  #view-tax .tax-topbar { gap: 16px 20px; }
+  #view-tax .tax-act-badge {
+    padding-left: 0;
+    border-left: 0;
+  }
+  #view-tax .tax-topbar__actions { margin-left: 0; }
+  #view-tax .tax-save-state { min-width: 0; text-align: left; }
+}
+
+/* ---------- buttons: flat, square-ish, no gradient or glow ---------- */
+
+#view-tax .btn,
+#view-tax .btn-outline {
+  border-radius: var(--tx-radius);
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 17px;
+  box-shadow: none;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+#view-tax .btn:hover,
+#view-tax .btn-outline:hover {
+  border-color: var(--ink-faint);
+  color: var(--ink);
+  background: transparent;
+}
+
+#view-tax .btn--primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+#view-tax .btn--primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: var(--primary-text);
+}
+
+#view-tax .btn--primary:disabled { opacity: 0.5; cursor: progress; }
+
+#view-tax .btn:focus-visible,
+#view-tax .btn-outline:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   2 — PAGE LAYOUT
+   Form on the left, running summary on the right, separated by a hairline
+   rather than by two competing containers.
+   ========================================================================== */
+
+#view-tax .tax-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 356px;
+  gap: 0;
+  align-items: start;
+}
+
+/* The form's own rules stop a gutter short of the rail's rule, so the two
+   never meet in a T-junction. */
+#view-tax .tax-forms {
+  min-width: 0;
+  padding-right: var(--tx-gutter);
+}
+
+#view-tax .tax-summary {
+  position: sticky;
+  top: 24px;
+  padding-left: var(--tx-gutter);
+  border-left: 1px solid var(--line);
+}
+
+@media (max-width: 1100px) {
+  #view-tax .tax-layout { grid-template-columns: 1fr; }
+  #view-tax .tax-forms { padding-right: 0; }
+  #view-tax .tax-summary {
+    position: static;
+    margin-top: 34px;
+    padding-left: 0;
+    padding-top: 30px;
+    border-left: 0;
+    border-top: 1px solid var(--line-strong);
+  }
+}
+
+
+/* ==========================================================================
+   3 — FILING GUIDE
+   A help section, not a feature. It sits above the form, understated, and
+   expands in place.
+   ========================================================================== */
+
+#view-tax .tax-filing-guides { margin: 0 0 34px; }
+
+#view-tax .tax-filing-guides__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  text-transform: none;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+#view-tax .tax-filing-guides__grid { display: block; }
+
+#view-tax .tax-filing-guide {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+#view-tax .tax-filing-guide:last-child { border-bottom: 1px solid var(--line); }
+
+#view-tax .tax-filing-guide__summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 17px 6px 17px 4px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.16s ease;
+}
+
+#view-tax .tax-filing-guide__summary::-webkit-details-marker { display: none; }
+
+#view-tax .tax-filing-guide__summary:hover { background: var(--tx-hover); }
+
+#view-tax .tax-filing-guide[open] .tax-filing-guide__summary { background: transparent; }
+
+/* Replaces the old filled triangle with the same chevron the income heads
+   use, so every disclosure on the page opens the same way. */
+#view-tax .tax-filing-guide__summary::before { content: none; }
+
+#view-tax .tax-filing-guide__summary::after {
+  content: '';
+  order: 9;
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-right: 1.4px solid var(--ink-faint);
+  border-bottom: 1.4px solid var(--ink-faint);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+#view-tax .tax-filing-guide[open] > .tax-filing-guide__summary::after {
+  transform: translateY(1px) rotate(-135deg);
+  border-right-color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+#view-tax .tax-filing-guide__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#view-tax .tax-filing-guide__title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.008em;
+  color: var(--ink);
+}
+
+#view-tax .tax-filing-guide__subtitle {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+/* "8 steps" — a count, not a badge. */
+#view-tax .tax-filing-guide__count {
+  flex: 0 0 auto;
+  margin-left: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+#view-tax .tax-filing-steps {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0 26px;
+}
+
+#view-tax .tax-filing-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 0 14px;
+}
+
+/* The decorative connector rail is gone; the numbers carry the sequence. */
+#view-tax .tax-filing-step:not(:last-child)::after { content: none; }
+
+#view-tax .tax-filing-step__number {
+  width: 26px;
+  height: auto;
+  display: block;
+  border-radius: 0;
+  background: transparent;
+  color: var(--tx-num);
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  padding-top: 1px;
+}
+
+#view-tax .tax-filing-step__body { padding: 0 0 18px; }
+
+#view-tax .tax-filing-step:last-child .tax-filing-step__body { padding-bottom: 0; }
+
+#view-tax .tax-filing-step__title {
+  margin-bottom: 3px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+#view-tax .tax-filing-step__detail {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-faint);
+  max-width: 62ch;
+}
+
+#view-tax .tax-filing-step__link {
+  color: var(--primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+#view-tax .tax-filing-step__link:hover { text-decoration: underline; }
+
+
+/* ==========================================================================
+   4 — FORM SECTIONS AND FIELDS
+   Labels above inputs, hairline borders, near-zero radius. Nothing floats.
+   ========================================================================== */
+
+#view-tax .tax-block { margin: 0 0 34px; }
+
+#view-tax .tax-block__title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+
+/* The page's one recurring mark. It appears before every section heading and
+   nowhere else, which is what makes it read as a signature rather than
+   decoration — and it carries the accent without any surface needing to. */
+#view-tax .tax-block__title,
+#view-tax .tax-filing-guides__title,
+#view-tax .tax-advice__head h3 {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+#view-tax .tax-block__title::before,
+#view-tax .tax-filing-guides__title::before,
+#view-tax .tax-advice__head h3::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 3px;
+  height: 15px;
+  background: var(--primary);
+}
+
+/* The rail and the progress label are subordinate, so they take the small
+   version of the same mark. */
+#view-tax .tax-rail__title,
+#view-tax .tax-progress__label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#view-tax .tax-rail__title::before,
+#view-tax .tax-progress__label::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 2px;
+  height: 10px;
+  background: var(--primary);
+}
+
+/* ---------- field grid ----------
+   `align-items: end` is what keeps a checkbox in a mixed row sitting on the
+   same line as the inputs beside it, without a hand-tuned top padding. */
+
+#view-tax .tax-grid {
+  display: grid;
+  gap: 18px 22px;
+  align-items: end;
+  margin-bottom: 0;
+}
+
+#view-tax .tax-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#view-tax .tax-grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Age, City and Metro city read across in one line. */
+#view-tax .tax-grid--about { grid-template-columns: 110px minmax(0, 300px) auto; }
+
+@media (max-width: 860px) {
+  #view-tax .tax-grid--about { grid-template-columns: 110px minmax(0, 1fr); }
+}
+
+@media (max-width: 720px) {
+  #view-tax .tax-grid--2,
+  #view-tax .tax-grid--3,
+  #view-tax .tax-grid--about { grid-template-columns: 1fr; }
+}
+
+#view-tax .tax-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#view-tax .tax-field > span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0.002em;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+
+/* A field is a surface you type on, so it gets one: a faint fill against the
+   page, a hairline, and figures set slightly heavier than the labels above
+   them so entered numbers carry. */
+#view-tax .ob-input,
+#view-tax select.ob-input,
+#view-tax textarea.ob-input {
+  width: 100%;
+  min-height: var(--tx-input-h);
+  margin-bottom: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--tx-field-line);
+  border-radius: var(--tx-radius);
+  background: var(--tx-field-bg);
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#view-tax .ob-input:hover { border-color: var(--tx-field-line-hover); }
+
+/* A ring rather than a doubled border: it reads at a glance without the
+   field appearing to change size. */
+#view-tax .ob-input:focus,
+#view-tax select.ob-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--tx-ring);
+}
+
+#view-tax .ob-input::placeholder { color: var(--ink-faint); opacity: 0.7; font-weight: 400; }
+
+/* A field standing on its own outside a grid — a TDS figure, say — is still
+   a short number, so it keeps a field's width rather than the column's. */
+#view-tax .tax-head__body > .tax-field:not(.tax-field--check) .ob-input,
+#view-tax .tax-subsection > .tax-field:not(.tax-field--check) .ob-input {
+  max-width: 260px;
+}
+
+/* ---------- checkboxes ----------
+   The expansion behaviour these drive is untouched; only the rule that sizes
+   and colours the box lives here. */
+
+#view-tax .tax-field--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--tx-input-h);
+  padding-top: 0;
+}
+
+#view-tax .tax-field--check > span {
+  margin-bottom: 0;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+#view-tax .tax-field--check input[type="checkbox"],
+#view-tax .tax-allowance__toggle input[type="checkbox"],
+#view-tax .tax-deduction__flag input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* A checkbox that opens a whole head is a statement, not a field: it gets
+   its own line and a little more weight than the fields it reveals. */
+#view-tax .tax-head__body > .tax-field--check,
+#view-tax .tax-subsection > .tax-field--check {
+  min-height: 0;
+  padding: 2px 0;
+}
+
+#view-tax .tax-head__body > .tax-field--check > span,
+#view-tax .tax-subsection > .tax-field--check > span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---------- nested blocks ----------
+   A revealed sub-block is indented against a hairline, so its dependence on
+   the checkbox above is visible without wrapping it in anything. */
+
+#view-tax .tax-subsection {
+  margin-top: 18px;
+  padding-left: 20px;
+  border-left: 1px solid var(--line);
+}
+
+/* The scripts reveal these by clearing `hidden`, which takes the block from
+   display:none back into flow — and that restarts a CSS animation. So the
+   reveal can be eased without touching the logic that decides it. */
+#view-tax .tax-subsection:not([hidden]) {
+  animation: taxRevealIn 0.22s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@keyframes taxRevealIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+#view-tax .tax-subsection > .tax-subhead:first-child { margin-top: 2px; }
+
+/* ---------- sub-headings and hints ---------- */
+
+#view-tax .tax-subhead {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 30px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-hint {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-faint);
+  margin: 10px 0 0;
+  max-width: 68ch;
+}
+
+#view-tax .tax-hint--warn { color: var(--status-warning); }
+
+
+/* ==========================================================================
+   5 — INCOME HEADS
+   One continuous list. Number and title left, running figure and chevron
+   right, a hairline between each, and the form itself simply appears
+   underneath when a row is opened.
+   ========================================================================== */
+
+#view-tax .tax-head {
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+#view-tax .tax-head:last-child { border-bottom: 1px solid var(--line); }
+
+/* The open section is the one the user is working in, so it is the only row
+   that holds a tone and the accent edge. The edge is an inset shadow, not a
+   border, so opening a section shifts nothing. */
+#view-tax .tax-head[open] {
+  background: var(--tx-open);
+  box-shadow: inset 2px 0 0 var(--primary);
+}
+
+#view-tax .tax-head__summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 6px 22px 18px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.16s ease;
+}
+
+#view-tax .tax-head__summary::-webkit-details-marker { display: none; }
+
+/* Hover belongs to the closed rows: on the open one it would fight the tone
+   that already marks it. */
+#view-tax .tax-head:not([open]) > .tax-head__summary:hover { background: var(--tx-hover); }
+
+#view-tax .tax-head__summary:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -3px;
+}
+
+/* The numbers are the page's scan line. Set in a muted accent they read as
+   anchors; they come up to full accent on the row being touched or opened. */
+#view-tax .tax-head__index {
+  flex: 0 0 auto;
+  width: 26px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--tx-num);
+  transition: color 0.16s ease;
+}
+
+#view-tax .tax-head__summary:hover .tax-head__index,
+#view-tax .tax-head[open] .tax-head__index { color: var(--primary); }
+
+#view-tax .tax-head__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  font-weight: 500;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+}
+
+#view-tax .tax-head[open] > .tax-head__summary .tax-head__title { font-weight: 600; }
+
+#view-tax .tax-head__amount {
+  flex: 0 0 auto;
+  font-size: 14px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+#view-tax details.tax-head[open] > .tax-head__summary .tax-head__amount { color: var(--ink-faint); }
+
+/* The disclosure chevron. Drawn on the summary itself so the markup carries
+   no decorative element. */
+#view-tax .tax-head__summary::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-left: 4px;
+  border-right: 1.5px solid var(--ink-faint);
+  border-bottom: 1.5px solid var(--ink-faint);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.24s cubic-bezier(0.33, 1, 0.68, 1), border-color 0.16s ease;
+}
+
+#view-tax .tax-head__summary:hover::after {
+  border-right-color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+#view-tax details.tax-head[open] > .tax-head__summary::after {
+  transform: translateY(1px) rotate(-135deg);
+  border-right-color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* Aligned under the title, not under the number — the body belongs to the
+   title it opened from. */
+#view-tax .tax-head__body {
+  border: 0;
+  padding: 4px 6px 34px 58px;
+}
+
+/* The content settles in rather than appearing. Short enough not to be
+   noticed as an animation, long enough to connect it to the click. */
+#view-tax .tax-head[open] > .tax-head__body {
+  animation: taxSectionIn 0.24s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@keyframes taxSectionIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (max-width: 720px) {
+  #view-tax .tax-head__summary { padding: 19px 2px 19px 14px; gap: 12px; }
+  #view-tax .tax-head__index { width: 22px; font-size: 12px; }
+  #view-tax .tax-head__title { font-size: 15.5px; }
+  #view-tax .tax-head__body { padding: 4px 2px 30px 14px; }
+  #view-tax .tax-subsection { padding-left: 14px; margin-top: 16px; }
+}
+
+
+/* ==========================================================================
+   6 — ALLOWANCES
+   ========================================================================== */
+
+#view-tax .tax-allowances { display: block; }
+
+#view-tax .tax-allowance {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) 158px minmax(0, 1.1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-allowance:last-child { border-bottom: none; }
+
+#view-tax .tax-allowance__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 0;
+}
+
+#view-tax .tax-allowance__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#view-tax .tax-allowance__input {
+  min-height: 34px;
+  padding: 6px 9px;
+  font-size: 13px;
+}
+
+#view-tax .tax-allowance__unit {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+#view-tax .tax-allowance__hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 900px) {
+  #view-tax .tax-allowance {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 14px 0;
+  }
+}
+
+
+/* ==========================================================================
+   7 — HOUSE PROPERTY ROWS
+   Repeating form blocks divided by a rule, not stacked tinted cards.
+   ========================================================================== */
+
+#view-tax .tax-property {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  padding: 20px 0 4px;
+  margin: 0;
+}
+
+#view-tax .tax-property:first-child { border-top: 0; padding-top: 6px; }
+
+#view-tax .tax-property__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+#view-tax .tax-property__label { flex: 1 1 180px; }
+#view-tax .tax-property__type { flex: 0 1 180px; }
+#view-tax .tax-property__remove { flex-shrink: 0; }
+
+#view-tax #btnAddProperty { margin-top: 20px; }
+
+
+/* ==========================================================================
+   8 — DEDUCTIONS CHECKLIST
+   A statutory list: section number in a fixed column, label, amount.
+   ========================================================================== */
+
+#view-tax .tax-deductions { display: block; }
+
+#view-tax .tax-deduction {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-deduction:last-child { border-bottom: none; }
+
+#view-tax .tax-deduction__main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+#view-tax .tax-deduction__id {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+/* The section number is reference data, so it is set as text in a fixed
+   column that the labels line up against — not as a coloured chip. */
+#view-tax .tax-deduction__section {
+  flex: 0 0 auto;
+  min-width: 62px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+#view-tax .tax-deduction__label {
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+#view-tax .tax-deduction__input {
+  flex: 0 0 158px;
+  min-height: 36px;
+  padding: 7px 10px;
+  font-size: 13.5px;
+  text-align: right;
+}
+
+#view-tax .tax-deduction__meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+  padding-left: 76px;
+}
+
+#view-tax .tax-deduction__limit {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-deduction__flag {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+#view-tax .tax-deduction__desc {
+  margin-top: 5px;
+  padding-left: 76px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-faint);
+  max-width: 76ch;
+}
+
+@media (max-width: 720px) {
+  #view-tax .tax-deduction__main { flex-direction: column; align-items: stretch; gap: 10px; }
+  #view-tax .tax-deduction__input { flex: 1 1 auto; text-align: left; }
+  #view-tax .tax-deduction__meta,
+  #view-tax .tax-deduction__desc { padding-left: 0; }
+}
+
+
+/* ==========================================================================
+   9 — TDS BREAKDOWN
+   ========================================================================== */
+
+#view-tax .tax-tds-list {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+}
+
+#view-tax .tax-tds-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-tds-list li span:last-child { color: var(--ink); }
+
+#view-tax .tax-tds-heading {
+  font-size: 10.5px !important;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint) !important;
+  padding: 0 0 8px !important;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-tds-total {
+  margin-top: 4px;
+  padding-top: 10px !important;
+  border-top: 1px solid var(--line-strong);
+  color: var(--ink) !important;
+  font-weight: 600;
+}
+
+
+/* ==========================================================================
+   10 — SUMMARY RAIL
+   Running totals, read as annotation to the form beside it. Small uppercase
+   headings keep it subordinate to the workflow.
+   ========================================================================== */
+
+#view-tax .tax-rail { padding: 26px 0; }
+
+#view-tax .tax-rail:first-child { padding-top: 0; }
+
+#view-tax .tax-rail + .tax-rail { border-top: 1px solid var(--line); }
+
+#view-tax .tax-rail__title {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 18px;
+}
+
+#view-tax .tax-summary__total {
+  display: block;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+#view-tax .tax-summary__total-label {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-bottom: 7px;
+}
+
+#view-tax .tax-summary__total-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  color: var(--ink);
+}
+
+#view-tax .tax-summary__heads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#view-tax .tax-summary__head {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-summary__head:first-child { padding-top: 0; }
+#view-tax .tax-summary__head:last-child { border-bottom: none; padding-bottom: 0; }
+
+#view-tax .tax-summary__head-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+#view-tax .tax-summary__head-label {
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+#view-tax .tax-summary__head-net {
+  font-size: 13.5px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+#view-tax .tax-summary__head-sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-summary__empty {
+  font-size: 13px;
+  color: var(--ink-faint);
+  padding: 2px 0;
+}
+
+#view-tax .tax-summary__detail { margin-top: 10px; }
+
+#view-tax .tax-summary__detail > summary,
+#view-tax .tax-compare__detail > summary,
+#view-tax .tax-itr__ruled > summary {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  list-style: none;
+  border-bottom: 1px solid transparent;
+}
+
+#view-tax .tax-summary__detail > summary::-webkit-details-marker,
+#view-tax .tax-compare__detail > summary::-webkit-details-marker,
+#view-tax .tax-itr__ruled > summary::-webkit-details-marker { display: none; }
+
+#view-tax .tax-summary__detail > summary:hover,
+#view-tax .tax-compare__detail > summary:hover,
+#view-tax .tax-itr__ruled > summary:hover { border-bottom-color: currentColor; }
+
+#view-tax .tax-summary__detail ul {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+#view-tax .tax-summary__detail li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 12px;
+  padding: 4px 0;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-summary__detail li span:last-of-type {
+  text-align: right;
+  white-space: nowrap;
+}
+
+#view-tax .tax-summary__detail li em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--accent);
+}
+
+#view-tax .tax-summary__detail li small {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+#view-tax .tax-summary__row--tds {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-strong);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-summary__row--tds span:last-child { color: var(--ink); font-weight: 500; }
+
+#view-tax .tax-summary__next {
+  margin-top: 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+/* ---------- warnings ---------- */
+
+#view-tax .tax-warnings {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#view-tax .tax-warnings li {
+  position: relative;
+  padding: 0 0 0 16px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-warnings li:last-child { margin-bottom: 0; }
+
+#view-tax .tax-warnings li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 1px;
+  background: var(--status-warning);
+}
+
+/* ---------- disclaimer ----------
+   Always visible, never inside a collapsed section: this is an estimate, and
+   the screen should keep saying so. */
+
+#view-tax .tax-disclaimer {
+  margin: 0;
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--ink-faint);
+}
+
+
+/* ==========================================================================
+   11 — HRA EXEMPTION
+   The three-limb test, read as a rail with the binding limb marked.
+   ========================================================================== */
+
+#view-tax .tax-hra__result {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+#view-tax .tax-hra__result-label {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-hra__result-value {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+#view-tax .tax-hra__lead {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0 0 10px;
+}
+
+#view-tax .tax-hra__limbs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#view-tax .tax-hra__limb {
+  padding: 9px 0 9px 14px;
+  border: 0;
+  border-left: 2px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+/* The limb that actually bit — this is the number the user can act on. */
+#view-tax .tax-hra__limb.is-binding {
+  border-left-color: var(--primary);
+  background: transparent;
+}
+
+#view-tax .tax-hra__limb-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-hra__limb.is-binding .tax-hra__limb-top { color: var(--ink); }
+
+#view-tax .tax-hra__limb-amount { white-space: nowrap; }
+
+#view-tax .tax-hra__limb.is-binding .tax-hra__limb-amount {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+#view-tax .tax-hra__limb small {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-hra__taxable {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-hra__taxable span:last-child { color: var(--ink); }
+
+#view-tax .tax-hra__notes,
+#view-tax .tax-compare__notes,
+#view-tax .tax-itr__reasons {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+#view-tax .tax-hra__notes li,
+#view-tax .tax-compare__notes li,
+#view-tax .tax-itr__reasons li {
+  position: relative;
+  padding: 0 0 0 15px;
+  margin-bottom: 9px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-hra__notes li:last-child,
+#view-tax .tax-compare__notes li:last-child,
+#view-tax .tax-itr__reasons li:last-child { margin-bottom: 0; }
+
+#view-tax .tax-hra__notes li::before,
+#view-tax .tax-compare__notes li::before,
+#view-tax .tax-itr__reasons li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+#view-tax .tax-compare__notes {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+#view-tax .tax-itr__reasons li {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-itr__reasons li::before { background: var(--primary); }
+
+
+/* ==========================================================================
+   12 — DEDUCTIONS SUMMARY
+   ========================================================================== */
+
+#view-tax .tax-ded-totals {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+#view-tax .tax-ded-total {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#view-tax .tax-ded-total span {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-ded-total strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+/* The new regime allows almost nothing here, so it reads as secondary. */
+#view-tax .tax-ded-total--muted strong { color: var(--ink-faint); }
+
+#view-tax .tax-ded-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#view-tax .tax-ded-item {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-ded-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+#view-tax .tax-ded-item__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+#view-tax .tax-ded-item__section {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+#view-tax .tax-ded-item__amount {
+  font-size: 12.5px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+#view-tax .tax-ded-item__sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-ded-item__sub em { font-style: normal; white-space: nowrap; }
+
+#view-tax .tax-ded-item.is-capped .tax-ded-item__sub em { color: var(--status-warning); }
+
+#view-tax .tax-ded-note {
+  margin: 16px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--status-warning);
+}
+
+
+/* ==========================================================================
+   13 — REGIME COMPARISON
+   Two columns of figures under a rule each, the cheaper one marked by its
+   rule turning accent. No cards, so the two stay equally readable.
+   ========================================================================== */
+
+#view-tax .tax-compare {
+  margin: 0 0 36px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+#view-tax .tax-compare__cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 48px;
+}
+
+@media (max-width: 900px) {
+  #view-tax .tax-compare__cards { grid-template-columns: 1fr; gap: 32px 0; }
+}
+
+#view-tax .tax-compare__card {
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 2px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+#view-tax .tax-compare__card.is-recommended {
+  border-top-color: var(--primary);
+  box-shadow: none;
+}
+
+#view-tax .tax-compare__head {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+#view-tax .tax-compare__title {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+#view-tax .tax-compare__title h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+/* "Lower by ₹x" — set as a label, not a pill. */
+#view-tax .tax-compare__badge {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#view-tax .tax-compare__liability {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+#view-tax .tax-compare__effective {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-compare__rows {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+#view-tax .tax-compare__rows li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-compare__rows li span:last-child {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+#view-tax .tax-compare__rows li.is-subtotal {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+#view-tax .tax-compare__total,
+#view-tax .tax-compare__paid,
+#view-tax .tax-compare__net {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+#view-tax .tax-compare__total {
+  padding-top: 12px;
+  border-top: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+#view-tax .tax-compare__total span:last-child,
+#view-tax .tax-compare__paid span:last-child,
+#view-tax .tax-compare__net span:last-child { white-space: nowrap; }
+
+#view-tax .tax-compare__paid {
+  margin-top: 9px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-compare__net {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+#view-tax .tax-compare__net.is-refund span:last-child { color: var(--status-good); }
+
+#view-tax .tax-compare__detail { margin-top: 16px; }
+
+#view-tax .tax-compare__detail ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+#view-tax .tax-compare__detail li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 12px;
+  padding: 4px 0;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-compare__detail li span:last-of-type {
+  text-align: right;
+  white-space: nowrap;
+}
+
+#view-tax .tax-compare__detail li em {
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--accent);
+}
+
+#view-tax .tax-compare__detail li small {
+  grid-column: 1 / -1;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+/* The verdict is the sentence the whole screen exists to produce, so it gets
+   an accent rule and room — not a tinted box. */
+#view-tax .tax-compare__verdict {
+  margin: 28px 0 0;
+  padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--primary);
+  border-radius: 0;
+  background: transparent;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  max-width: 76ch;
+}
+
+
+/* ==========================================================================
+   14 — RECOMMENDATIONS AND ITR FORM
+   ========================================================================== */
+
+/* The advice pair borrows the form/rail geometry above it, so one vertical
+   rule runs down the right of the whole screen instead of two that nearly
+   line up. It collapses at the same width the layout does, for the same
+   reason. */
+#view-tax .tax-advice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 356px;
+  gap: 0;
+  margin-top: 34px;
+}
+
+#view-tax .tax-advice__panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+#view-tax .tax-advice__panel:first-child { padding-right: var(--tx-gutter); }
+
+#view-tax .tax-itr {
+  padding-left: var(--tx-gutter);
+  border-left: 1px solid var(--line);
+}
+
+@media (max-width: 1100px) {
+  #view-tax .tax-advice { grid-template-columns: 1fr; gap: 34px 0; }
+  #view-tax .tax-advice__panel:first-child { padding-right: 0; }
+  #view-tax .tax-itr { padding-left: 0; border-left: 0; }
+}
+
+#view-tax .tax-advice__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-tax .tax-advice__head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+#view-tax .tax-advice__sub {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-recs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Priority is carried by a short accent tick, the only mark on the row. */
+#view-tax .tax-rec {
+  position: relative;
+  padding: 18px 0 18px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+
+#view-tax .tax-rec:last-child { border-bottom: 0; }
+
+#view-tax .tax-rec::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 21px;
+  width: 2px;
+  height: 14px;
+  background: var(--line-strong);
+}
+
+#view-tax .tax-rec--high::before { background: var(--primary); }
+#view-tax .tax-rec--medium::before { background: var(--accent); opacity: 0.5; }
+#view-tax .tax-rec--low::before { background: var(--line-strong); }
+
+#view-tax .tax-rec__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+#view-tax .tax-rec__cat {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-rec__saving {
+  font-size: 12.5px;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+#view-tax .tax-rec__title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+#view-tax .tax-rec__detail {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-muted);
+  max-width: 72ch;
+}
+
+#view-tax .tax-rec__action {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--accent);
+}
+
+/* ---------- ITR form ---------- */
+
+#view-tax .tax-itr__form {
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: 14px 0 8px;
+}
+
+#view-tax .tax-itr__desc {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+#view-tax .tax-itr__ruled { margin-top: 16px; }
+
+#view-tax .tax-itr__ruled ul {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+#view-tax .tax-itr__ruled li {
+  padding: 5px 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+#view-tax .tax-itr__ruled li strong {
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+
+#view-tax .tax-itr__warning {
+  margin: 16px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--ink-faint);
+}
+
+
+/* ==========================================================================
+   15 — FIELD HELP
+   Small, quiet, and out of the way until asked for.
+   ========================================================================== */
+
+/* The wrapper is what the tooltip is positioned against, so the tip travels
+   with its field on scroll and the script never measures a page offset. */
+#view-tax .tax-help {
+  position: relative;
+  display: inline-flex;
+  margin-left: 7px;
+}
+
+#view-tax .tax-help__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--line-strong);
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+#view-tax .tax-help__btn:hover,
+#view-tax .tax-help__btn.is-open {
+  background: var(--primary);
+  color: var(--primary-text);
+  box-shadow: none;
+  transform: none;
+}
+
+#view-tax .tax-help__btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Lives on <body>, not beside its field: the script sets top/left in viewport
+   coordinates and --tax-help-arrow, the arrow's offset from the tip's left.
+   The one elevated surface on the screen, because it has to float. */
+.tax-help__tip {
+  position: fixed;
+  z-index: 1200;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(320px, 78vw);
+  padding: 12px 15px;
+  background: var(--surface-3, #16191b);
+  color: var(--ink-muted, #a8b0b6);
+  border: 1px solid var(--line-strong, rgba(255, 255, 255, 0.16));
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.65;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  animation: taxHelpIn 0.18s ease-out;
+}
+
+.tax-help__tip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: calc(var(--tax-help-arrow, 12px) - 5px);
+  width: 10px;
+  height: 10px;
+  background: var(--surface-3, #16191b);
+  border-left: 1px solid var(--line-strong, rgba(255, 255, 255, 0.16));
+  border-top: 1px solid var(--line-strong, rgba(255, 255, 255, 0.16));
+  transform: rotate(45deg);
+}
+
+/* Flipped above the field when the viewport has no room below it. */
+.tax-help__tip.is-above { animation-name: taxHelpInAbove; }
+
+.tax-help__tip.is-above::before {
+  top: auto;
+  bottom: -6px;
+  border-left: none;
+  border-top: none;
+  border-right: 1px solid var(--line-strong, rgba(255, 255, 255, 0.16));
+  border-bottom: 1px solid var(--line-strong, rgba(255, 255, 255, 0.16));
+}
+
+@keyframes taxHelpIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes taxHelpInAbove {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tax-help__tip { animation: none; }
+
+  #view-tax .tax-head,
+  #view-tax .tax-head__summary,
+  #view-tax .tax-head__index,
+  #view-tax .tax-head__summary::after,
+  #view-tax .tax-filing-guide__summary,
+  #view-tax .tax-filing-guide__summary::after,
+  #view-tax .tax-progress__fill,
+  #view-tax .ob-input {
+    transition: none;
+  }
+
+  #view-tax .tax-head[open] > .tax-head__body,
+  #view-tax .tax-subsection:not([hidden]) {
+    animation: none;
+  }
+}
+
+
+/* ==========================================================================
+   16 — LOOSE ENDS
+   Guards for the elements the scripts fill in later, and for native select
+   popups, which do not inherit a transparent field background usefully.
+   ========================================================================== */
+
+/* Hints, the deductions intro, the verdict and the disclaimer are all written
+   by the scripts. Until they are, they should take up no room at all rather
+   than leaving an orphaned rule or a gap behind. */
+#view-tax .tax-hint:empty,
+#view-tax .tax-compare__verdict:empty,
+#view-tax .tax-disclaimer:empty,
+#view-tax .tax-subhead:empty { display: none; }
+
+/* Every in-form select carries the same field fill as the text inputs beside
+   it; the header's year select deliberately stays transparent and is handled
+   above. The option colours are set explicitly because a select with a
+   transparent field can otherwise open a popup that paints the page's ink
+   colour onto the platform's own background. */
+#view-tax select.ob-input { background-color: var(--tx-field-bg, transparent); }
+
+#view-tax select.ob-input option {
+  background-color: var(--surface);
+  color: var(--ink);
+}

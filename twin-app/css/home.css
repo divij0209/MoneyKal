@@ -1,0 +1,3643 @@
+/* ==========================================================================
+   MoneyKal — public homepage
+
+   Self-contained: this file does not load or depend on styles.css, so nothing
+   here can leak into the signed-in app and nothing there can fight it. The two
+   share a vocabulary (Poppins / Inter, cyan accent) so the page
+   reads as the same product, but the token names are prefixed --mk- to keep
+   the systems independent.
+
+   Palette: near-black × cyan × off-white in dark, warm off-white × deep cyan ×
+   near-black in light. Cyan is a spotlight, not a wash — it appears on the
+   headline's second line, the primary CTA, the chosen branch, and interactive
+   states. Everything else is greyscale.
+   ========================================================================== */
+
+/* ============================== TOKENS ============================== */
+
+:root,
+:root[data-theme="light"] {
+  /* LIGHT — warm off-white, never a clinical pure white */
+  --mk-bg:            #F4F2ED;
+  --mk-bg-tint:       #EDEAE3;
+  --mk-surface:       #FBFAF7;
+  --mk-ink:           #14171A;
+  --mk-ink-2:         #4A5257;
+  --mk-ink-3:         #838C91;
+  --mk-line:          rgba(20, 23, 26, 0.10);
+  --mk-line-strong:   rgba(20, 23, 26, 0.20);
+
+  /* Deepened so cyan holds contrast against a light ground */
+  --mk-accent:        #00808F;
+  --mk-accent-hi:     #00A0B4;
+  --mk-accent-tint:   rgba(0, 128, 143, 0.10);
+  --mk-accent-glow:   rgba(0, 128, 143, 0.18);
+  --mk-on-accent:     #FFFFFF;
+
+  --mk-shadow:        0 1px 2px rgba(20,23,26,0.05), 0 12px 34px rgba(20,23,26,0.07);
+  --mk-nav-bg:        rgba(244, 242, 237, 0.72);
+}
+
+:root[data-theme="dark"] {
+  /* DARK — rich near-black, not flat #000 */
+  --mk-bg:            #070809;
+  --mk-bg-tint:       #0C0E10;
+  --mk-surface:       #101315;
+  --mk-ink:           #F2F5F6;
+  --mk-ink-2:         #99A3A8;
+  --mk-ink-3:         #656E73;
+  --mk-line:          rgba(255, 255, 255, 0.08);
+  --mk-line-strong:   rgba(255, 255, 255, 0.17);
+
+  --mk-accent:        #00E5FF;
+  --mk-accent-hi:     #6BF1FF;
+  --mk-accent-tint:   rgba(0, 229, 255, 0.10);
+  --mk-accent-glow:   rgba(0, 229, 255, 0.22);
+  --mk-on-accent:     #04161A;
+
+  --mk-shadow:        0 1px 2px rgba(0,0,0,0.4), 0 18px 48px rgba(0,0,0,0.5);
+  --mk-nav-bg:        rgba(7, 8, 9, 0.72);
+}
+
+:root {
+  --mk-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-mono:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mk-serif:   'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --mk-wrap:    1180px;
+  --mk-gutter:  clamp(20px, 5vw, 56px);
+  --mk-section: clamp(96px, 13vh, 168px);
+
+  /* One easing across the whole page. A single curve is most of what makes
+     motion feel authored rather than assembled. */
+  --mk-ease:    cubic-bezier(0.22, 1, 0.36, 1);
+  --mk-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* ============================== BASE ============================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  /* Anchors must clear the fixed nav. */
+  scroll-padding-top: 96px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body.mk {
+  margin: 0;
+  background: var(--mk-bg);
+  color: var(--mk-ink);
+  font-family: var(--mk-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Theme transition: the surfaces cross-fade together instead of snapping, and
+   only colour properties transition so nothing reflows mid-switch. Applied to
+   the elements that actually carry a themed colour rather than to `*`, which
+   would make every hover feel sluggish. */
+body.mk,
+body.mk .mk-nav,
+body.mk .mk-section--tint,
+body.mk .mk-final,
+body.mk .mk-footer,
+body.mk .mk-quote,
+body.mk .mk-solution,
+body.mk .mk-btn,
+body.mk .mk-icon-btn,
+body.mk .mk-lang-btn,
+body.mk .mk-post,
+body.mk .mk-sim__panel,
+body.mk .mk-hero__readout {
+  transition: background-color 420ms var(--mk-ease-io),
+              border-color 420ms var(--mk-ease-io),
+              color 420ms var(--mk-ease-io),
+              box-shadow 420ms var(--mk-ease-io);
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+
+:where(a, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--mk-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.mk-wrap {
+  width: 100%;
+  max-width: var(--mk-wrap);
+  margin-inline: auto;
+  padding-inline: var(--mk-gutter);
+}
+
+/* ============================== TYPE ============================== */
+
+.mk-eyebrow {
+  margin: 0 0 18px;
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+
+.mk-h2 {
+  margin: 0;
+  font-family: var(--mk-display);
+  font-weight: 400;
+  font-size: clamp(30px, 4.4vw, 54px);
+  line-height: 1.1;
+  letter-spacing: -0.028em;
+  color: var(--mk-ink);
+}
+
+.mk-muted-text { color: var(--mk-ink-3); }
+.mk-accent-text { color: var(--mk-accent); }
+
+.mk-sub {
+  margin: 22px 0 0;
+  max-width: 56ch;
+  font-size: clamp(15px, 1.3vw, 17px);
+  line-height: 1.68;
+  color: var(--mk-ink-2);
+}
+
+.mk-head { margin-bottom: clamp(48px, 7vw, 84px); }
+.mk-head--center { text-align: center; }
+.mk-head--center .mk-sub { margin-inline: auto; }
+
+.mk-section { padding-block: var(--mk-section); }
+.mk-section--tint { background: var(--mk-bg-tint); }
+
+/* ============================== BUTTONS ============================== */
+
+.mk-btn {
+  --_y: 0px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-family: var(--mk-body);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transform: translateY(var(--_y));
+  transition: transform 260ms var(--mk-ease), background-color 200ms var(--mk-ease),
+              border-color 200ms var(--mk-ease), box-shadow 260ms var(--mk-ease),
+              color 200ms var(--mk-ease);
+}
+.mk-btn--lg { padding: 15px 26px; font-size: 15px; border-radius: 12px; }
+
+.mk-btn--accent {
+  background: var(--mk-accent);
+  color: var(--mk-on-accent);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+}
+.mk-btn--accent:hover {
+  --_y: -2px;
+  background: var(--mk-accent-hi);
+  box-shadow: 0 10px 26px var(--mk-accent-glow);
+}
+.mk-btn--accent:active { --_y: 0px; box-shadow: 0 2px 8px var(--mk-accent-glow); }
+
+.mk-btn--ghost {
+  background: transparent;
+  color: var(--mk-ink);
+  border-color: var(--mk-line-strong);
+}
+.mk-btn--ghost:hover { --_y: -2px; border-color: var(--mk-accent); color: var(--mk-accent); }
+.mk-btn--ghost:active { --_y: 0px; }
+
+/* The arrow leads on hover — the smallest possible cue that the button goes
+   somewhere, without a bounce. */
+.mk-btn__arrow { transition: transform 300ms var(--mk-ease); }
+.mk-btn:hover .mk-btn__arrow { transform: translateX(4px); }
+
+.mk-link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 26px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mk-accent);
+}
+.mk-link-arrow span { transition: transform 300ms var(--mk-ease); }
+.mk-link-arrow:hover span { transform: translateX(5px); }
+
+/* ============================== PROGRESS ============================== */
+
+.mk-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 120;
+  pointer-events: none;
+}
+.mk-progress i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, transparent, var(--mk-accent));
+  transition: width 90ms linear;
+}
+
+/* ============================== NAV ============================== */
+
+.mk-nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 18px var(--mk-gutter);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  /* Enters after the page paints — the nav should feel like it settled in,
+     not like it was always mid-animation. */
+  animation: mkNavIn 700ms var(--mk-ease) 120ms both;
+}
+.mk-nav.is-stuck {
+  background: var(--mk-nav-bg);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom-color: var(--mk-line);
+  padding-block: 12px;
+}
+@keyframes mkNavIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+
+.mk-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mk-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--mk-ink);
+}
+.mk-nav__logo { width: 26px; height: 26px; display: block; flex-shrink: 0; }
+.mk-nav__logo svg,
+.mk-nav__logo img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.mk-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline: auto;
+}
+/* No boxes — a hairline that grows from the centre is the whole interaction. */
+.mk-nav__links a {
+  position: relative;
+  padding: 7px 12px;
+  font-size: 14px;
+  color: var(--mk-ink-2);
+  transition: color 220ms var(--mk-ease);
+}
+.mk-nav__links a::after {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px; bottom: 2px;
+  height: 1px;
+  background: var(--mk-accent);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 320ms var(--mk-ease);
+}
+.mk-nav__links a:hover { color: var(--mk-ink); }
+.mk-nav__links a:hover::after { transform: scaleX(1); }
+
+.mk-nav__actions { display: flex; align-items: center; gap: 10px; }
+
+.mk-nav__login {
+  padding: 7px 10px;
+  font-size: 14px;
+  color: var(--mk-ink-2);
+  transition: color 220ms var(--mk-ease);
+}
+.mk-nav__login:hover { color: var(--mk-ink); }
+
+.mk-icon-btn,
+.mk-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid var(--mk-line);
+  background: transparent;
+  color: var(--mk-ink-2);
+  cursor: pointer;
+  font-family: var(--mk-mono);
+  transition: color 200ms var(--mk-ease), border-color 200ms var(--mk-ease),
+              background-color 200ms var(--mk-ease);
+}
+.mk-icon-btn { width: 34px; }
+.mk-lang-btn { padding-inline: 10px; font-size: 11.5px; letter-spacing: 0.04em; }
+.mk-icon-btn:hover,
+.mk-lang-btn:hover { color: var(--mk-accent); border-color: var(--mk-accent); background: var(--mk-accent-tint); }
+
+.mk-nav__burger {
+  display: none;
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  border: 1px solid var(--mk-line);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+.mk-nav__burger span {
+  position: absolute;
+  left: 9px; right: 9px;
+  height: 1.5px;
+  background: var(--mk-ink);
+  border-radius: 2px;
+  transition: transform 300ms var(--mk-ease), opacity 200ms var(--mk-ease);
+}
+.mk-nav__burger span:nth-child(1) { top: 13px; }
+.mk-nav__burger span:nth-child(2) { top: 19px; }
+.mk-nav__burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(3px) rotate(45deg); }
+.mk-nav__burger[aria-expanded="true"] span:nth-child(2) { transform: translateY(-3px) rotate(-45deg); }
+
+/* Mobile sheet */
+.mk-sheet {
+  position: fixed;
+  inset: 68px 0 auto 0;
+  z-index: 99;
+  padding: 22px var(--mk-gutter) 30px;
+  background: var(--mk-nav-bg);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  border-bottom: 1px solid var(--mk-line);
+  animation: mkSheetIn 320ms var(--mk-ease) both;
+}
+.mk-sheet[hidden] { display: none; }
+@keyframes mkSheetIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+.mk-sheet__links { display: flex; flex-direction: column; }
+.mk-sheet__links a {
+  padding: 13px 0;
+  font-family: var(--mk-display);
+  font-size: 19px;
+  border-bottom: 1px solid var(--mk-line);
+  color: var(--mk-ink);
+}
+.mk-sheet__actions { display: flex; gap: 10px; margin-top: 22px; }
+.mk-sheet__actions .mk-btn { flex: 1; justify-content: center; }
+
+/* ============================== HERO ==============================
+   Above the fold has one job: say what MoneyKal is, who it is for, and what it
+   does, without asking anyone to scroll. The left column carries the claim, the
+   two audiences and the actions; the right column shows a condensed slice of
+   the real product surface so the page demonstrates rather than only asserts.
+   ================================================================== */
+
+.mk-hero {
+  position: relative;
+  padding-top: clamp(118px, 15vh, 168px);
+  padding-bottom: clamp(72px, 10vh, 120px);
+  overflow: hidden;
+}
+
+/* A single, very restrained glow anchored behind the visual. One light source,
+   not a field of gradients. */
+.mk-hero::before {
+  content: "";
+  position: absolute;
+  top: -12%; right: -8%;
+  width: min(760px, 68vw);
+  height: min(760px, 68vw);
+  background: radial-gradient(circle, var(--mk-accent-glow) 0%, transparent 62%);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mk-hero__grid {
+  position: relative;
+  z-index: 1;
+  width: min(var(--mk-wrap), 100% - var(--mk-gutter) * 2);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  gap: clamp(40px, 5vw, 76px);
+  align-items: center;
+}
+
+/* ---------------- Left column ---------------- */
+
+.mk-hero__eyebrow { animation: mkFadeUp 700ms var(--mk-ease) 200ms both; }
+
+.mk-hero__title {
+  margin: 0 0 20px;
+  font-family: var(--mk-display);
+  font-size: clamp(38px, 5.4vw, 68px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.038em;
+}
+
+/* Masked line reveal: the text rises out of its own line box, which reads as
+   deliberate typesetting rather than a generic fade. `.mk-line` is generic on
+   purpose, the final CTA section reuses it. */
+.mk-line { display: block; overflow: hidden; }
+.mk-line > span {
+  display: block;
+  transform: translateY(105%);
+  animation: mkLineUp 1000ms var(--mk-ease) both;
+}
+.mk-hero__title .mk-line:nth-child(1) > span { animation-delay: 300ms; }
+.mk-hero__title .mk-line:nth-child(2) > span { animation-delay: 420ms; }
+.mk-hero__title .mk-line:nth-child(3) > span { animation-delay: 540ms; }
+
+@keyframes mkLineUp { from { transform: translateY(105%); } to { transform: translateY(0); } }
+@keyframes mkFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+/* Shared with the sparkline further down the page. */
+@keyframes mkDraw { to { stroke-dashoffset: 0; } }
+
+.mk-hero__lede {
+  margin: 0 0 32px;
+  max-width: 46ch;
+  font-size: clamp(16px, 1.35vw, 18.5px);
+  line-height: 1.6;
+  color: var(--mk-ink-2);
+  animation: mkFadeUp 800ms var(--mk-ease) 560ms both;
+}
+
+/* ---------------- Audience split ----------------
+   Two cards, deliberately plain: a label, one sentence, one affordance. They
+   answer "is this for me" at a glance and route straight into sign-up. */
+
+.mk-hero__audience {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 34px;
+  animation: mkFadeUp 800ms var(--mk-ease) 700ms both;
+}
+
+.mk-aud {
+  position: relative;
+  display: block;
+  padding: 20px 20px 22px;
+  border: 1px solid var(--mk-line);
+  border-radius: 14px;
+  background: var(--mk-surface);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 260ms var(--mk-ease),
+    transform 260ms var(--mk-ease),
+    box-shadow 260ms var(--mk-ease);
+}
+
+.mk-aud:hover {
+  border-color: var(--mk-accent);
+  transform: translateY(-3px);
+  box-shadow: var(--mk-shadow);
+}
+
+.mk-aud__tag {
+  display: block;
+  margin-bottom: 9px;
+  font-family: var(--mk-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+}
+
+.mk-aud__copy {
+  margin: 0;
+  font-size: 13.6px;
+  line-height: 1.52;
+  color: var(--mk-ink-2);
+}
+
+.mk-aud__go {
+  position: absolute;
+  top: 18px; right: 18px;
+  font-size: 15px;
+  color: var(--mk-ink-3);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 260ms var(--mk-ease);
+}
+
+.mk-aud:hover .mk-aud__go {
+  opacity: 1;
+  transform: translateX(0);
+  color: var(--mk-accent);
+}
+
+.mk-hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  animation: mkFadeUp 800ms var(--mk-ease) 840ms both;
+}
+
+/* ---------------- Right column: product preview ---------------- */
+
+.mk-hero__visual {
+  position: relative;
+  animation: mkFadeUp 1000ms var(--mk-ease) 640ms both;
+}
+
+.mk-preview {
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+  overflow: hidden;
+}
+
+.mk-preview__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mk-line);
+  background: var(--mk-bg-tint);
+}
+
+.mk-preview__mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mk-accent);
+  flex-shrink: 0;
+}
+
+.mk-preview__name {
+  font-family: var(--mk-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.mk-preview__chip {
+  margin-left: auto;
+  padding: 4px 10px;
+  border: 1px solid var(--mk-line);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+
+.mk-preview__body { padding: 22px; }
+
+.mk-preview__headline { margin-bottom: 16px; }
+
+.mk-readout__label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+  margin-bottom: 7px;
+}
+
+.mk-readout__value {
+  display: block;
+  font-family: var(--mk-display);
+  font-size: clamp(30px, 3.4vw, 40px);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--mk-ink);
+}
+
+.mk-readout__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  font-size: 12.6px;
+  color: var(--mk-ink-3);
+}
+
+.mk-readout__arrow { color: var(--mk-accent); font-weight: 700; }
+
+.mk-preview__chart {
+  display: block;
+  width: 100%;
+  height: 96px;
+  margin-bottom: 20px;
+}
+
+.mk-preview__line {
+  stroke-dasharray: 460;
+  stroke-dashoffset: 460;
+  animation: mkDraw 1600ms var(--mk-ease) 900ms forwards;
+}
+
+.mk-preview__area {
+  opacity: 0;
+  animation: mkFadeIn 900ms var(--mk-ease) 1700ms forwards;
+}
+
+@keyframes mkFadeIn { to { opacity: 1; } }
+
+.mk-preview__tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mk-tile {
+  padding: 13px 12px;
+  border: 1px solid var(--mk-line);
+  border-radius: 11px;
+  background: var(--mk-bg-tint);
+}
+
+.mk-tile__k {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+  margin-bottom: 6px;
+}
+
+.mk-tile__v {
+  font-family: var(--mk-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+}
+
+.mk-preview__rows { display: grid; gap: 11px; }
+
+.mk-prow {
+  display: grid;
+  grid-template-columns: 78px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.4px;
+}
+
+.mk-prow__k { color: var(--mk-ink-2); }
+
+.mk-prow__bar {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--mk-line);
+  overflow: hidden;
+}
+
+.mk-prow__bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mk-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: mkBarIn 1000ms var(--mk-ease) forwards;
+}
+
+.mk-prow:nth-child(1) .mk-prow__bar i { animation-delay: 1500ms; }
+.mk-prow:nth-child(2) .mk-prow__bar i { animation-delay: 1620ms; }
+.mk-prow:nth-child(3) .mk-prow__bar i { animation-delay: 1740ms; }
+
+@keyframes mkBarIn { to { transform: scaleX(1); } }
+
+.mk-prow__v {
+  font-weight: 600;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- Scroll hint ---------------- */
+
+.mk-hero__scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 38px;
+  border: 1px solid var(--mk-line-strong);
+  border-radius: 999px;
+  display: grid;
+  place-items: start center;
+  padding-top: 7px;
+  z-index: 1;
+}
+
+.mk-hero__scroll span {
+  width: 3px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--mk-accent);
+  animation: mkScrollHint 2000ms var(--mk-ease-io) infinite;
+}
+
+@keyframes mkScrollHint {
+  0%, 100% { transform: translateY(0);   opacity: 0; }
+  30%      { opacity: 1; }
+  70%      { transform: translateY(11px); opacity: 0; }
+}
+
+
+/* ============================== SCROLL REVEAL ============================== */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 900ms var(--mk-ease), transform 900ms var(--mk-ease);
+  will-change: opacity, transform;
+}
+[data-reveal].is-in { opacity: 1; transform: none; }
+/* Children carrying --d stagger inside an already-revealed parent. */
+[data-reveal] [style*="--d"] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 760ms var(--mk-ease), transform 760ms var(--mk-ease);
+  transition-delay: var(--d, 0ms);
+}
+[data-reveal].is-in [style*="--d"] { opacity: 1; transform: none; }
+
+/* ============================== RAIL (Track → Decide) ============================== */
+
+.mk-rail {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 28px;
+  margin: 0;
+  padding: 34px 0 0;
+  list-style: none;
+  counter-reset: rail;
+}
+/* The line that ties the five steps into one process. It draws across as the
+   section enters, which is the whole point of the section. */
+.mk-rail::before {
+  content: "";
+  position: absolute;
+  top: 4px; left: 0;
+  height: 1px;
+  width: 100%;
+  background: var(--mk-line);
+}
+.mk-rail::after {
+  content: "";
+  position: absolute;
+  top: 4px; left: 0;
+  height: 1px;
+  width: 0;
+  background: linear-gradient(90deg, var(--mk-accent), var(--mk-accent-hi));
+  transition: width 1900ms var(--mk-ease) 260ms;
+}
+.mk-rail.is-in::after { width: 100%; }
+
+.mk-rail__item { position: relative; padding-top: 26px; }
+.mk-rail__dot {
+  position: absolute;
+  top: 0; left: 0;
+  width: 9px; height: 9px;
+  margin-top: 0;
+  border-radius: 50%;
+  background: var(--mk-bg);
+  border: 1.5px solid var(--mk-line-strong);
+  transform: translateY(-0px);
+  transition: border-color 400ms var(--mk-ease), background-color 400ms var(--mk-ease);
+  transition-delay: var(--d, 0ms);
+}
+.mk-rail.is-in .mk-rail__dot { border-color: var(--mk-accent); }
+.mk-rail.is-in .is-final .mk-rail__dot { background: var(--mk-accent); }
+
+.mk-rail__item h3 {
+  margin: 0 0 8px;
+  font-family: var(--mk-display);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--mk-ink);
+}
+.mk-rail__item.is-final h3 { color: var(--mk-accent); }
+.mk-rail__item p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--mk-ink-3); }
+
+/* ============================== TWIN / PIPELINE ============================== */
+
+.mk-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(44px, 7vw, 96px);
+  align-items: center;
+}
+.mk-split__text .mk-sub { margin-top: 20px; }
+
+.mk-pipe { position: relative; padding-left: 62px; }
+.mk-pipe__track {
+  position: absolute;
+  left: 21px; top: 10px; bottom: 10px;
+  width: 1px;
+  background: var(--mk-line);
+}
+.mk-pipe__track i {
+  display: block;
+  width: 100%;
+  height: 0;
+  background: linear-gradient(180deg, var(--mk-accent), var(--mk-accent-hi));
+  transition: height 2000ms var(--mk-ease) 300ms;
+}
+.mk-pipe.is-in .mk-pipe__track i { height: 100%; }
+
+.mk-pipe__step { position: relative; display: flex; gap: 18px; padding-block: 20px; }
+.mk-pipe__mark {
+  position: absolute;
+  left: -62px;
+  width: 42px; height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--mk-line);
+  background: var(--mk-bg-tint);
+  font-family: var(--mk-mono);
+  font-size: 11.5px;
+  color: var(--mk-ink-3);
+  transition: border-color 460ms var(--mk-ease), color 460ms var(--mk-ease),
+              background-color 460ms var(--mk-ease);
+  transition-delay: var(--d, 0ms);
+}
+.mk-pipe.is-in .mk-pipe__mark { border-color: var(--mk-accent); color: var(--mk-accent); }
+.mk-pipe.is-in .is-key .mk-pipe__mark {
+  background: var(--mk-accent);
+  color: var(--mk-on-accent);
+  border-color: var(--mk-accent);
+}
+
+.mk-pipe__step h3 {
+  margin: 0 0 5px;
+  font-family: var(--mk-display);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.mk-pipe__step.is-key h3 { color: var(--mk-accent); }
+.mk-pipe__step p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--mk-ink-3); }
+
+/* ============================== ASK ============================== */
+
+.mk-ask { max-width: 760px; margin-inline: auto; }
+
+.mk-ask__stage {
+  min-height: 232px;
+  padding: clamp(26px, 4vw, 44px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+
+.mk-ask__q {
+  margin: 0 0 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--mk-line);
+  font-family: var(--mk-display);
+  font-size: clamp(19px, 2.4vw, 27px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+  min-height: 1.4em;
+}
+.mk-ask__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  vertical-align: -0.12em;
+  background: var(--mk-accent);
+  animation: mkBlink 1.05s steps(1) infinite;
+}
+@keyframes mkBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+/* The answer fades between states rather than popping — the transition is the
+   product behaving, so it should feel considered. */
+.mk-ask__a {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 520ms var(--mk-ease), transform 520ms var(--mk-ease);
+}
+.mk-ask__a.is-shown { opacity: 1; transform: none; }
+
+.mk-ask__badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mk-ask__text {
+  margin: 0;
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.62;
+  color: var(--mk-ink);
+}
+.mk-ask__basis {
+  margin: 14px 0 0;
+  font-family: var(--mk-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--mk-ink-3);
+}
+
+.mk-ask__dots { display: flex; justify-content: center; gap: 8px; margin-top: 26px; }
+.mk-ask__dots button {
+  width: 26px; height: 3px;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: var(--mk-line-strong);
+  cursor: pointer;
+  transition: background-color 320ms var(--mk-ease), width 320ms var(--mk-ease);
+}
+.mk-ask__dots button.is-active { background: var(--mk-accent); width: 40px; }
+
+/* ============================== SIMULATE ============================== */
+
+.mk-sim { max-width: 900px; margin-inline: auto; }
+
+.mk-sim__choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 32px;
+}
+.mk-sim__choice {
+  padding: 9px 17px;
+  border-radius: 999px;
+  border: 1px solid var(--mk-line);
+  background: transparent;
+  color: var(--mk-ink-2);
+  font-family: var(--mk-body);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: color 240ms var(--mk-ease), border-color 240ms var(--mk-ease),
+              background-color 240ms var(--mk-ease);
+}
+.mk-sim__choice:hover { color: var(--mk-ink); border-color: var(--mk-line-strong); }
+.mk-sim__choice.is-active {
+  color: var(--mk-on-accent);
+  background: var(--mk-accent);
+  border-color: var(--mk-accent);
+}
+
+.mk-sim__panel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(18px, 4vw, 44px);
+  padding: clamp(26px, 4vw, 46px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+.mk-sim__side .mk-eyebrow { margin-bottom: 12px; }
+.mk-sim__figure {
+  margin: 0;
+  font-family: var(--mk-display);
+  font-size: clamp(28px, 4.2vw, 46px);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--mk-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.mk-sim__figure--accent { color: var(--mk-accent); }
+.mk-sim__note { margin: 12px 0 0; font-size: 13px; line-height: 1.55; color: var(--mk-ink-3); }
+.mk-sim__arrow { color: var(--mk-line-strong); }
+.mk-sim__arrow svg { width: 60px; height: 24px; }
+
+.mk-sim__meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 44px;
+  margin-top: 30px;
+  /* Inset to match the panel above so the whole simulator reads as one block
+     rather than a card with a stray strip beneath it. */
+  padding-inline: clamp(26px, 4vw, 46px);
+}
+/* Explicit placement: the source order is label → track → value (the bar sits
+   next to the thing it measures for assistive tech), but visually the value
+   belongs beside the label with the bar spanning underneath. */
+.mk-meter {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 9px 12px;
+  align-items: center;
+}
+.mk-meter__label { grid-area: 1 / 1 / 2 / 2; }
+.mk-meter__value { grid-area: 1 / 2 / 2 / 3; justify-self: end; }
+.mk-meter__track { grid-area: 2 / 1 / 3 / 3; }
+.mk-meter__label {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-meter__value {
+  font-family: var(--mk-mono);
+  font-size: 13px;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.mk-meter__track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--mk-line);
+  overflow: hidden;
+}
+.mk-meter__track i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--mk-accent);
+  transition: width 900ms var(--mk-ease), background-color 400ms var(--mk-ease);
+}
+.mk-meter__track i.is-low { background: var(--mk-ink-3); }
+
+.mk-sim__disclaimer {
+  margin: 22px 0 0;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--mk-ink-3);
+}
+
+/* ============================== DAILY ============================== */
+
+.mk-daily {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--mk-line);
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+/* One grid divided by hairlines — not five separate floating cards. */
+.mk-daily__item {
+  padding: 30px 26px 34px;
+  background: var(--mk-bg);
+  transition: background-color 320ms var(--mk-ease);
+}
+.mk-daily__item:hover { background: var(--mk-bg-tint); }
+.mk-daily__item--wide { grid-column: span 4; }
+.mk-daily__num {
+  display: block;
+  margin-bottom: 16px;
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--mk-accent);
+}
+.mk-daily__item h3 {
+  margin: 0 0 8px;
+  font-family: var(--mk-display);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.mk-daily__item p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--mk-ink-3); max-width: 60ch; }
+
+/* ============================== SOLUTIONS ============================== */
+
+.mk-solutions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.mk-solution {
+  position: relative;
+  display: block;
+  padding: clamp(28px, 4vw, 44px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-bg);
+  overflow: hidden;
+  transition: border-color 320ms var(--mk-ease), transform 420ms var(--mk-ease),
+              box-shadow 420ms var(--mk-ease);
+}
+.mk-solution:hover {
+  border-color: var(--mk-accent);
+  transform: translateY(-4px);
+  box-shadow: var(--mk-shadow);
+}
+.mk-solution__k {
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--mk-ink-3);
+  transition: color 320ms var(--mk-ease);
+}
+.mk-solution:hover .mk-solution__k { color: var(--mk-accent); }
+.mk-solution h3 {
+  margin: 18px 0 10px;
+  font-family: var(--mk-display);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.mk-solution p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--mk-ink-2); max-width: 40ch; }
+.mk-solution .mk-link-arrow { margin-top: 24px; }
+
+/* ============================== QUOTE ============================== */
+
+.mk-quote {
+  padding-block: clamp(90px, 12vh, 150px);
+  border-top: 1px solid var(--mk-line);
+  border-bottom: 1px solid var(--mk-line);
+}
+/* Width is set in px, not ch: `ch` here would resolve against the
+   blockquote's inherited 16px rather than the display serif inside it. */
+.mk-quote blockquote { margin: 0; max-width: min(880px, 100%); }
+.mk-quote p {
+  margin: 0;
+  font-family: var(--mk-serif);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(28px, 4.6vw, 56px);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+}
+.mk-quote cite {
+  display: block;
+  margin-top: 26px;
+  font-family: var(--mk-mono);
+  font-style: normal;
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+
+/* ============================== INSIGHTS MARQUEE ============================== */
+
+.mk-marquee {
+  position: relative;
+  overflow: hidden;
+  /* Fades the rail into the page edges instead of cutting it off. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.mk-marquee__track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  padding-inline: var(--mk-gutter);
+  animation: mkMarquee 64s linear infinite;
+}
+.mk-marquee:hover .mk-marquee__track,
+.mk-marquee:focus-within .mk-marquee__track { animation-play-state: paused; }
+@keyframes mkMarquee {
+  /* The track is duplicated by script, so -50% is exactly one full set. */
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.mk-post {
+  flex: 0 0 auto;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  background: var(--mk-bg);
+  transition: border-color 300ms var(--mk-ease), transform 380ms var(--mk-ease);
+}
+.mk-post:hover { border-color: var(--mk-accent); transform: translateY(-4px); }
+.mk-post__cat {
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+}
+.mk-post h3 {
+  flex: 1;
+  margin: 16px 0 22px;
+  font-family: var(--mk-display);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.34;
+  letter-spacing: -0.015em;
+  color: var(--mk-ink);
+}
+.mk-post__by {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--mk-line);
+  font-size: 12px;
+  color: var(--mk-ink-3);
+}
+.mk-post__by span { transition: transform 300ms var(--mk-ease); }
+.mk-post:hover .mk-post__by span { transform: translateX(4px); color: var(--mk-accent); }
+
+/* ============================== FINAL CTA ============================== */
+
+.mk-final {
+  position: relative;
+  padding-block: clamp(110px, 16vh, 200px);
+  background: var(--mk-bg-tint);
+  overflow: hidden;
+  text-align: center;
+}
+.mk-final::before {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -55%;
+  width: min(1100px, 130vw);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, var(--mk-accent-glow) 0%, transparent 60%);
+  opacity: 0.5;
+  filter: blur(30px);
+  pointer-events: none;
+}
+.mk-final__inner { position: relative; }
+.mk-final__title {
+  margin: 0;
+  font-family: var(--mk-display);
+  font-weight: 300;
+  font-size: clamp(38px, 6vw, 76px);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+/* Reused reveal: the same masked line motion as the hero, closing the loop. */
+.mk-final__title .mk-line > span { animation: none; transform: translateY(105%); transition: transform 1000ms var(--mk-ease); }
+.mk-final__inner.is-in .mk-final__title .mk-line:nth-child(1) > span { transform: none; transition-delay: 120ms; }
+.mk-final__inner.is-in .mk-final__title .mk-line:nth-child(2) > span { transform: none; transition-delay: 240ms; }
+
+.mk-final__sub { margin-inline: auto; }
+.mk-final__cta { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
+
+/* ============================== FOOTER ==============================
+   One footer, identical on every public page.
+
+   Content rule: everything here points at something that exists. Products link
+   to their own pages; the three features that only live inside the signed-in
+   app (Money Splits, Freedom Balance, Risk alerts) link into the app, which
+   sends a signed-out visitor to sign in. Nothing is listed that MoneyKal does
+   not have: no address, phone, social accounts, app-store badges or version
+   number, and the copyright names MoneyKal rather than a legal entity the
+   Terms have not yet confirmed.
+
+   Type is the system's own: Poppins for the wordmark, Inter for everything
+   else, the mono-style eyebrow for column headings. Colour comes only from the
+   theme tokens above, so light and dark need no rules of their own. */
+
+.mk-footer {
+  padding-block: clamp(64px, 9vw, 104px) 30px;
+  border-top: 1px solid var(--mk-line);
+}
+
+.mk-footer__top {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.1fr) minmax(0, 2.9fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: start;
+}
+
+/* ---- Brand column ---- */
+.mk-footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mk-display);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--mk-ink);
+}
+.mk-footer__logo { width: 28px; height: 28px; display: block; flex-shrink: 0; }
+.mk-footer__logo img { width: 100%; height: 100%; display: block; object-fit: contain; }
+
+.mk-footer__tagline {
+  margin: 22px 0 10px;
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+}
+
+.mk-footer__about {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--mk-ink-2);
+}
+
+.mk-footer__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 22px;
+  margin-top: 28px;
+}
+.mk-footer__login {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mk-ink-2);
+  transition: color 220ms var(--mk-ease);
+}
+.mk-footer__login:hover { color: var(--mk-accent); }
+
+/* ---- Link columns ---- */
+.mk-footer__nav {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.mk-footer__heading {
+  margin: 0 0 18px;
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+
+.mk-footer__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 13px;
+}
+
+.mk-footer__list a,
+.mk-footer__linkbtn {
+  font-family: var(--mk-body);
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--mk-ink-2);
+  transition: color 220ms var(--mk-ease);
+}
+
+/* Terms & Conditions opens the Terms dialog rather than a page, so it is a
+   button — styled to be indistinguishable from the links beside it. */
+.mk-footer__linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mk-footer__list a:hover,
+.mk-footer__linkbtn:hover { color: var(--mk-accent); }
+
+.mk-footer__list a:focus-visible,
+.mk-footer__linkbtn:focus-visible,
+.mk-footer__login:focus-visible,
+.mk-footer__brand:focus-visible {
+  outline: 2px solid var(--mk-accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* ---- Bottom bar ---- */
+.mk-footer__bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px 40px;
+  margin-top: clamp(52px, 7vw, 80px);
+  padding-top: 24px;
+  border-top: 1px solid var(--mk-line);
+}
+
+.mk-footer__legal,
+.mk-footer__note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--mk-ink-3);
+}
+.mk-footer__note { max-width: 62ch; text-align: right; }
+
+/* Devanagari has no case, and tracking pulls its conjuncts apart — the same
+   relaxation the DEVANAGARI TYPOGRAPHY block below gives every other eyebrow. */
+[data-lang="hi"] .mk-footer__heading,
+[data-lang="hi"] .mk-footer__tagline {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* Tablet: the brand sits above the four columns instead of beside them. */
+@media (max-width: 1080px) {
+  .mk-footer__top { grid-template-columns: 1fr; }
+  .mk-footer__about { max-width: 52ch; }
+}
+
+/* Small tablet and phone: two columns of links, bottom bar stacked. */
+@media (max-width: 720px) {
+  .mk-footer__nav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 24px; }
+  .mk-footer__bottom { flex-direction: column; }
+  .mk-footer__note { text-align: left; }
+}
+
+/* ============================== RESPONSIVE ==============================
+   Each breakpoint re-composes rather than shrinking: the hero stacks with the
+   visual reordered below the words, the 5-step rail becomes a vertical list
+   with the connector running down it, and the simulator's side-by-side
+   comparison turns into a stacked before/after. */
+
+@media (max-width: 1080px) {
+  .mk-nav__links { display: none; }
+  .mk-nav__burger { display: block; }
+  .mk-nav__login { display: none; }
+  .mk-nav__brand { margin-right: auto; }
+
+  .mk-hero__grid { grid-template-columns: 1fr; gap: 56px; }
+  .mk-hero__visual { max-width: 560px; }
+
+  .mk-split { grid-template-columns: 1fr; gap: 48px; }
+  .mk-daily { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mk-daily__item--wide { grid-column: span 2; }
+}
+
+@media (max-width: 860px) {
+  html { scroll-padding-top: 80px; }
+
+  /* Rail becomes a vertical process list; the connector follows. */
+  .mk-rail { grid-template-columns: 1fr; gap: 0; padding: 0 0 0 26px; }
+  .mk-rail::before, .mk-rail::after { top: 0; bottom: 0; left: 4px; width: 1px; height: auto; }
+  .mk-rail::before { background: var(--mk-line); }
+  .mk-rail::after {
+    width: 1px; height: 0;
+    background: linear-gradient(180deg, var(--mk-accent), var(--mk-accent-hi));
+    transition: height 1900ms var(--mk-ease) 260ms;
+  }
+  .mk-rail.is-in::after { width: 1px; height: 100%; }
+  .mk-rail__item { padding: 0 0 30px; }
+  .mk-rail__dot { left: -26px; top: 6px; }
+
+  .mk-sim__panel { grid-template-columns: 1fr; text-align: left; }
+  .mk-sim__arrow { justify-self: start; }
+  .mk-sim__arrow svg { transform: rotate(90deg); width: 40px; }
+  .mk-sim__meters { grid-template-columns: 1fr; gap: 22px; padding-inline: 0; }
+
+  .mk-solutions { grid-template-columns: 1fr; }
+  .mk-quote blockquote { max-width: none; }
+}
+
+@media (max-width: 620px) {
+  :root { --mk-section: 76px; }
+
+  /* Brand + theme + language + menu is all that fits at this width. Get Started
+     is dropped from the bar rather than squeezed — it is the first thing in the
+     menu sheet and the primary button in the hero directly below. */
+  .mk-nav__actions > .mk-btn--accent { display: none; }
+  .mk-nav { gap: 12px; }
+
+  .mk-hero { padding-top: 112px; }
+  .mk-hero__audience { grid-template-columns: 1fr; gap: 12px; }
+  .mk-hero__cta .mk-btn { flex: 1; justify-content: center; }
+  .mk-hero__scroll { display: none; }
+
+  .mk-daily { grid-template-columns: 1fr; }
+  .mk-daily__item--wide { grid-column: span 1; }
+
+  .mk-post { width: 258px; padding: 22px; }
+  .mk-ask__stage { min-height: 300px; }
+  .mk-sim__choices { justify-content: flex-start; }
+  .mk-final__cta .mk-btn { flex: 1; justify-content: center; }
+}
+
+/* ==========================================================================
+   PRODUCT SHOWCASES
+
+   Six demonstrations that explain a feature by performing it. They share one
+   vocabulary so the page still reads as a single system: a bordered surface
+   panel, a mono label bar, cyan reserved for the value the demo is making, and
+   the same easing token as everything above.
+
+   Each demo declares `data-demo` and is driven from home-landing.js. Every one
+   of them degrades to a complete, readable static state — the reduced-motion
+   block at the end of this file is the contract, not an afterthought.
+   ========================================================================== */
+
+/* Shared demo furniture ----------------------------------------------------- */
+
+.mk-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--mk-line);
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-panel__meta b { color: var(--mk-accent); font-weight: 500; }
+
+.mk-demo__note {
+  margin: 20px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--mk-ink-3);
+}
+
+/* Small stat used by both the simulator and the CFO demo. */
+.mk-stat__label {
+  display: block;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-stat__value {
+  display: block;
+  margin-top: 9px;
+  font-family: var(--mk-display);
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.mk-stat__delta {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--mk-mono);
+  font-size: 11.5px;
+  color: var(--mk-ink-3);
+  min-height: 1.4em;
+  transition: color 320ms var(--mk-ease);
+}
+.mk-stat__delta.is-up   { color: var(--mk-accent); }
+.mk-stat__delta.is-down { color: var(--mk-ink-2); }
+.mk-stat__bar {
+  display: block;
+  margin-top: 12px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--mk-line);
+  overflow: hidden;
+}
+.mk-stat__bar i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--mk-accent);
+  transition: width 900ms var(--mk-ease);
+}
+
+/* ============================== 1. HISAAB ============================== */
+
+.mk-hisaab {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.mk-hisaab__ledger {
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+  overflow: hidden;
+}
+.mk-hisaab__list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  /* A fixed window, not a growing list. New entries push in at the top and
+     older ones slide out under a soft edge, which reads as a live feed and
+     keeps the ledger the same height as the summary beside it. The height is
+     reserved up front so the page never reflows as entries land. */
+  height: 428px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 76%, transparent 99%);
+  mask-image: linear-gradient(180deg, #000 76%, transparent 99%);
+}
+
+.mk-hisaab__row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 20px;
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: mkRowIn 520ms var(--mk-ease) forwards;
+}
+@keyframes mkRowIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+.mk-hisaab__row + .mk-hisaab__row { border-top: 1px solid var(--mk-line); }
+/* The row a category bar is being hovered against. */
+.mk-hisaab__row.is-dim { opacity: 0.32; }
+.mk-hisaab__row { transition: opacity 240ms var(--mk-ease), background-color 240ms var(--mk-ease); }
+
+.mk-hisaab__icon {
+  width: 34px; height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-size: 15px;
+  background: var(--mk-bg-tint);
+}
+.mk-hisaab__row.is-in .mk-hisaab__icon { background: var(--mk-accent-tint); }
+
+.mk-hisaab__name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--mk-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mk-hisaab__cat {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: var(--mk-ink-3);
+}
+.mk-hisaab__amt {
+  font-family: var(--mk-mono);
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--mk-ink-2);
+  white-space: nowrap;
+}
+.mk-hisaab__row.is-in .mk-hisaab__amt { color: var(--mk-accent); }
+
+/* --- summary side --- */
+.mk-hisaab__side {
+  padding: 24px;
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  background: var(--mk-bg);
+}
+.mk-hisaab__totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--mk-line);
+}
+.mk-hisaab__totals span {
+  display: block;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-hisaab__totals b {
+  display: block;
+  margin-top: 7px;
+  font-family: var(--mk-display);
+  font-size: clamp(15px, 1.6vw, 19px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.mk-hisaab__totals b.is-in { color: var(--mk-accent); }
+
+.mk-hisaab__catlabel { margin: 22px 0 14px; }
+
+.mk-cats { list-style: none; margin: 0; padding: 0; }
+.mk-cat {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px 10px;
+  padding: 9px 0;
+  cursor: default;
+}
+.mk-cat__name { font-size: 12.5px; color: var(--mk-ink-2); }
+.mk-cat__amt {
+  font-family: var(--mk-mono);
+  font-size: 12px;
+  color: var(--mk-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.mk-cat__track {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--mk-line);
+  overflow: hidden;
+}
+.mk-cat__track i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--mk-accent);
+  /* Longer than the row cadence so the bars read as accumulating rather than
+     snapping each time an entry lands. */
+  transition: width 700ms var(--mk-ease);
+}
+.mk-cat:hover .mk-cat__name,
+.mk-cat:hover .mk-cat__amt { color: var(--mk-ink); }
+
+/* ============================== 2. TATHYA ============================== */
+
+.mk-tathya { max-width: 860px; margin-inline: auto; }
+
+/* Three states, shown as a progress track rather than three tabs — the demo
+   advances on its own, so the control has to read as a position, not a choice. */
+.mk-stages {
+  display: flex;
+  gap: 0;
+  margin: 0 0 26px;
+  padding: 0;
+  list-style: none;
+  counter-reset: st;
+}
+.mk-stages li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--mk-line);
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+  transition: color 420ms var(--mk-ease), border-color 420ms var(--mk-ease);
+}
+.mk-stages li span {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--mk-line-strong);
+  transition: background-color 420ms var(--mk-ease), transform 420ms var(--mk-ease);
+}
+.mk-stages li.is-active {
+  color: var(--mk-accent);
+  border-bottom-color: var(--mk-accent);
+}
+.mk-stages li.is-active span { background: var(--mk-accent); transform: scale(1.4); }
+.mk-stages li.is-done { color: var(--mk-ink-2); border-bottom-color: var(--mk-line-strong); }
+.mk-stages li.is-done span { background: var(--mk-ink-3); }
+
+.mk-tathya__stage {
+  position: relative;
+  min-height: 268px;
+  padding: clamp(22px, 3.4vw, 34px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+/* Panels are stacked and cross-faded, so the panel height never changes and
+   the transition reads as one thing becoming another. */
+.mk-tathya__panel {
+  position: absolute;
+  inset: clamp(22px, 3.4vw, 34px);
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  /* Leaving is quicker than arriving, and arriving waits for the outgoing
+     panel to clear. Symmetric fades would leave both states legible at once
+     mid-transition, which reads as a rendering fault rather than a handover. */
+  transition: opacity 240ms var(--mk-ease), transform 240ms var(--mk-ease);
+}
+.mk-tathya__panel.is-on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition: opacity 520ms var(--mk-ease) 210ms, transform 520ms var(--mk-ease) 210ms;
+}
+
+/* --- state 1: the raw material --- */
+.mk-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  align-content: flex-start;
+}
+.mk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border: 1px solid var(--mk-line);
+  border-radius: 999px;
+  background: var(--mk-bg);
+  font-size: 12.5px;
+  color: var(--mk-ink-2);
+  opacity: 0;
+  transform: translateY(8px) scale(0.96);
+  animation: mkChipIn 420ms var(--mk-ease) forwards;
+}
+.mk-chip b { font-family: var(--mk-mono); color: var(--mk-ink); font-weight: 500; }
+.mk-chip::before {
+  content: "";
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--mk-accent);
+  opacity: 0.7;
+}
+@keyframes mkChipIn {
+  to { opacity: 1; transform: none; }
+}
+
+/* --- state 2: the comparison --- */
+.mk-scan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+.mk-scan__row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.mk-scan__row span {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  color: var(--mk-ink-3);
+}
+.mk-scan__row i {
+  display: block;
+  height: 8px;
+  width: 0;
+  border-radius: 999px;
+  background: var(--mk-line-strong);
+  transition: width 760ms var(--mk-ease);
+}
+.mk-scan__row em {
+  font-family: var(--mk-mono);
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--mk-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.is-on .mk-scan__row i { width: var(--h); }
+/* The outlier is the finding, so it is the only bar that takes the accent. */
+.mk-scan__row.is-hot i { background: var(--mk-accent); }
+.mk-scan__row.is-hot em { color: var(--mk-accent); }
+.mk-scan__row.is-hot span { color: var(--mk-ink-2); }
+
+/* A single sweep across the rows while the comparison is being made. */
+.mk-scan__beam {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, var(--mk-accent-tint), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.is-on .mk-scan__beam { animation: mkBeam 1900ms var(--mk-ease-io) 200ms 2; }
+@keyframes mkBeam {
+  0%   { opacity: 0; transform: translateX(-110%); }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(280%); }
+}
+
+.mk-tathya__reading {
+  margin: 22px 0 0;
+  font-family: var(--mk-mono);
+  font-size: 12px;
+  color: var(--mk-ink-3);
+}
+.mk-tathya__reading b { color: var(--mk-ink); font-weight: 500; }
+
+/* --- state 3: the conclusion --- */
+.mk-insight {
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px solid var(--mk-accent);
+}
+.mk-insight__tag {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.mk-insight__title {
+  margin: 0 0 10px;
+  font-family: var(--mk-display);
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 400;
+  letter-spacing: -0.024em;
+  color: var(--mk-ink);
+}
+.mk-insight__body {
+  margin: 0;
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+  max-width: 52ch;
+}
+.mk-insight__body b { color: var(--mk-accent); font-family: var(--mk-mono); font-weight: 500; }
+.mk-insight__basis {
+  margin: 14px 0 0;
+  font-family: var(--mk-mono);
+  font-size: 11.5px;
+  color: var(--mk-ink-3);
+}
+
+/* ============================== 3. VARTA ============================== */
+
+.mk-varta { max-width: 780px; margin-inline: auto; }
+
+.mk-varta__stage {
+  min-height: 330px;
+  padding: clamp(24px, 3.6vw, 40px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+
+.mk-varta__ask {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--mk-line);
+}
+
+/* The waveform only moves while a question is being asked. Silence between
+   questions is the difference between a product and a screensaver. */
+.mk-wave {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+  height: 34px;
+  flex-shrink: 0;
+  padding-top: 3px;
+}
+.mk-wave i {
+  display: block;
+  width: 2.5px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--mk-line-strong);
+  transition: height 220ms var(--mk-ease), background-color 300ms var(--mk-ease);
+}
+.mk-wave.is-live i {
+  background: var(--mk-accent);
+  animation: mkWave 900ms var(--mk-ease-io) infinite;
+}
+.mk-wave.is-live i:nth-child(1)  { animation-delay: 0ms;   }
+.mk-wave.is-live i:nth-child(2)  { animation-delay: 80ms;  }
+.mk-wave.is-live i:nth-child(3)  { animation-delay: 160ms; }
+.mk-wave.is-live i:nth-child(4)  { animation-delay: 40ms;  }
+.mk-wave.is-live i:nth-child(5)  { animation-delay: 220ms; }
+.mk-wave.is-live i:nth-child(6)  { animation-delay: 120ms; }
+.mk-wave.is-live i:nth-child(7)  { animation-delay: 300ms; }
+.mk-wave.is-live i:nth-child(8)  { animation-delay: 60ms;  }
+.mk-wave.is-live i:nth-child(9)  { animation-delay: 260ms; }
+.mk-wave.is-live i:nth-child(10) { animation-delay: 140ms; }
+.mk-wave.is-live i:nth-child(11) { animation-delay: 200ms; }
+.mk-wave.is-live i:nth-child(12) { animation-delay: 20ms;  }
+@keyframes mkWave {
+  0%, 100% { height: 4px; }
+  50%      { height: 24px; }
+}
+
+.mk-varta__q {
+  margin: 0;
+  font-family: var(--mk-display);
+  font-size: clamp(18px, 2.3vw, 26px);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.32;
+  color: var(--mk-ink);
+  min-height: 1.4em;
+}
+
+.mk-varta__a {
+  margin-top: 24px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 520ms var(--mk-ease), transform 520ms var(--mk-ease);
+}
+.mk-varta__a.is-shown { opacity: 1; transform: none; }
+
+.mk-varta__badge {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mk-varta__text {
+  margin: 0;
+  font-size: clamp(14.5px, 1.5vw, 17px);
+  line-height: 1.62;
+  color: var(--mk-ink);
+}
+
+/* The figures the answer stands on, revealed after it so they read as support
+   rather than as the answer itself. */
+.mk-varta__figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mk-varta__figures li {
+  padding: 6px 11px;
+  border: 1px solid var(--mk-line);
+  border-radius: 8px;
+  background: var(--mk-bg);
+  font-family: var(--mk-mono);
+  font-size: 11.5px;
+  color: var(--mk-ink-2);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: mkChipIn 380ms var(--mk-ease) forwards;
+}
+.mk-varta__basis {
+  margin: 16px 0 0;
+  font-family: var(--mk-mono);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--mk-ink-3);
+}
+
+/* ============================== 4. SIMULATE (added stats) ============================== */
+
+.mk-sim__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 44px;
+  margin-top: 30px;
+  padding-inline: clamp(26px, 4vw, 46px);
+}
+
+/* ============================== 5. TWIN HUB ============================== */
+
+.mk-hub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 40px);
+  align-items: center;
+}
+
+.mk-hub__colhead {
+  margin: 0 0 16px;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-hub__col--out .mk-hub__colhead { text-align: right; }
+
+.mk-hub__node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--mk-line);
+  border-radius: 12px;
+  background: var(--mk-bg);
+  font-size: 13.5px;
+  color: var(--mk-ink-2);
+  transition: border-color 320ms var(--mk-ease), color 320ms var(--mk-ease),
+              transform 320ms var(--mk-ease);
+}
+.mk-hub__col--out .mk-hub__node { flex-direction: row-reverse; text-align: right; }
+.mk-hub__node:hover { border-color: var(--mk-accent); color: var(--mk-ink); }
+.mk-hub__col--in .mk-hub__node:hover  { transform: translateX(4px); }
+.mk-hub__col--out .mk-hub__node:hover { transform: translateX(-4px); }
+
+.mk-hub__dot {
+  width: 6px; height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--mk-accent);
+  opacity: 0.55;
+}
+
+/* The connector. A static hairline with a travelling highlight on top — the
+   highlight is a moving background rather than a moving element, so the flow
+   costs one compositor property and nothing reflows. */
+.mk-hub__node::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: clamp(18px, 3vw, 40px);
+  height: 1px;
+  background:
+    linear-gradient(90deg, transparent 0%, var(--mk-accent) 45%, transparent 90%) 0 0 / 55% 100% no-repeat,
+    var(--mk-line);
+  background-position-x: -60%, 0;
+}
+.mk-hub__col--in .mk-hub__node::after  { left: 100%; }
+.mk-hub__col--out .mk-hub__node::after { right: 100%; }
+
+/* Flow only runs once the section is on screen, and each node is offset so the
+   pulses arrive in sequence rather than in lockstep. */
+.mk-hub.is-flowing .mk-hub__node::after {
+  animation: mkFlowIn 2600ms linear infinite;
+  animation-delay: var(--d, 0ms);
+}
+.mk-hub.is-flowing .mk-hub__col--out .mk-hub__node::after {
+  animation-name: mkFlowOut;
+  /* Outputs pulse after inputs have reached the core. */
+  animation-delay: calc(var(--d, 0ms) + 900ms);
+}
+@keyframes mkFlowIn  { from { background-position-x: -60%, 0; } to { background-position-x: 115%, 0; } }
+@keyframes mkFlowOut { from { background-position-x: -60%, 0; } to { background-position-x: 115%, 0; } }
+
+.mk-hub__core {
+  position: relative;
+  width: clamp(150px, 19vw, 208px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  justify-self: center;
+}
+.mk-hub__coreinner {
+  position: relative;
+  z-index: 2;
+  width: 74%;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 50%;
+  border: 1px solid var(--mk-accent);
+  background: var(--mk-bg);
+  box-shadow: 0 0 0 1px var(--mk-accent-tint), 0 16px 46px var(--mk-accent-glow);
+}
+.mk-hub__corelabel {
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-hub__corename {
+  font-family: var(--mk-display);
+  font-size: clamp(19px, 2.4vw, 27px);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--mk-accent);
+  line-height: 1;
+}
+.mk-hub__corestat {
+  margin-top: 5px;
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+  transition: color 400ms var(--mk-ease);
+}
+.mk-hub__corestat.is-live { color: var(--mk-accent); }
+
+/* Two rings breathing out of phase: the core is doing something continuously,
+   which is the whole claim the section is making. */
+.mk-hub__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--mk-accent);
+  opacity: 0;
+}
+.mk-hub.is-flowing .mk-hub__ring { animation: mkRing 3400ms var(--mk-ease-io) infinite; }
+.mk-hub.is-flowing .mk-hub__ring--2 { animation-delay: 1700ms; }
+@keyframes mkRing {
+  0%   { opacity: 0;    transform: scale(0.74); }
+  22%  { opacity: 0.34; }
+  100% { opacity: 0;    transform: scale(1.06); }
+}
+
+/* ============================== 6. CFO ============================== */
+
+.mk-cfo { max-width: 980px; margin-inline: auto; }
+
+.mk-cfo__timeline {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin-bottom: 30px;
+  border-bottom: 1px solid var(--mk-line);
+}
+.mk-cfo__q {
+  padding: 0 0 16px;
+  border: none;
+  background: none;
+  font-family: var(--mk-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--mk-ink-3);
+  cursor: pointer;
+  transition: color 320ms var(--mk-ease);
+}
+.mk-cfo__q:hover { color: var(--mk-ink-2); }
+.mk-cfo__q.is-active { color: var(--mk-accent); }
+.mk-cfo__q.is-past { color: var(--mk-ink-2); }
+
+/* One underline that slides between quarters — the timeline advancing is the
+   animation, so it must be a single continuous object, not four states. */
+.mk-cfo__progress {
+  position: absolute;
+  left: 0; bottom: -1px;
+  width: 25%;
+  height: 2px;
+  background: var(--mk-accent);
+  transform: translateX(0);
+  transition: transform 620ms var(--mk-ease);
+}
+
+.mk-cfo__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(24px, 4vw, 52px);
+  align-items: center;
+  padding: clamp(24px, 3.6vw, 38px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+.mk-cfo__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 26px 22px;
+}
+
+.mk-cfo__legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-cfo__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mk-cfo__legend span::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 2px;
+}
+.mk-cfo__legend .is-rev::before  { background: var(--mk-accent); }
+.mk-cfo__legend .is-burn::before { background: var(--mk-line-strong); }
+
+.mk-cfo__bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  height: 170px;
+  align-items: end;
+}
+.mk-cfo__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  justify-content: flex-end;
+  opacity: 0.4;
+  transition: opacity 420ms var(--mk-ease);
+}
+.mk-cfo__col.is-reached { opacity: 1; }
+.mk-cfo__pair {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+}
+.mk-cfo__bar {
+  width: 16px;
+  height: 0;
+  border-radius: 4px 4px 0 0;
+  transition: height 780ms var(--mk-ease);
+}
+.mk-cfo__bar--rev  { background: var(--mk-accent); }
+.mk-cfo__bar--burn { background: var(--mk-line-strong); }
+.mk-cfo__col span {
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--mk-ink-3);
+}
+.mk-cfo__col.is-active span { color: var(--mk-accent); }
+
+.mk-cfo__insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 24px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--mk-line);
+  border-left: 2px solid var(--mk-accent);
+  border-radius: 0 12px 12px 0;
+  background: var(--mk-bg);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 520ms var(--mk-ease), transform 520ms var(--mk-ease);
+}
+.mk-cfo__insight.is-shown { opacity: 1; transform: none; }
+.mk-cfo__insighttag {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.mk-cfo__insighttext {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--mk-ink-2);
+}
+
+/* ============================== SHOWCASE RESPONSIVE ============================== */
+
+@media (max-width: 1080px) {
+  .mk-hisaab { grid-template-columns: 1fr; }
+  .mk-cfo__body { grid-template-columns: 1fr; }
+
+  /* The hub keeps its three-part meaning but stacks: inputs, core, outputs,
+     with the connectors turning to run vertically into and out of the core. */
+  .mk-hub { grid-template-columns: 1fr; gap: 0; justify-items: center; }
+  .mk-hub__col { width: 100%; max-width: 420px; }
+  .mk-hub__col--out .mk-hub__colhead { text-align: left; }
+  .mk-hub__col--out .mk-hub__node { flex-direction: row; text-align: left; }
+  .mk-hub__core { margin-block: 30px; }
+
+  .mk-hub__node::after {
+    top: 100%;
+    left: 22px;
+    right: auto;
+    width: 1px;
+    height: 10px;
+    background:
+      linear-gradient(180deg, transparent 0%, var(--mk-accent) 45%, transparent 90%) 0 0 / 100% 55% no-repeat,
+      var(--mk-line);
+    background-position-x: 0, 0;
+    background-position-y: -60%, 0;
+  }
+  /* The desktop rules are column-scoped (.mk-hub__col--in .mk-hub__node::after),
+     so a bare .mk-hub__node::after override above loses to them on specificity
+     and the connectors stay pinned to the horizontal edges. Both columns are
+     therefore restated at matching specificity here. */
+  .mk-hub__col--in .mk-hub__node::after,
+  .mk-hub__col--out .mk-hub__node::after {
+    top: 100%;
+    left: 22px;
+    right: auto;
+    width: 1px;
+    height: 10px;
+    background:
+      linear-gradient(180deg, transparent 0%, var(--mk-accent) 45%, transparent 90%) 0 0 / 100% 55% no-repeat,
+      var(--mk-line);
+    background-position-x: 0, 0;
+    background-position-y: -60%, 0;
+  }
+  .mk-hub.is-flowing .mk-hub__node::after,
+  .mk-hub.is-flowing .mk-hub__col--out .mk-hub__node::after { animation-name: mkFlowDown; }
+  @keyframes mkFlowDown {
+    from { background-position-y: -60%, 0; }
+    to   { background-position-y: 115%, 0; }
+  }
+  /* The last node in each column has nothing below it to connect to. */
+  .mk-hub__col--in .mk-hub__node:last-child::after { height: 30px; }
+  .mk-hub__col--out .mk-hub__node:last-child::after { display: none; }
+}
+
+@media (max-width: 860px) {
+  .mk-sim__stats { grid-template-columns: 1fr; gap: 22px; padding-inline: 0; }
+  .mk-tathya__stage { min-height: 320px; }
+  .mk-cfo__metrics { gap: 22px 18px; }
+}
+
+@media (max-width: 620px) {
+  .mk-hisaab__list { min-height: 300px; }
+  .mk-hisaab__row { padding: 10px 14px; gap: 11px; grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .mk-hisaab__icon { width: 30px; height: 30px; font-size: 13px; }
+  .mk-hisaab__side { padding: 20px; }
+  .mk-panel__bar { padding: 12px 14px; }
+
+  .mk-stages li { font-size: 9.5px; letter-spacing: 0.09em; gap: 7px; }
+  .mk-tathya__stage { min-height: 350px; }
+  .mk-varta__stage { min-height: 380px; }
+  .mk-varta__ask { gap: 12px; }
+  .mk-wave { height: 26px; }
+  .mk-wave i { width: 2px; }
+
+  .mk-cfo__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mk-cfo__bars { height: 130px; gap: 9px; }
+  .mk-cfo__bar { width: 11px; }
+  .mk-cfo__insight { flex-direction: column; gap: 10px; }
+}
+
+
+/* ==========================================================================
+   ADDITIONS — journeys, tax, market pulse, alerts, devices, and the ambient
+   layer that fills the quieter stretches of the page.
+
+   Everything here is additive. No selector below overrides an existing rule;
+   the new components reuse the same tokens, the same easing and the same
+   surface treatment so they read as part of the page that was already built.
+   ========================================================================== */
+
+/* A roadmap marker. Used wherever the page describes something that is not in
+   the product yet — a public page should not imply a shipped feature. */
+.mk-soon {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border: 1px solid var(--mk-line-strong);
+  border-radius: 999px;
+  font-family: var(--mk-mono);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+  vertical-align: 1px;
+}
+
+/* ============================== AMBIENT LAYER ==============================
+   Fills the sparse stretches without adding objects to read. Two devices only:
+   a slowly drifting measurement grid, and a single soft light source. Both are
+   pointer-transparent and sit behind everything. */
+
+.mk-ambient { position: relative; isolation: isolate; overflow: hidden; }
+.mk-ambient > * { position: relative; z-index: 1; }
+
+.mk-ambient--grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--mk-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mk-line) 1px, transparent 1px);
+  background-size: 68px 68px;
+  /* Fades out well before the edges so the grid never draws a hard border. */
+  -webkit-mask-image: radial-gradient(ellipse 70% 62% at 50% 50%, #000 10%, transparent 78%);
+  mask-image: radial-gradient(ellipse 70% 62% at 50% 50%, #000 10%, transparent 78%);
+  opacity: 0.62;
+  animation: mkGridDrift 44s linear infinite;
+}
+@keyframes mkGridDrift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 68px 68px, 68px 68px; }
+}
+
+/* Applied to two existing sections through their ids alone, so no markup in
+   those sections had to change. A single low light source each — enough to
+   stop a wide plain band reading as empty. */
+#daily, #account-types { position: relative; isolation: isolate; overflow: hidden; }
+#daily > *, #account-types > * { position: relative; z-index: 1; }
+#daily::before,
+#account-types::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  width: min(720px, 80vw);
+  aspect-ratio: 1;
+  background: radial-gradient(circle, var(--mk-accent-glow) 0%, transparent 64%);
+  opacity: 0.34;
+  filter: blur(30px);
+}
+#daily::before        { top: -18%; right: -10%; }
+#account-types::before { bottom: -22%; left: -12%; }
+
+/* ============================== JOURNEYS ============================== */
+
+.mk-journey { max-width: 1000px; margin-inline: auto; }
+
+.mk-journey__tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 34px;
+}
+.mk-journey__tab {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 18px 22px;
+  border: 1px solid var(--mk-line);
+  border-radius: 14px;
+  background: var(--mk-bg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 320ms var(--mk-ease), background-color 320ms var(--mk-ease),
+              transform 320ms var(--mk-ease);
+}
+.mk-journey__tab:hover { border-color: var(--mk-line-strong); transform: translateY(-2px); }
+.mk-journey__tab.is-active {
+  border-color: var(--mk-accent);
+  background: var(--mk-accent-tint);
+}
+.mk-journey__tabk {
+  font-family: var(--mk-display);
+  font-size: clamp(16px, 1.8vw, 20px);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  color: var(--mk-ink);
+}
+.mk-journey__tab.is-active .mk-journey__tabk { color: var(--mk-accent); }
+.mk-journey__tabd { font-size: 12.5px; color: var(--mk-ink-3); }
+
+.mk-journey__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(28px, 5vw, 56px);
+  align-items: start;
+  padding: clamp(24px, 3.6vw, 38px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+
+/* The journey itself: a vertical run of steps with a spine that fills. */
+.mk-flow {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 30px;
+  list-style: none;
+}
+.mk-flow::before {
+  content: "";
+  position: absolute;
+  left: 5px; top: 8px; bottom: 8px;
+  width: 1px;
+  background: var(--mk-line);
+}
+.mk-flow__fill {
+  position: absolute;
+  left: 5px; top: 8px;
+  width: 1px;
+  height: 0;
+  background: linear-gradient(180deg, var(--mk-accent), var(--mk-accent-hi));
+  transition: height 1700ms var(--mk-ease);
+}
+.mk-flow.is-filled .mk-flow__fill { height: calc(100% - 16px); }
+
+.mk-flow__step {
+  position: relative;
+  padding: 9px 0;
+  font-size: 14.5px;
+  color: var(--mk-ink-2);
+  opacity: 0;
+  transform: translateX(-8px);
+  animation: mkStepIn 460ms var(--mk-ease) forwards;
+}
+.mk-flow__step b { color: var(--mk-ink); font-weight: 500; }
+.mk-flow__step::before {
+  content: "";
+  position: absolute;
+  left: -30px; top: 50%;
+  width: 11px; height: 11px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: var(--mk-surface);
+  border: 1.5px solid var(--mk-accent);
+}
+.mk-flow__step:last-child::before { background: var(--mk-accent); }
+@keyframes mkStepIn { to { opacity: 1; transform: none; } }
+
+.mk-journey__side .mk-eyebrow { margin-bottom: 16px; }
+.mk-journey__feats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mk-journey__feats li {
+  padding: 7px 12px;
+  border: 1px solid var(--mk-line);
+  border-radius: 999px;
+  background: var(--mk-bg);
+  font-size: 12.5px;
+  color: var(--mk-ink-2);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: mkChipIn 380ms var(--mk-ease) forwards;
+  transition: border-color 260ms var(--mk-ease), color 260ms var(--mk-ease);
+}
+.mk-journey__feats li:hover { border-color: var(--mk-accent); color: var(--mk-ink); }
+/* Anything not yet shipped is labelled in the chip itself. */
+.mk-journey__feats li.is-soon { color: var(--mk-ink-3); border-style: dashed; }
+.mk-journey__feats li.is-soon::after {
+  content: " · soon";
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  opacity: 0.75;
+}
+
+/* ============================== TAX ============================== */
+
+.mk-tax { max-width: 1000px; margin-inline: auto; }
+.mk-tax__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.1fr);
+  gap: clamp(20px, 4vw, 44px);
+  align-items: center;
+  padding: clamp(24px, 3.6vw, 38px);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+}
+.mk-tax__colhead {
+  margin: 0 0 16px;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+
+.mk-tax__docs { list-style: none; margin: 0; padding: 0; }
+.mk-tax__docs li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 13px;
+  margin-bottom: 8px;
+  border: 1px solid var(--mk-line);
+  border-radius: 10px;
+  background: var(--mk-bg);
+  font-size: 13px;
+  color: var(--mk-ink-2);
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: mkStepIn 420ms var(--mk-ease) forwards;
+}
+.mk-tax__docs li span {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--mk-accent);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* The read: two rings turning at different rates around a status word. */
+.mk-tax__scan {
+  position: relative;
+  width: clamp(96px, 12vw, 124px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+.mk-tax__scanring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--mk-line-strong);
+  border-top-color: var(--mk-accent);
+  animation: mkSpin 2600ms linear infinite;
+}
+.mk-tax__scanring--2 {
+  inset: 13%;
+  border-top-color: transparent;
+  border-right-color: var(--mk-accent);
+  animation-duration: 1900ms;
+  animation-direction: reverse;
+}
+@keyframes mkSpin { to { transform: rotate(360deg); } }
+.mk-tax__scantext {
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-accent);
+  text-align: center;
+  max-width: 70%;
+  line-height: 1.4;
+}
+
+.mk-tax__found { list-style: none; margin: 0; padding: 0; }
+.mk-tax__found li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--mk-line);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: mkChipIn 440ms var(--mk-ease) forwards;
+}
+.mk-tax__name { font-size: 13.5px; color: var(--mk-ink); }
+.mk-tax__sec {
+  grid-column: 1;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  color: var(--mk-ink-3);
+}
+.mk-tax__amt {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  align-self: center;
+  font-family: var(--mk-mono);
+  font-size: 14px;
+  color: var(--mk-accent);
+  font-variant-numeric: tabular-nums;
+}
+.mk-tax__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mk-line-strong);
+}
+.mk-tax__total span {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-tax__total b {
+  font-family: var(--mk-display);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================== MARKET PULSE ============================== */
+
+.mk-news {
+  display: grid;
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.mk-news__context {
+  padding: 24px;
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  background: var(--mk-bg);
+}
+.mk-news__chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mk-news__chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1px solid var(--mk-line);
+  border-radius: 999px;
+  background: var(--mk-surface);
+  font-size: 12.5px;
+  color: var(--mk-ink-2);
+  transition: border-color 300ms var(--mk-ease), color 300ms var(--mk-ease);
+}
+/* Lights up while a signal that matched it is being shown, which is the whole
+   claim of the section: this headline is here because of that holding. */
+.mk-news__chips li.is-hit { border-color: var(--mk-accent); color: var(--mk-ink); }
+.mk-news__chips li::before {
+  content: "";
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--mk-line-strong);
+  transition: background-color 300ms var(--mk-ease);
+}
+.mk-news__chips li.is-hit::before { background: var(--mk-accent); }
+.mk-news__hint { margin: 16px 0 0; font-size: 12px; line-height: 1.55; color: var(--mk-ink-3); }
+
+.mk-news__feed {
+  border: 1px solid var(--mk-line);
+  border-radius: 16px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+  overflow: hidden;
+}
+.mk-news__list { list-style: none; margin: 0; padding: 0; min-height: 322px; }
+.mk-news__item {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--mk-line);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: mkChipIn 480ms var(--mk-ease) forwards;
+}
+.mk-news__item:last-child { border-bottom: none; }
+.mk-news__meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 9px;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-news__rel {
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+}
+.mk-news__rel.is-medium { background: var(--mk-line); color: var(--mk-ink-3); }
+.mk-news__head {
+  margin: 0 0 9px;
+  font-family: var(--mk-display);
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.36;
+  letter-spacing: -0.012em;
+  color: var(--mk-ink);
+}
+/* The line that separates this from a generic feed. */
+.mk-news__why {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--mk-accent);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--mk-ink-2);
+}
+
+/* ============================== WHATSAPP ALERTS ============================== */
+
+.mk-alerts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(30px, 6vw, 70px);
+  align-items: center;
+}
+
+.mk-alerts__list { list-style: none; margin: 0; padding: 0; }
+.mk-alerts__list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--mk-line);
+  transition: border-color 320ms var(--mk-ease);
+}
+.mk-alerts__list li:last-child { border-bottom: 1px solid var(--mk-line); }
+/* The trigger that produced the message currently on the phone. */
+.mk-alerts__list li.is-firing { border-color: var(--mk-accent); }
+.mk-alerts__k {
+  grid-row: 1 / 3;
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--mk-bg-tint);
+  font-size: 14px;
+  transition: background-color 320ms var(--mk-ease), transform 320ms var(--mk-ease);
+}
+.mk-alerts__list li.is-firing .mk-alerts__k {
+  background: var(--mk-accent-tint);
+  transform: scale(1.08);
+}
+.mk-alerts__t { font-size: 14px; font-weight: 500; color: var(--mk-ink); }
+.mk-alerts__d { font-size: 12.5px; color: var(--mk-ink-3); }
+.mk-alerts__note { text-align: left; }
+
+/* --- the phone --- */
+.mk-phone { position: relative; justify-self: center; }
+.mk-phone__glow {
+  position: absolute;
+  inset: -18% -30%;
+  background: radial-gradient(circle, var(--mk-accent-glow) 0%, transparent 62%);
+  opacity: 0.5;
+  filter: blur(28px);
+  pointer-events: none;
+}
+.mk-phone__frame {
+  position: relative;
+  z-index: 1;
+  width: clamp(268px, 30vw, 316px);
+  height: 476px;
+  padding: 0 0 16px;
+  border: 1px solid var(--mk-line-strong);
+  border-radius: 34px;
+  background: var(--mk-bg);
+  box-shadow: var(--mk-shadow);
+  overflow: hidden;
+}
+.mk-phone__notch {
+  width: 96px; height: 20px;
+  margin: 9px auto 0;
+  border-radius: 999px;
+  background: var(--mk-bg-tint);
+}
+.mk-phone__bar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 18px;
+  margin-top: 8px;
+  border-bottom: 1px solid var(--mk-line);
+}
+/* WhatsApp's own mark and colour, used to identify the channel. */
+.mk-wa {
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff;
+  flex-shrink: 0;
+}
+.mk-phone__who { display: flex; flex-direction: column; line-height: 1.25; }
+.mk-phone__who b { font-size: 13.5px; font-weight: 500; color: var(--mk-ink); }
+.mk-phone__who em {
+  font-style: normal;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--mk-accent);
+}
+
+.mk-phone__thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: 372px;
+  overflow: hidden;
+  justify-content: flex-end;
+}
+.mk-msg {
+  align-self: flex-start;
+  max-width: 88%;
+  padding: 11px 14px;
+  border-radius: 4px 14px 14px 14px;
+  background: var(--mk-surface);
+  border: 1px solid var(--mk-line);
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  animation: mkMsgIn 460ms var(--mk-ease) forwards;
+}
+@keyframes mkMsgIn { to { opacity: 1; transform: none; } }
+.mk-msg__title {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mk-accent);
+}
+.mk-msg__body { display: block; font-size: 12.5px; line-height: 1.5; color: var(--mk-ink); }
+.mk-msg__body b { font-family: var(--mk-mono); font-weight: 500; }
+.mk-msg__time {
+  display: block;
+  margin-top: 5px;
+  text-align: right;
+  font-family: var(--mk-mono);
+  font-size: 9px;
+  color: var(--mk-ink-3);
+}
+/* ---- Inbound side of the thread ----
+   The person's messages sit on the right with the tail mirrored, so the
+   conversation reads as two way rather than as a feed of notifications. */
+.mk-msg--in {
+  align-self: flex-end;
+  background: var(--mk-accent-tint);
+  border-color: var(--mk-accent-glow);
+  border-radius: 14px 4px 14px 14px;
+}
+
+.mk-msg--in .mk-msg__body { color: var(--mk-ink); }
+
+/* ---- Voice note ----
+   A play control, a waveform and a duration, laid out on one row. The bars
+   animate only while the bubble is the newest one, which is what makes a voice
+   note read as playing rather than as decoration. */
+.mk-msg--voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  max-width: 88%;
+}
+
+.mk-msg__play {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--mk-accent);
+  color: var(--mk-on-accent);
+}
+
+.mk-msg__wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 22px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mk-msg__wave i {
+  display: block;
+  width: 2px;
+  flex: 1;
+  min-width: 2px;
+  max-width: 3px;
+  border-radius: 2px;
+  background: var(--mk-accent);
+  opacity: 0.45;
+  transform-origin: center;
+  animation: mkVoiceBar 1100ms var(--mk-ease-io) infinite alternate;
+}
+
+@keyframes mkVoiceBar {
+  from { transform: scaleY(0.55); opacity: 0.35; }
+  to   { transform: scaleY(1);    opacity: 0.9;  }
+}
+
+.mk-msg__dur {
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  color: var(--mk-ink-3);
+  flex-shrink: 0;
+}
+
+.mk-msg--voice .mk-msg__time { margin-top: 0; flex-shrink: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-msg__wave i { animation: none; transform: scaleY(0.8); opacity: 0.6; }
+}
+
+/* The three-dot typing bubble that precedes each message. */
+.mk-msg--typing { padding: 13px 16px; }
+.mk-msg--typing i {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--mk-ink-3);
+  animation: mkDot 1200ms var(--mk-ease-io) infinite;
+}
+.mk-msg--typing i:nth-child(2) { animation-delay: 180ms; }
+.mk-msg--typing i:nth-child(3) { animation-delay: 360ms; margin-right: 0; }
+@keyframes mkDot { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-3px); } }
+
+/* ============================== WEB + MOBILE ============================== */
+
+.mk-devices {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  max-width: 940px;
+  margin-inline: auto;
+}
+
+.mk-browser {
+  flex: 1 1 auto;
+  /* Narrow enough that the phone can overlap a corner without covering the
+     dashboard content it is meant to be showing alongside. */
+  max-width: 596px;
+  border: 1px solid var(--mk-line);
+  border-radius: 14px;
+  background: var(--mk-surface);
+  box-shadow: var(--mk-shadow);
+  overflow: hidden;
+}
+.mk-browser__bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--mk-line);
+  background: var(--mk-bg-tint);
+}
+.mk-browser__dots { display: flex; gap: 6px; }
+.mk-browser__dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--mk-line-strong); }
+.mk-browser__url {
+  flex: 1;
+  padding: 5px 12px;
+  border-radius: 7px;
+  background: var(--mk-bg);
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  color: var(--mk-ink-2);
+}
+.mk-browser__path { color: var(--mk-ink-3); }
+.mk-browser__live {
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+  font-family: var(--mk-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.mk-browser__body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 20px;
+}
+.mk-mini {
+  padding: 15px;
+  border: 1px solid var(--mk-line);
+  border-radius: 11px;
+  background: var(--mk-bg);
+}
+.mk-mini--wide { grid-column: span 3; }
+.mk-mini--chart { display: flex; flex-direction: column; gap: 10px; }
+.mk-mini__label {
+  display: block;
+  font-family: var(--mk-mono);
+  font-size: 9px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-mini__value {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--mk-display);
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.mk-mini__text { display: block; margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--mk-ink-2); }
+.mk-spark { width: 100%; height: 42px; }
+.mk-spark__line { stroke-dasharray: 400; stroke-dashoffset: 400; }
+.is-in .mk-spark__line { animation: mkDraw 1500ms var(--mk-ease) 400ms forwards; }
+
+/* The phone overlaps the browser's corner — one product, two surfaces, rather
+   than two objects sitting side by side. */
+.mk-pocket { flex: 0 0 auto; margin-left: -24px; margin-bottom: -18px; position: relative; z-index: 2; }
+.mk-pocket__frame {
+  width: 196px;
+  padding-bottom: 18px;
+  border: 1px solid var(--mk-line-strong);
+  border-radius: 26px;
+  background: var(--mk-bg);
+  box-shadow: var(--mk-shadow);
+  overflow: hidden;
+}
+.mk-pocket__notch {
+  width: 66px; height: 15px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: var(--mk-bg-tint);
+}
+.mk-pocket__body { display: flex; flex-direction: column; padding: 18px 16px 0; }
+.mk-pocket__eyebrow {
+  font-family: var(--mk-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-pocket__value {
+  margin-top: 6px;
+  font-family: var(--mk-display);
+  font-size: 25px;
+  font-weight: 400;
+  letter-spacing: -0.028em;
+  color: var(--mk-ink);
+  font-variant-numeric: tabular-nums;
+}
+.mk-pocket__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid var(--mk-line);
+  font-size: 11.5px;
+  color: var(--mk-ink-2);
+}
+.mk-pocket__row i { width: 5px; height: 5px; border-radius: 50%; background: var(--mk-accent); flex-shrink: 0; }
+.mk-pocket__goal {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px 10px;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--mk-line);
+  font-size: 11.5px;
+  color: var(--mk-ink-2);
+}
+.mk-pocket__goal b { font-family: var(--mk-mono); font-weight: 500; color: var(--mk-accent); }
+.mk-pocket__bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--mk-line);
+  overflow: hidden;
+}
+.mk-pocket__bar i { display: block; width: 0; height: 100%; border-radius: 999px; background: var(--mk-accent); transition: width 1200ms var(--mk-ease) 600ms; }
+.is-in .mk-pocket__bar i { width: 68%; }
+.mk-devices__note { text-align: center; }
+
+/* ============================== VARTA — thinking state ============================== */
+
+.mk-varta__thinking {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 24px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 340ms var(--mk-ease), transform 340ms var(--mk-ease);
+  pointer-events: none;
+}
+.mk-varta__thinking.is-shown { opacity: 1; transform: none; }
+.mk-varta__thinklabel {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-ink-3);
+}
+.mk-varta__sources { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mk-varta__sources li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid var(--mk-line);
+  border-radius: 999px;
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: var(--mk-ink-3);
+  transition: border-color 300ms var(--mk-ease), color 300ms var(--mk-ease);
+}
+.mk-varta__sources li span {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--mk-line-strong);
+  transition: background-color 300ms var(--mk-ease);
+}
+/* Each source lights as it is consulted, so the wait has content. */
+.mk-varta__sources li.is-read { border-color: var(--mk-accent); color: var(--mk-ink-2); }
+.mk-varta__sources li.is-read span { background: var(--mk-accent); }
+
+/* ============================== TATHYA — patterns + action ============================== */
+
+.mk-stages--five li { font-size: 10px; letter-spacing: 0.1em; }
+
+.mk-patterns { list-style: none; margin: 0; padding: 0; }
+.mk-patterns li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--mk-line);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: mkChipIn 420ms var(--mk-ease) forwards;
+}
+.mk-patterns li:last-child { border-bottom: none; }
+.mk-pattern__name { font-size: 13.5px; color: var(--mk-ink-2); }
+.mk-pattern__val {
+  font-family: var(--mk-mono);
+  font-size: 12.5px;
+  color: var(--mk-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.mk-pattern__track {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--mk-line);
+  overflow: hidden;
+}
+.mk-pattern__track i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--mk-line-strong);
+  transition: width 760ms var(--mk-ease);
+}
+/* Only the pattern that wins the slot is drawn in the accent. */
+.mk-patterns li.is-top .mk-pattern__name { color: var(--mk-ink); }
+.mk-patterns li.is-top .mk-pattern__val { color: var(--mk-accent); }
+.mk-patterns li.is-top .mk-pattern__track i { background: var(--mk-accent); }
+
+.mk-action { padding-left: 20px; border-left: 2px solid var(--mk-accent); }
+.mk-action__tag {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: var(--mk-accent-tint);
+  color: var(--mk-accent);
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.mk-action__title {
+  margin: 0 0 10px;
+  font-family: var(--mk-display);
+  font-size: clamp(19px, 2.4vw, 26px);
+  font-weight: 400;
+  letter-spacing: -0.024em;
+  color: var(--mk-ink);
+}
+.mk-action__body {
+  margin: 0;
+  font-size: clamp(13.5px, 1.4vw, 15.5px);
+  line-height: 1.62;
+  color: var(--mk-ink-2);
+  max-width: 52ch;
+}
+.mk-action__row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.mk-action__pill {
+  padding: 5px 11px;
+  border: 1px solid var(--mk-line);
+  border-radius: 8px;
+  background: var(--mk-bg);
+  font-family: var(--mk-mono);
+  font-size: 11px;
+  color: var(--mk-ink-2);
+}
+.mk-action__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mk-accent);
+}
+
+/* ============================== RESPONSIVE ============================== */
+
+@media (max-width: 1080px) {
+  .mk-journey__body { grid-template-columns: 1fr; }
+  .mk-news { grid-template-columns: 1fr; }
+  .mk-alerts { grid-template-columns: 1fr; gap: 40px; }
+  .mk-phone { justify-self: start; }
+
+  .mk-tax__stage { grid-template-columns: 1fr; gap: 28px; }
+  .mk-tax__col--mid { justify-self: start; }
+  .mk-tax__scan { transform: rotate(90deg); }
+  .mk-tax__scantext { transform: rotate(-90deg); }
+
+  /* Devices stack rather than overlap — the overlap only reads at width. */
+  .mk-devices { flex-direction: column; align-items: center; gap: 26px; }
+  .mk-pocket { margin: 0; }
+}
+
+@media (max-width: 860px) {
+  .mk-journey__tabs { grid-template-columns: 1fr; }
+  .mk-browser__body { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mk-mini--wide { grid-column: span 2; }
+  .mk-news__list { min-height: 0; }
+}
+
+@media (max-width: 620px) {
+  .mk-ambient--grid::before { background-size: 48px 48px; }
+  .mk-journey__body { padding: 20px; }
+  .mk-flow { padding-left: 26px; }
+  .mk-flow__step::before { left: -26px; }
+  .mk-news__context { padding: 20px; }
+  .mk-news__item { padding: 15px 17px; }
+  .mk-phone__frame { width: 100%; max-width: 300px; }
+  .mk-browser__body { grid-template-columns: 1fr; padding: 15px; }
+  .mk-mini--wide { grid-column: span 1; }
+  .mk-stages--five li { font-size: 8.5px; letter-spacing: 0.04em; gap: 5px; }
+  .mk-tax__stage { padding: 20px; }
+}
+
+
+/* ============================== REDUCED MOTION ==============================
+   Not "faster animations" — no animation. Everything resolves to its final
+   state immediately, including the drawn paths and the marquee, so the page is
+   fully legible and nothing loops in the background. */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  body.mk *,
+  body.mk *::before,
+  body.mk *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .mk-line > span { transform: none !important; }
+  /* The preview draws itself in; without motion it must simply be finished. */
+  .mk-preview__line { stroke-dashoffset: 0 !important; }
+  .mk-preview__area { opacity: 1 !important; }
+  .mk-prow__bar i { transform: scaleX(1) !important; }
+  .mk-hero__eyebrow, .mk-hero__lede, .mk-hero__cta, .mk-hero__audience,
+  .mk-hero__visual, .mk-hero__readout, .mk-hero__scroll { opacity: 1 !important; }
+  [data-reveal], [data-reveal] [style*="--d"] { opacity: 1 !important; transform: none !important; }
+  .mk-rail::after { width: 100% !important; }
+  .mk-pipe__track i { height: 100% !important; }
+  .mk-marquee__track { animation: none !important; }
+  .mk-hero__scroll span { animation: none !important; opacity: 1 !important; }
+  .mk-ask__caret { animation: none !important; }
+
+  /* --- product showcases --- */
+  .mk-hisaab__row { opacity: 1 !important; transform: none !important; }
+  /* No animation means no feed — show the whole month rather than clipping it
+     under a mask the visitor can never scroll past. */
+  .mk-hisaab__list { height: auto !important; overflow: visible !important;
+                     -webkit-mask-image: none !important; mask-image: none !important; }
+  .mk-chip, .mk-varta__figures li { opacity: 1 !important; transform: none !important; }
+  .mk-scan__beam { display: none; }
+  .mk-scan__row i { width: var(--h) !important; }
+  .mk-tathya__panel { position: static; inset: auto; opacity: 1 !important; transform: none !important; }
+  .mk-tathya__panel + .mk-tathya__panel { margin-top: 30px; }
+  .mk-tathya__stage { min-height: 0; }
+  .mk-stages li { color: var(--mk-ink-2); border-bottom-color: var(--mk-line-strong); }
+  .mk-wave.is-live i { animation: none !important; height: 12px; }
+  .mk-varta__a { opacity: 1 !important; transform: none !important; }
+  .mk-hub__node::after { background-image: none !important; animation: none !important; }
+  .mk-hub__ring { display: none; }
+  .mk-cfo__insight { opacity: 1 !important; transform: none !important; }
+  .mk-cfo__col { opacity: 1 !important; }
+
+  /* --- additions: journeys, tax, market pulse, alerts, devices --- */
+  .mk-ambient--grid::before { animation: none !important; }
+  .mk-flow__step,
+  .mk-journey__feats li,
+  .mk-tax__docs li,
+  .mk-tax__found li,
+  .mk-news__item,
+  .mk-patterns li,
+  .mk-msg { opacity: 1 !important; transform: none !important; }
+  .mk-flow__fill { height: calc(100% - 16px) !important; }
+  .mk-tax__scanring { animation: none !important; }
+  .mk-pattern__track i { width: var(--w, 100%) !important; }
+  .mk-msg--typing { display: none !important; }
+  .mk-msg--typing i { animation: none !important; }
+  .mk-varta__thinking { display: none !important; }
+  .mk-spark__line { stroke-dashoffset: 0 !important; animation: none !important; }
+  .mk-pocket__bar i { width: 68% !important; }
+}
+
+
+/* ==========================================================================
+   TABULAR FIGURES
+   The type system is two families now, so there is no monospace face to keep
+   columns of numbers aligned. Inter's tabular figures do the same job, applied
+   where digits are meant to line up: table cells and any element whose class
+   marks it as a value, amount or figure.
+   ========================================================================== */
+table td,
+table th,
+[class*="__value"],
+[class*="__amount"],
+[class*="__figure"],
+[class*="-value"],
+[class*="-amount"] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Form controls do not inherit type from their container by default, so a
+   button's label silently falls back to the UA font. Inheriting the family
+   (not the size, which components set themselves) keeps every control inside
+   the two-font system. */
+button, input, select, textarea, optgroup {
+  font-family: inherit;
+}
+
+
+/* ==========================================================================
+   DEVANAGARI TYPOGRAPHY
+   The eyebrows and labels are set as tracked uppercase, which is a Latin
+   convention. Devanagari has no case, and letter-spacing pulls its conjuncts
+   apart, so in Hindi those rules are relaxed: normal tracking, no transform,
+   and a little more line height for the taller matras.
+   ========================================================================== */
+
+[data-lang="hi"] .mk-eyebrow,
+[data-lang="hi"] .mk-fbar__desc,
+[data-lang="hi"] .mk-cap__k,
+[data-lang="hi"] .mk-sec__label,
+[data-lang="hi"] .mk-tile__k,
+[data-lang="hi"] .mk-readout__label,
+[data-lang="hi"] .mk-brain__num,
+[data-lang="hi"] .mk-step__n,
+[data-lang="hi"] .canvas-kicker,
+[data-lang="hi"] .mk-post__cat,
+[data-lang="hi"] .auth-eyebrow,
+[data-lang="hi"] .mk-field > span,
+[data-lang="hi"] .step-count,
+[data-lang="hi"] .eyebrow,
+[data-lang="hi"] .llf-hero__eyebrow,
+[data-lang="hi"] .llf-sec__label,
+[data-lang="hi"] .llf-freedom__label,
+[data-lang="hi"] .llf-break__title,
+[data-lang="hi"] .llf-verdict__tag,
+[data-lang="hi"] .llf-tradeoff__label {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+/* Headlines are tightened for Latin; Devanagari needs that tracking back. */
+[data-lang="hi"] .mk-hero__title,
+[data-lang="hi"] .mk-h1,
+[data-lang="hi"] .mk-h2,
+[data-lang="hi"] .mk-phero__title,
+[data-lang="hi"] .auth-title,
+[data-lang="hi"] .llf-hero__title,
+[data-lang="hi"] .llf-sec h2 {
+  letter-spacing: -0.005em;
+  line-height: 1.24;
+}

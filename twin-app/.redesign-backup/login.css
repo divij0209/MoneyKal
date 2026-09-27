@@ -1,0 +1,837 @@
+/* ==========================================================================
+   MONEYKAL LOGIN STYLES (HDFC INSPIRED)
+   ========================================================================== */
+
+/* Theme tokens for the right-hand card. The brand panel keeps its own
+   fixed teal gradient in both themes (it's brand identity, not chrome),
+   but the white card needs a real light/dark switch. */
+:root,
+[data-theme="light"] {
+  --auth-card-bg: #FFFFFF;
+  --auth-card-border: #ECEEF1;
+  --auth-shadow-1: rgba(15, 23, 42, 0.16);
+  --auth-shadow-2: rgba(15, 23, 42, 0.06);
+  --auth-text: #101828;
+  --auth-text-muted: #6B7280;
+  --auth-text-faint: #9CA3AF;
+  --auth-input-bg: #F9FAFB;
+  --auth-input-bg-focus: #FFFFFF;
+  --auth-input-border: #E5E7EB;
+  --auth-divider: #E5E7EB;
+  --auth-mascot-bg: #FFFFFF;
+  --auth-mascot-border: #E5E7EB;
+  --auth-accent: #0D9488;
+  --auth-accent-glow: rgba(13, 148, 136, 0.12);
+  --auth-danger: #EF4444;
+  /* Fixed regardless of theme - the solid CTA fill needs to stay dark
+     enough for white button text to keep sufficient contrast, so it
+     doesn't get the brightened dark-mode treatment --auth-accent gets. */
+  --auth-accent-solid: #0D9488;
+  --auth-accent-solid-hover: #0B7C71;
+}
+
+[data-theme="dark"] {
+  --auth-card-bg: #161C24;
+  --auth-card-border: rgba(255, 255, 255, 0.08);
+  --auth-shadow-1: rgba(0, 0, 0, 0.55);
+  --auth-shadow-2: rgba(0, 0, 0, 0.3);
+  --auth-text: #F3F4F6;
+  --auth-text-muted: #9CA3AF;
+  --auth-text-faint: #6B7280;
+  --auth-input-bg: #1E252E;
+  --auth-input-bg-focus: #242C36;
+  --auth-input-border: rgba(255, 255, 255, 0.12);
+  --auth-divider: rgba(255, 255, 255, 0.12);
+  --auth-mascot-bg: #1E252E;
+  --auth-mascot-border: rgba(255, 255, 255, 0.16);
+  --auth-accent: #2DD4BF;
+  --auth-accent-glow: rgba(45, 212, 186, 0.16);
+  --auth-danger: #F87171;
+  --auth-accent-solid: #0D9488;
+  --auth-accent-solid-hover: #0B7C71;
+}
+
+body.auth-page {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #004d4d 0%, #006666 30%, #008080 55%, #00a38c 80%, #00b89c 100%);
+  background-size: 200% 200%;
+  animation: authGradientShift 18s ease infinite;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+@keyframes authGradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.auth-page { animation: none; }
+}
+
+/* Floating colour blobs - purely decorative, sit behind the brand panel
+   to give the teal side some life instead of a flat wash of one color. */
+.auth-blobs {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  animation: blobDrift 24s ease-in-out infinite;
+}
+.blob-1 {
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, #B794FF 0%, transparent 68%);
+  top: -14%; left: -2%;
+  animation-duration: 27s;
+}
+.blob-2 {
+  width: 360px; height: 360px;
+  background: radial-gradient(circle, #4DFFFF 0%, transparent 68%);
+  /* Sits in the gap between the hero photo and the white card rather
+     than directly behind the photo, where it would barely show. */
+  bottom: -4%; left: 40%;
+  animation-duration: 21s;
+  animation-delay: -6s;
+}
+.blob-3 {
+  width: 340px; height: 340px;
+  background: radial-gradient(circle, #FFD166 0%, transparent 68%);
+  /* Positioned with `left` (not `right`) so it lands on the teal brand
+     panel - the right ~45% of the page is an opaque white card and would
+     hide anything placed with a right-edge offset. */
+  top: 8%; left: 34%;
+  animation-duration: 25s;
+  animation-delay: -13s;
+}
+@keyframes blobDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -40px) scale(1.08); }
+  66%      { transform: translate(-25px, 25px) scale(0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none; }
+}
+
+.hdfc-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 50;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--auth-card-bg);
+  border: 1px solid var(--auth-card-border);
+  color: var(--auth-text-muted);
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--auth-shadow-2);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.auth-theme-toggle:hover {
+  color: var(--auth-accent);
+  transform: scale(1.08);
+}
+
+@media (max-width: 900px) {
+  .auth-theme-toggle {
+    top: 12px;
+    right: 12px;
+  }
+}
+
+/* ==========================================================================
+   LEFT SIDE (BRANDING & IMAGE)
+   ========================================================================== */
+.brand-panel {
+  flex: 1;
+  position: relative;
+  padding: 40px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+.brand-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  animation: fadeSlideDown 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.brand-logo-icon-auth {
+  height: 28px;
+  width: auto;
+}
+
+.brand-wordmark-auth {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  color: #1F2937;
+}
+
+@keyframes fadeSlideDown {
+  0%   { opacity: 0; transform: translateY(-16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideUp {
+  0%   { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-link { animation: none; }
+}
+
+.brand-tags {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  animation: fadeIn 0.7s ease 0.25s both;
+}
+
+.brand-tags .dot {
+  font-size: 10px;
+}
+
+/* Cinematic Text Reveal */
+.cinematic-text-container {
+  position: relative;
+  height: 200px;
+  max-width: 500px;
+  z-index: 10;
+}
+
+.cinematic-phrase {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  visibility: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2em;
+}
+
+.cinematic-phrase.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cinematic-phrase .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.cinematic-phrase.active .word {
+  animation: revealWord 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes revealWord {
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cinematic-phrase.exit .word {
+  animation: exitWord 0.6s cubic-bezier(0.5, 0, 0.5, 1) forwards;
+}
+
+@keyframes exitWord {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Human Image */
+.brand-hero-image {
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  height: 65vh;
+  /* Scale to fit bottom */
+  width: auto;
+  object-fit: contain;
+  z-index: 1;
+  opacity: 0;
+  animation: fadeIn 1s ease 0.3s both, heroFloat 6s ease-in-out 1.3s infinite;
+}
+
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-14px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-hero-image { animation: fadeIn 1s ease 0.3s both; }
+}
+
+/* ==========================================================================
+   RIGHT SIDE (WHITE OVERLAY LOGIN CARD)
+   ========================================================================== */
+.login-panel-wrapper {
+  width: 45%;
+  min-width: 500px;
+  background: var(--auth-card-bg);
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+  /* Adding a subtle background pattern could go here */
+}
+
+.login-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 480px;
+  background: var(--auth-card-bg);
+  border-radius: 20px;
+  padding: 44px 40px 40px;
+  box-shadow: 0 24px 70px var(--auth-shadow-1), 0 2px 8px var(--auth-shadow-2);
+  border: 1px solid var(--auth-card-border);
+  opacity: 0;
+  transition: background 0.3s ease, border-color 0.3s ease;
+  animation: fadeSlideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card { animation: fadeIn 0.4s ease both; }
+}
+
+.login-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #0D9488 0%, #14B8A6 45%, #7C3AED 100%);
+  z-index: 2;
+}
+
+/* Soft decorative glows in the card corners - echoes the brand panel's
+   blobs so both halves of the page feel like one designed piece, rather
+   than a colourful side and a flat white one. */
+.login-card::before,
+.login-card::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(30px);
+}
+.login-card::before {
+  width: 220px;
+  height: 220px;
+  top: -110px;
+  right: -80px;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.16) 0%, transparent 70%);
+}
+.login-card::after {
+  width: 200px;
+  height: 200px;
+  bottom: -110px;
+  left: -70px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.12) 0%, transparent 70%);
+}
+
+.login-card > *:not(.login-card-accent) {
+  position: relative;
+  z-index: 1;
+}
+
+.login-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--auth-accent);
+  margin-bottom: 12px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 0.2s both;
+}
+
+.login-eyebrow svg {
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-eyebrow { animation: none; opacity: 1; }
+}
+
+.login-title {
+  text-align: center;
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--auth-text);
+  margin-bottom: 6px;
+  transition: color 0.3s ease;
+}
+
+.login-subtitle {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--auth-text-muted);
+  margin-bottom: 32px;
+}
+
+/* Form Fields */
+.auth-error {
+  color: var(--auth-danger);
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
+  display: none;
+  font-weight: 500;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.hdfc-field {
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  animation: fadeSlideUp 0.5s ease both;
+}
+
+.hdfc-field:nth-of-type(1) { animation-delay: 0.3s; }
+.hdfc-field:nth-of-type(2) { animation-delay: 0.38s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hdfc-field { animation: none; opacity: 1; }
+}
+
+.hdfc-field span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--auth-text-muted);
+  margin-bottom: 8px;
+}
+
+.hdfc-field .req {
+  color: var(--auth-danger);
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--auth-text-faint);
+  pointer-events: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.input-wrapper:focus-within .input-icon,
+.password-wrapper:focus-within .input-icon {
+  color: var(--auth-accent);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.login-card .ob-input {
+  width: 100%;
+  background: var(--auth-input-bg);
+  border: 1.5px solid var(--auth-input-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--auth-text);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* Only fields with a prefix icon (User ID, Password) need the extra
+   left gutter - plain fields (e.g. register's Name/Email) shouldn't get
+   a blank indent. */
+.input-wrapper .ob-input,
+.password-wrapper .ob-input {
+  padding-left: 40px;
+}
+
+.login-card .ob-input:focus {
+  background: var(--auth-input-bg-focus);
+  border-color: var(--auth-accent);
+  box-shadow: 0 0 0 4px var(--auth-accent-glow);
+}
+
+.login-card .ob-input::placeholder {
+  color: var(--auth-text-faint);
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 32px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 0.5s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-actions { animation: none; opacity: 1; }
+}
+
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--auth-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.action-link svg {
+  color: var(--auth-text-faint);
+  transition: color 0.2s ease;
+}
+
+.action-link:hover {
+  color: var(--auth-accent);
+}
+
+.action-link:hover svg {
+  color: var(--auth-accent);
+}
+
+/* Login Button */
+.btn-login-solid {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--auth-accent-solid);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  width: 100%;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: background 0.2s, transform 0.15s ease, box-shadow 0.2s ease;
+  opacity: 0;
+  animation: fadeSlideUp 0.5s ease 0.55s both;
+}
+
+.btn-arrow {
+  transition: transform 0.2s ease;
+}
+
+.btn-login-solid:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+/* Divider + trust badges */
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--auth-text-faint);
+  font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 0.6s both;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--auth-divider);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-divider { animation: none; opacity: 1; }
+}
+
+.trust-badges {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 0.68s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-badges { animation: none; opacity: 1; }
+}
+
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--auth-text-muted);
+}
+
+.trust-badge svg {
+  flex-shrink: 0;
+}
+
+/* Each badge gets its own accent so the row reads with a bit of colour
+   variety instead of one repeated tone. */
+.trust-badge--teal svg { color: var(--auth-accent); }
+.trust-badge--amber svg { color: #D97706; }
+.trust-badge--purple svg { color: #7C3AED; }
+
+[data-theme="dark"] .trust-badge--amber svg { color: #FBBF24; }
+[data-theme="dark"] .trust-badge--purple svg { color: #A78BFA; }
+
+.btn-login-solid::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+
+.btn-login-solid:hover::after {
+  left: 130%;
+}
+
+.btn-login-solid:hover {
+  background: var(--auth-accent-solid-hover);
+  box-shadow: 0 10px 26px rgba(13, 148, 136, 0.32);
+  transform: translateY(-1px);
+}
+
+.btn-login-solid:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-login-solid::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-login-solid { animation: none; opacity: 1; }
+}
+
+/* Footer Links */
+.auth-footer-links {
+  text-align: center;
+  font-size: 13px;
+  color: var(--auth-text-muted);
+  line-height: 2;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 0.76s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-footer-links { animation: none; opacity: 1; }
+}
+
+.bold-link {
+  color: var(--auth-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.bold-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .hdfc-layout {
+    flex-direction: column;
+  }
+
+  .brand-panel {
+    flex: none;
+    height: 50vh;
+    padding: 24px;
+  }
+
+  .brand-hero-image {
+    height: 40vh;
+  }
+
+  .login-panel-wrapper {
+    width: 100%;
+    height: 50vh;
+    padding: 24px;
+  }
+
+  .login-card {
+    padding: 24px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Password Toggle Support */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Password mascot - a small badge that peeks over the field's top-right
+   corner. Its paws rest below its face by default and swing up to
+   physically cover its eyes while you type, then drop back down once
+   you're done - a real "see no evil" gesture rather than just a closed
+   eyelid. Minimal line-icon style in the brand color, matching the rest
+   of the form's icon language instead of a flat cartoon sticker. */
+.password-mascot {
+  position: absolute;
+  top: -15px;
+  right: 6px;
+  width: 34px;
+  height: 34px;
+  z-index: 2;
+  filter: drop-shadow(0 3px 8px rgba(15, 23, 42, 0.14));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+.password-mascot.is-covering {
+  transform: translateY(2px) rotate(-3deg);
+}
+
+.mascot-eye {
+  transition: opacity 0.15s ease;
+}
+.password-mascot.is-covering .mascot-eye {
+  opacity: 0;
+}
+
+.mascot-hand {
+  transform: translateY(0) rotate(0deg);
+  transform-origin: center;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.password-mascot.is-covering .mascot-hand-left {
+  transform: translate(1.5px, -10.5px) rotate(-14deg);
+}
+.password-mascot.is-covering .mascot-hand-right {
+  transform: translate(-1.5px, -10.5px) rotate(14deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-hand { transition: none; }
+}
+
+.password-wrapper .ob-input {
+  width: 100%;
+  padding-right: 40px; /* Space for the icon */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.eye-icon:hover {
+  color: var(--ink);
+}

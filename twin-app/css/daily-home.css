@@ -1,0 +1,1329 @@
+/* ==========================================================================
+   MoneyKal — Daily Home
+
+   The Individual's answer to "what is happening with my money today?", sitting
+   at the top of the Overview. Every colour, font and radius below comes from
+   the tokens already declared in overview.css (--ink, --accent, --line,
+   --surface-*, --font-*) so this section inherits both themes for free and
+   cannot drift from the rest of the app.
+
+   Structurally it follows the Overview's own convention: sections are flat,
+   separated by whitespace and hairlines rather than stacked cards. The two
+   places a container appears — the insight and each upcoming row — are the two
+   places where a defined edge is doing real work.
+   ========================================================================== */
+
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+#view-overview .dh{
+  margin:26px 0 34px;
+  display:flex;
+  flex-direction:column;
+  gap:34px;
+}
+#view-overview .dh[hidden]{ display:none; }
+
+/* ============ B. Financial snapshot ============
+   Three figures on one baseline. The serif carries the numbers, which stay the
+   loudest thing on the page; the labels sit quietly above them. */
+.dh-snap{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:0;
+}
+.dh-stat{
+  min-width:0;
+  padding:0 34px;
+}
+.dh-stat:first-child{ padding-left:0; }
+.dh-stat:last-child{ padding-right:0; }
+.dh-stat + .dh-stat{ border-left:1px solid var(--line); }
+
+.dh-stat__label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.13em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin:0 0 12px;
+}
+.dh-stat__label svg{ width:13px; height:13px; color:var(--accent); flex-shrink:0; }
+
+.dh-stat__value{
+  font-family:var(--font-display);
+  font-size:40px;
+  line-height:1.05;
+  font-weight:500;
+  color:var(--ink);
+  letter-spacing:-0.02em;
+  overflow-wrap:anywhere;
+}
+.dh-stat__value.is-empty{ color:var(--ink-faint); font-size:30px; }
+
+.dh-stat__meta{
+  margin-top:10px;
+  font-size:12.5px;
+  color:var(--ink-muted);
+  line-height:1.5;
+}
+.dh-stat__meta b{ color:var(--ink); font-family:var(--font-mono); font-weight:500; }
+.dh-stat__meta.is-up{ color:var(--ov-neg); }
+.dh-stat__meta.is-down{ color:var(--ov-pos); }
+
+/* Savings progress carries a bar rather than a second big number, so the three
+   tiles do not read as three identical figures. */
+.dh-stat__bar{
+  height:4px;
+  border-radius:999px;
+  background:var(--ov-ring-track);
+  overflow:hidden;
+  margin-top:14px;
+}
+.dh-stat__bar i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:var(--accent);
+  transition:width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A button that reads as an inline prompt, used where a tile has no data yet */
+.dh-stat__cta{
+  margin-top:12px;
+  background:none;
+  border:none;
+  padding:0;
+  font:inherit;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--accent);
+  cursor:pointer;
+  border-bottom:1px solid transparent;
+  transition:border-color 0.15s ease;
+}
+.dh-stat__cta:hover{ border-bottom-color:var(--accent); }
+
+/* ============ C. MoneyKal insight ============
+   The one section that keeps a real container. It is the page's editorial
+   voice, and giving it an edge is what stops it reading as another statistic. */
+.dh-insight{
+  position:relative;
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+  padding:22px 24px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--ov-card-bg);
+  overflow:hidden;
+}
+/* A hairline of accent on the leading edge, weighted by priority. */
+.dh-insight::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:3px;
+  background:var(--accent);
+  opacity:0.85;
+}
+.dh-insight--low::before{ background:var(--ink-faint); opacity:0.5; }
+
+.dh-insight__icon{
+  flex-shrink:0;
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:var(--accent-tint);
+  color:var(--accent);
+}
+.dh-insight__icon svg{ width:19px; height:19px; }
+.dh-insight--low .dh-insight__icon{
+  background:var(--ov-neg-tint);
+  color:var(--ink-muted);
+}
+
+.dh-insight__body{ flex:1; min-width:0; }
+.dh-insight__eyebrow{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:10.5px;
+  font-weight:600;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin:0 0 8px;
+}
+.dh-insight__badge{
+  padding:2px 7px;
+  border-radius:5px;
+  font-size:9.5px;
+  letter-spacing:0.1em;
+  background:var(--accent-tint);
+  color:var(--accent);
+}
+.dh-insight--low .dh-insight__badge{
+  background:var(--ov-neg-tint);
+  color:var(--ink-muted);
+}
+.dh-insight__title{
+  font-family:var(--font-display);
+  font-size:19px;
+  font-weight:500;
+  color:var(--ink);
+  margin:0 0 6px;
+  letter-spacing:-0.01em;
+}
+.dh-insight__msg{
+  font-size:14px;
+  line-height:1.62;
+  color:var(--ink-muted);
+  margin:0;
+}
+.dh-insight__action{
+  margin-top:14px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:none;
+  border:none;
+  padding:0;
+  font:inherit;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--accent);
+  cursor:pointer;
+}
+.dh-insight__action:hover{ text-decoration:underline; }
+
+/* ============ D + E. Coming up / Goal ============ */
+.dh-split{
+  display:grid;
+  grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr);
+  gap:44px;
+  align-items:start;
+}
+.dh-block{ min-width:0; }
+
+.dh-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:6px;
+}
+.dh-head__title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.13em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin:0;
+}
+.dh-head__title svg{ width:13px; height:13px; color:var(--accent); flex-shrink:0; }
+.dh-head__action{
+  background:none;
+  border:none;
+  padding:4px 6px;
+  border-radius:6px;
+  font:inherit;
+  font-size:12px;
+  font-weight:500;
+  color:var(--ink-faint);
+  cursor:pointer;
+  transition:color 0.15s ease, background 0.15s ease;
+}
+.dh-head__action:hover{ color:var(--accent); background:var(--accent-tint); }
+.dh-sub{
+  font-size:12.5px;
+  color:var(--ink-faint);
+  margin:0 0 16px;
+}
+
+/* ---- Upcoming rows ---- */
+.dh-up{ list-style:none; margin:0; padding:0; }
+.dh-up__item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:13px 0;
+  border-bottom:1px solid var(--line);
+}
+.dh-up__item:last-child{ border-bottom:none; }
+
+.dh-up__mark{
+  flex-shrink:0;
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:13px;
+  font-weight:600;
+  letter-spacing:0.02em;
+  background:var(--ov-neg-tint);
+  color:var(--ink-muted);
+}
+.dh-up__item--critical .dh-up__mark{ background:var(--accent-tint); color:var(--accent); }
+
+.dh-up__body{ flex:1; min-width:0; }
+.dh-up__name{
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.dh-up__meta{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-top:3px;
+  font-size:11.5px;
+  color:var(--ink-faint);
+}
+.dh-up__due{ font-weight:500; }
+.dh-up__item--critical .dh-up__due{ color:var(--accent); }
+.dh-up__repeat{
+  padding:1px 6px;
+  border-radius:4px;
+  border:1px solid var(--line-strong);
+  font-size:10px;
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+
+.dh-up__right{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+}
+.dh-up__amt{
+  font-family:var(--font-mono);
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--ink);
+}
+.dh-up__paid{
+  background:none;
+  border:1px solid var(--line-strong);
+  border-radius:6px;
+  padding:4px 9px;
+  font:inherit;
+  font-size:11px;
+  color:var(--ink-faint);
+  cursor:pointer;
+  white-space:nowrap;
+  transition:color 0.15s ease, border-color 0.15s ease;
+}
+.dh-up__paid:hover{ color:var(--accent); border-color:var(--ov-accent-border); }
+.dh-up__paid:disabled{ opacity:0.5; cursor:default; }
+
+.dh-up__total{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  font-size:12.5px;
+  color:var(--ink-faint);
+}
+.dh-up__total b{
+  font-family:var(--font-mono);
+  font-weight:500;
+  font-size:14px;
+  color:var(--ink);
+}
+
+/* ---- Goal ---- */
+.dh-goal__top{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:16px;
+}
+.dh-goal__icon{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:17px;
+  background:var(--accent-tint);
+  flex-shrink:0;
+}
+.dh-goal__name{
+  font-family:var(--font-display);
+  font-size:18px;
+  font-weight:500;
+  color:var(--ink);
+  letter-spacing:-0.01em;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+
+.dh-goal__figures{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  font-family:var(--font-mono);
+  margin-bottom:12px;
+}
+.dh-goal__current{ font-size:24px; font-weight:500; color:var(--ink); }
+.dh-goal__target{ font-size:14px; color:var(--ink-faint); }
+
+.dh-goal__bar{
+  height:7px;
+  border-radius:999px;
+  background:var(--ov-ring-track);
+  overflow:hidden;
+}
+.dh-goal__bar i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:var(--accent);
+  transition:width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dh-goal__pct{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  font-size:12.5px;
+  color:var(--ink-muted);
+}
+.dh-goal__pct b{ color:var(--accent); font-family:var(--font-mono); font-weight:500; }
+.dh-goal__note{
+  margin:14px 0 0;
+  font-size:12.5px;
+  line-height:1.6;
+  color:var(--ink-faint);
+}
+.dh-goal__note b{ color:var(--ink); font-family:var(--font-mono); font-weight:500; }
+
+/* ---- Empty states ----
+   Deliberately not greyed-out placeholders: each one names the next useful
+   action, because an empty section on a finance dashboard is a prompt, not a
+   failure. */
+.dh-empty{
+  padding:20px 0 4px;
+}
+.dh-empty__text{
+  font-size:13.5px;
+  color:var(--ink-muted);
+  margin:0 0 12px;
+  line-height:1.6;
+}
+.dh-empty__btn{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  background:var(--ov-btn-bg);
+  color:var(--ov-on-accent);
+  border:none;
+  border-radius:9px;
+  padding:9px 16px;
+  font:inherit;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:var(--ov-btn-shadow);
+  transition:background 0.16s ease, transform 0.16s ease;
+}
+.dh-empty__btn:hover{ background:var(--ov-btn-bg-hover); transform:translateY(-1px); }
+.dh-empty__btn svg{ width:14px; height:14px; }
+
+/* ---- Onboarding state: no financial data at all ---- */
+.dh-onboard{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--ov-card-bg);
+  padding:30px 28px;
+}
+.dh-onboard__title{
+  font-family:var(--font-display);
+  font-size:21px;
+  font-weight:500;
+  color:var(--ink);
+  margin:0 0 8px;
+}
+.dh-onboard__text{
+  font-size:14px;
+  line-height:1.65;
+  color:var(--ink-muted);
+  margin:0 0 20px;
+  max-width:56ch;
+}
+.dh-onboard__actions{ display:flex; flex-wrap:wrap; gap:10px; }
+
+/* ---- Error state ---- */
+.dh-error{
+  border:1px solid var(--line-strong);
+  border-radius:12px;
+  padding:18px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.dh-error__text{ font-size:13.5px; color:var(--ink-muted); margin:0; }
+.dh-error__retry{
+  background:none;
+  border:1px solid var(--line-strong);
+  border-radius:8px;
+  padding:7px 14px;
+  font:inherit;
+  font-size:12.5px;
+  color:var(--ink);
+  cursor:pointer;
+}
+.dh-error__retry:hover{ border-color:var(--ov-accent-border); color:var(--accent); }
+
+/* ---- Loading skeletons ----
+   Shapes matching the real content, so the layout does not jump when data
+   lands. No spinners: the page should look like it is filling in, not waiting. */
+.dh-skel{
+  border-radius:6px;
+  background:linear-gradient(90deg,
+    var(--ov-ring-track) 25%,
+    var(--line-strong) 37%,
+    var(--ov-ring-track) 63%);
+  background-size:400% 100%;
+  animation:dhShimmer 1.4s ease-in-out infinite;
+}
+@keyframes dhShimmer{
+  0%{ background-position:100% 50%; }
+  100%{ background-position:0 50%; }
+}
+@media (prefers-reduced-motion: reduce){
+  .dh-skel{ animation:none; }
+  .dh-stat__bar i, .dh-goal__bar i{ transition:none; }
+}
+.dh-skel--label{ height:10px; width:110px; margin-bottom:14px; }
+.dh-skel--value{ height:34px; width:72%; }
+.dh-skel--meta{ height:11px; width:56%; margin-top:12px; }
+.dh-skel--row{ height:52px; width:100%; margin-bottom:10px; border-radius:10px; }
+.dh-skel--insight{ height:104px; width:100%; border-radius:14px; }
+
+/* ============ Modal forms ============ */
+.dh-form{ display:flex; flex-direction:column; gap:16px; }
+.dh-field{ display:flex; flex-direction:column; gap:7px; min-width:0; }
+.dh-field > span{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+}
+.dh-field > span em{
+  font-style:normal;
+  text-transform:none;
+  letter-spacing:0;
+  opacity:0.7;
+}
+.dh-field-row{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:14px;
+}
+.dh-form__actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top:6px;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+}
+.dh-btn-ghost{ padding:9px 18px; font-size:13px; }
+.dh-btn-go{ padding:9px 22px; font-size:13px; min-height:0; }
+.dh-modal__err{
+  margin:0 0 14px;
+  padding:10px 14px;
+  border-radius:8px;
+  font-size:12.5px;
+  color:var(--ink);
+  background:var(--warn-tint);
+  border:1px solid var(--line-strong);
+}
+.dh-modal__err[hidden]{ display:none; }
+
+/* ============ Responsive ============ */
+@media (max-width: 1080px){
+  .dh-split{ grid-template-columns:1fr; gap:34px; }
+  .dh-split > .dh-block + .dh-block{
+    border-top:1px solid var(--line);
+    padding-top:30px;
+  }
+}
+@media (max-width: 860px){
+  #view-overview .dh{ gap:28px; }
+  .dh-snap{ grid-template-columns:1fr; gap:24px; }
+  .dh-stat{ padding:0; }
+  .dh-stat + .dh-stat{
+    border-left:none;
+    border-top:1px solid var(--line);
+    padding-top:24px;
+  }
+  .dh-stat__value{ font-size:34px; }
+}
+@media (max-width: 560px){
+  .dh-insight{ padding:18px; gap:13px; flex-direction:column; }
+  .dh-insight__title{ font-size:17px; }
+  .dh-insight__msg{ font-size:13.5px; }
+  .dh-stat__value{ font-size:30px; }
+  .dh-up__right{ flex-direction:column; align-items:flex-end; gap:5px; }
+  .dh-up__paid{ padding:3px 7px; font-size:10.5px; }
+  .dh-field-row{ grid-template-columns:1fr; }
+  .dh-onboard{ padding:22px 18px; }
+}
+
+/* ============ Detected obligations awaiting review ============
+   Visually subordinate to the confirmed list on purpose: these are questions
+   MoneyKal is asking, not figures it is asserting. Nothing here counts toward
+   any total until the user answers, and the copy says so. */
+.dh-sg{
+  margin-top:22px;
+  padding:16px 18px;
+  border:1px dashed var(--line-strong);
+  border-radius:12px;
+  background:var(--surface-2);
+}
+.dh-sg__head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.11em;
+  text-transform:uppercase;
+  color:var(--ink-muted);
+}
+.dh-sg__head svg{ width:13px; height:13px; color:var(--accent); flex-shrink:0; }
+.dh-sg__note{
+  margin:6px 0 14px;
+  font-size:11.5px;
+  color:var(--ink-faint);
+}
+
+.dh-sg__list{ list-style:none; margin:0; padding:0; }
+.dh-sg__item{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:11px 0;
+  border-top:1px solid var(--line);
+}
+.dh-sg__item:first-child{ border-top:none; padding-top:0; }
+
+.dh-sg__body{ flex:1; min-width:0; }
+.dh-sg__name{
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.dh-sg__name b{ font-family:var(--font-mono); font-weight:500; }
+.dh-sg__meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:3px;
+  font-size:11px;
+  color:var(--ink-faint);
+}
+/* The source subject line — enough for the user to recognise the mail, one
+   line only, never the body. */
+.dh-sg__subject{
+  margin-top:4px;
+  font-size:11px;
+  color:var(--ink-faint);
+  opacity:0.8;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:44ch;
+}
+
+.dh-sg__actions{ display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.dh-sg__yes,
+.dh-sg__no{
+  border-radius:7px;
+  padding:5px 12px;
+  font:inherit;
+  font-size:11.5px;
+  font-weight:500;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.dh-sg__yes{
+  border:1px solid var(--ov-accent-border);
+  background:var(--accent-tint);
+  color:var(--accent);
+}
+.dh-sg__yes:hover{ background:var(--ov-accent-hover); }
+.dh-sg__no{
+  border:1px solid var(--line-strong);
+  background:none;
+  color:var(--ink-faint);
+}
+.dh-sg__no:hover{ color:var(--ink); border-color:var(--ink-faint); }
+.dh-sg__yes:disabled,
+.dh-sg__no:disabled{ opacity:0.5; cursor:default; }
+
+/* Attribution chip on a confirmed row that MoneyKal detected rather than the
+   user entering it. */
+.dh-up__src{
+  padding:1px 6px;
+  border-radius:4px;
+  background:var(--accent-tint);
+  color:var(--accent);
+  font-size:10px;
+  letter-spacing:0.03em;
+  white-space:nowrap;
+}
+
+@media (max-width: 560px){
+  .dh-sg{ padding:14px; }
+  .dh-sg__item{ flex-direction:column; align-items:stretch; gap:9px; }
+  .dh-sg__actions{ justify-content:flex-end; }
+  .dh-sg__subject{ max-width:none; }
+}
+
+/* ==========================================================================
+   SPENDING OVERVIEW + FINANCIAL CALENDAR
+
+   Added to the Daily Home, using the same tokens, easing and flat-section
+   convention as everything above. Nothing here overrides an existing rule.
+   ========================================================================== */
+
+/* ============ Spending overview ============ */
+
+.dh-spend__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.dh-spend__total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.dh-spend__amount {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.dh-spend__period {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dh-spend__delta {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+.dh-spend__delta.is-up { color: var(--ov-neg); }
+.dh-spend__delta.is-down { color: var(--ov-pos); }
+
+/* Rows, not a donut: a category list is read top-down and compared by bar
+   length, which a ring makes harder for the five-to-eight items we have. */
+.dh-cats { list-style: none; margin: 0; padding: 0; }
+.dh-cat {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.dh-cat:last-child { border-bottom: none; }
+.dh-cat__icon {
+  grid-row: 1 / 3;
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+.dh-cat--lead .dh-cat__icon { background: var(--accent-tint); }
+.dh-cat__name {
+  font-size: 13.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dh-cat--lead .dh-cat__name { font-weight: 500; }
+.dh-cat__amt {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.dh-cat__meta {
+  grid-column: 2 / 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-faint);
+}
+.dh-cat__change.is-up { color: var(--ov-neg); }
+.dh-cat__change.is-down { color: var(--ov-pos); }
+.dh-cat__track {
+  grid-column: 2 / 4;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ov-ring-track);
+  overflow: hidden;
+}
+.dh-cat__track i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  transition: width 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--d, 0ms);
+}
+/* Only the largest category takes the accent — if every bar is cyan, none of
+   them is telling you anything. */
+.dh-cat--lead .dh-cat__track i { background: var(--accent); }
+
+.dh-spend__insight {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-left: 2px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 0 8px 8px 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+/* ============ Financial calendar ============ */
+
+.dh-cal__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.dh-cal__nav { display: flex; align-items: center; gap: 6px; }
+.dh-cal__navbtn {
+  width: 28px; height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+.dh-cal__navbtn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-tint); }
+.dh-cal__navbtn:disabled { opacity: 0.4; cursor: default; }
+.dh-cal__month {
+  min-width: 11ch;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.dh-cal__today {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.dh-cal__today:hover { color: var(--accent); background: var(--accent-tint); }
+
+.dh-cal__totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-bottom: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.dh-cal__totals b { color: var(--ink); font-weight: 500; }
+.dh-cal__totals .is-in b { color: var(--accent); }
+
+/* Grid on the left, the day/window panel beside it. Full width would give a
+   7-column grid ~160px cells, which is a wall calendar, not a dashboard. */
+.dh-cal__month-wrap { min-width: 0; }
+.dh-cal__side { min-width: 0; }
+
+.dh-cal__body {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: start;
+}
+
+.dh-cal__dow,
+.dh-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.dh-cal__dow {
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.dh-day {
+  position: relative;
+  height: 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  cursor: default;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.dh-day.is-blank { visibility: hidden; }
+.dh-day.is-outside { color: var(--ink-faint); opacity: 0.45; }
+.dh-day.has-events { cursor: pointer; color: var(--ink); }
+.dh-day.has-events:hover { background: var(--surface-2); }
+.dh-day.is-today {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 500;
+}
+.dh-day.is-selected { background: var(--accent); color: var(--ov-on-accent, #04161A); }
+.dh-day.is-selected .dh-day__dot { background: currentColor; }
+
+/* Up to three dots per day, then a "+" — a day with nine events should not
+   render nine dots in a 34px cell. */
+.dh-day__dots { display: flex; align-items: center; gap: 2px; height: 4px; }
+.dh-day__dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.dh-day__dot--in { background: var(--accent); }
+.dh-day__dot--out { background: var(--ink-muted); }
+.dh-day__dot--goal { background: var(--accent); opacity: 0.55; }
+.dh-day__dot--tentative {
+  background: none;
+  border: 1px solid var(--ink-faint);
+  width: 5px; height: 5px;
+}
+.dh-day__more { font-size: 8px; color: var(--ink-faint); line-height: 1; }
+
+/* --- selected day / upcoming list --- */
+.dh-cal__panel { min-width: 0; }
+.dh-cal__panelhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.dh-cal__panellabel {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dh-cal__range {
+  display: flex;
+  gap: 4px;
+}
+.dh-cal__rangebtn {
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+.dh-cal__rangebtn:hover { color: var(--ink); }
+.dh-cal__rangebtn.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.dh-events { list-style: none; margin: 0; padding: 0; }
+.dh-event {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 3px 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.18s ease;
+}
+.dh-event__icon { grid-area: 1 / 1 / 3 / 2; }
+.dh-event__name { grid-area: 1 / 2 / 2 / 3; }
+.dh-event__amt  { grid-area: 1 / 3 / 3 / 4; justify-self: end; }
+.dh-event__meta { grid-area: 2 / 2 / 3 / 3; }
+.dh-event:last-child { border-bottom: none; }
+.dh-event:hover { opacity: 0.82; }
+.dh-event__icon {
+  width: 30px; height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+.dh-event--in .dh-event__icon { background: var(--accent-tint); }
+.dh-event__name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dh-event__meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+.dh-event__when { font-family: var(--font-mono); }
+.dh-event--soon .dh-event__when { color: var(--accent); }
+.dh-event__amt {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.dh-event--in .dh-event__amt { color: var(--accent); }
+/* A plan, not a debit — goal contributions read as a target, not a charge. */
+.dh-event--plan .dh-event__amt { color: var(--ink-faint); }
+
+/* An unconfirmed detection is visibly provisional and says so. */
+.dh-event--tentative { opacity: 0.72; }
+.dh-event--tentative .dh-event__icon {
+  background: none;
+  border: 1px dashed var(--line-strong);
+}
+.dh-tag {
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dh-tag--review { border-color: var(--accent); color: var(--accent); }
+
+.dh-cal__empty {
+  padding: 14px 0 4px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+/* --- event detail --- */
+.dh-detail {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.dh-detail__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.dh-detail__title { font-size: 14px; font-weight: 500; color: var(--ink); }
+.dh-detail__close {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.dh-detail__close:hover { color: var(--ink); }
+.dh-detail__rows { display: grid; gap: 6px; }
+.dh-detail__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 12px;
+}
+.dh-detail__row span { color: var(--ink-faint); font-family: var(--font-mono); font-size: 10.5px;
+                       letter-spacing: 0.08em; text-transform: uppercase; }
+.dh-detail__row b { color: var(--ink); font-weight: 500; font-family: var(--font-mono); font-size: 12px; }
+
+/* ============ Responsive ============ */
+
+@media (max-width: 900px) {
+  .dh-cal__body { grid-template-columns: 1fr; gap: 20px; }
+  .dh-cal__panel {
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+  }
+  .dh-day { height: 42px; }
+}
+
+@media (max-width: 620px) {
+  .dh-cat { grid-template-columns: 26px minmax(0, 1fr) auto; gap: 5px 10px; }
+  .dh-cat__icon { width: 26px; height: 26px; font-size: 12px; }
+  .dh-day { height: 38px; font-size: 10.5px; }
+  .dh-cal__grid, .dh-cal__dow { gap: 3px; }
+  .dh-spend__head { gap: 8px; }
+  .dh-event { grid-template-columns: 26px minmax(0, 1fr) auto; gap: 3px 10px; }
+  .dh-event__icon { width: 26px; height: 26px; font-size: 12px; }
+}
+
+/* ============ Reduced motion ============
+   The bars land at their final width rather than growing. Everything else here
+   is already static. */
+@media (prefers-reduced-motion: reduce) {
+  .dh-cat__track i { transition: none !important; }
+}
+
+/* ==========================================================================
+   Health Score Widget & Modal
+   ========================================================================== */
+.dh-health-stat {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.dh-health-stat:hover {
+  opacity: 0.8;
+}
+
+.health-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.health-modal-content {
+  background: var(--surface-1);
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.health-modal-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: none; border: none;
+  font-size: 24px; color: var(--ink-light);
+  cursor: pointer;
+}
+
+.health-modal-score {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 12px 0 24px 0;
+  text-align: center;
+}
+
+.health-section {
+  margin-bottom: 20px;
+}
+.health-section h3 {
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.health-list {
+  list-style: none;
+  padding: 0; margin: 0;
+}
+.health-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--ink);
+}
+.health-list li:last-child {
+  border-bottom: none;
+}
+
+/* ==========================================================================
+   Daily AI Insights List
+   ========================================================================== */
+.dh-insights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dh-insight--stacked {
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--surface-1);
+}
+.dh-insight--stacked .dh-insight__title {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.dh-insight--stacked .dh-insight__msg {
+  font-size: 14px;
+}
+
+/* ============================================================
+   Budget Goals � progress bars
+   ============================================================ */
+.dh-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.dh-block__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+.dh-block__action {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent, #6366f1);
+  background: none;
+  border: 1px solid var(--accent, #6366f1);
+  border-radius: 20px;
+  padding: 3px 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.dh-block__action:hover {
+  background: var(--accent, #6366f1);
+  color: #fff;
+}
+.dh-budget-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dh-budget-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dh-budget-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dh-budget-cat {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.dh-budget-remain {
+  font-size: 12px;
+  font-weight: 600;
+}
+.dh-budget-bar-bg {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line, rgba(0,0,0,0.08));
+  overflow: hidden;
+}
+.dh-budget-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+.dh-budget-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* dh-modal__err � shared error display */
+.dh-modal__err {
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.08);
+  border-radius: 6px;
+}

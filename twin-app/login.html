@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F4F2ED" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070809" media="(prefers-color-scheme: dark)">
+  <title>Log in to MoneyKal</title>
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+  <!-- The PIN styles. Shared with unlock.html and the account dialog, so the
+       PIN looks the same wherever it is asked for. -->
+  <link rel="stylesheet" href="css/pin.css?v=1">
+  <!-- Theme, before first paint. Same key and same attribute as every other
+       MoneyKal page, so arriving here from the site keeps the theme you had.
+       The switch itself is the shared control in js/i18n.js. -->
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+
+  <script>
+    // Redirect if already logged in, unless user is logging out or session expired
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('logout') || params.has('expired') || params.has('force')) {
+        localStorage.removeItem('twin_session');
+        // An expired session still falls through to the remembered-device check
+        // below: on a device that chose "keep me signed in", the PIN lock screen
+        // is where an expired session belongs. Logout and ?force stay here.
+        if (!params.has('expired')) return;
+      }
+      const sess = JSON.parse(localStorage.getItem('twin_session') || '{}');
+      if (sess.token && sess.profileKey) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      if (!sess.token) {
+        /* No session, but this browser may still be a remembered device whose
+           PIN can open it without a password. Sending them to the lock screen
+           is the whole point of having chosen "keep me signed in".
+
+           Skipped when `?notice=` is present: that parameter is only ever set by
+           the lock screen itself on its way here ("use password instead", or the
+           three days are up), and bouncing straight back would be a loop. */
+        try {
+          var hasDevice = !!localStorage.getItem('moneykal_device');
+          var leavingLock = params.has('notice');
+          if (hasDevice && !leavingLock) window.location.replace('unlock.html');
+        } catch (e) { /* private mode: the password form is the fallback */ }
+      }
+    })();
+  </script>
+</head>
+
+<body class="auth-page">
+
+  <div class="auth-shell">
+
+    <!-- ================= LEFT: brand + form ================= -->
+    <main class="auth-main">
+
+      <div class="auth-topbar">
+        <a href="/" class="auth-brand">
+          <span class="auth-brand__mark" aria-hidden="true">
+            <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+          </span>
+          <span class="auth-brand__name">Money<em>Kal</em></span>
+        </a>
+
+        <button type="button" id="theme-toggle" class="auth-iconbtn" aria-label="Toggle theme">
+          <svg id="theme-icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg id="theme-icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4.5"></circle>
+            <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="auth-body">
+        <div class="auth-form-wrap">
+
+          <!-- Sign in / Sign up. Two pages, one control: each tab is a link to
+               the page that owns that form, so the sign-in form and the
+               multi-step sign-up wizard keep their own markup and scripts. -->
+          <nav class="auth-tabs" data-active="signin" aria-label="Sign in or sign up">
+            <span class="auth-tabs__pill" aria-hidden="true"></span>
+            <a class="auth-tab" href="login.html" aria-current="page">Sign In</a>
+            <a class="auth-tab" href="register.html">Sign Up</a>
+          </nav>
+
+          <span class="auth-eyebrow">Secure Access</span>
+          <h1 class="auth-title">Welcome back.</h1>
+          <p class="auth-subtitle">Sign in to your financial brain and pick up where your last decision left off.</p>
+
+          <div id="loginError" class="auth-error" role="alert" aria-live="assertive"></div>
+
+          <form id="loginForm" novalidate>
+            <div class="field-stack">
+
+              <label class="mk-field">
+                <span>User ID</span>
+                <div class="mk-input-shell mk-input-shell--icon">
+                  <span class="mk-input-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </span>
+                  <input type="text" id="authEmail" class="ob-input" placeholder="you@company.com"
+                    autocomplete="username" required autocapitalize="none" autocorrect="off" spellcheck="false">
+                </div>
+              </label>
+
+              <label class="mk-field">
+                <span>Password</span>
+                <div class="mk-input-shell mk-input-shell--icon mk-input-shell--action">
+                  <span class="mk-input-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </span>
+                  <input type="password" id="authPassword" class="ob-input" placeholder="Enter your password"
+                    autocomplete="current-password" required>
+                  <span class="eye-icon" role="button" tabindex="0" aria-label="Show password"
+                    onclick="togglePasswordVisibility('authPassword', this)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </span>
+                </div>
+              </label>
+
+            </div>
+
+            <div class="auth-utility-row">
+              <label class="mk-check">
+                <input type="checkbox" id="rememberMe">
+                <span class="mk-check__box">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                Remember my User ID
+              </label>
+
+              <button type="button" class="auth-link auth-link--cyan" id="btnForgotOpen">Forgot password?</button>
+            </div>
+
+            <!-- Distinct from "Remember my User ID" above, which only fills in
+                 the address. This one asks the server for a device token, so
+                 that MoneyKal reopens on a PIN instead of a password for the
+                 next three days. js/auth.js sends it as `remember_device`. -->
+            <div class="auth-utility-row auth-utility-row--device">
+              <label class="mk-check">
+                <input type="checkbox" id="rememberDevice">
+                <span class="mk-check__box">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                Keep me signed in on this device
+              </label>
+            </div>
+            <p class="pin-inline-note">Unlock with a 4- or 6-digit PIN. Your password is required again every 3 days.</p>
+
+            <!-- Terms acceptance. Required: js/auth.js refuses to submit until
+                 it is ticked, and js/terms-consent.js opens the document in a
+                 dialog so nothing typed above is lost to a navigation. -->
+            <div class="mk-consent" id="loginConsent">
+              <label class="mk-check mk-check--consent">
+                <input type="checkbox" id="loginTerms" class="mk-consent__input" required
+                  aria-describedby="loginTermsError">
+                <span class="mk-check__box" aria-hidden="true">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </span>
+                <span class="mk-consent__text">I agree to the <button type="button" class="mk-consent__link"
+                    data-terms-open>Terms &amp; Conditions</button> and the <button type="button" class="mk-consent__link"
+                    data-terms-open data-terms-section="privacy">Privacy Policy</button>.</span>
+              </label>
+              <p class="mk-consent__error" id="loginTermsError" role="alert" aria-live="assertive"></p>
+            </div>
+
+            <button type="submit" class="btn-login-solid" id="btnLogin">
+              <span>Sign In</span>
+              <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </form>
+
+          <!-- Shown only when someone ticks "Keep me signed in" and the account
+               has no PIN yet. It is a step on this page, not a separate one, so
+               the password just typed can be reused from memory to satisfy
+               POST /auth/pin/set without ever being stored. -->
+          <div class="pin-setup" id="pinSetup" hidden>
+            <span class="pin-lockmark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2.5"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <h2 class="pin-title">Create your MoneyKal PIN</h2>
+            <p class="pin-sub">You are signed in. Choose a 4- or 6-digit PIN to unlock MoneyKal
+              on this device instead of typing your password each time.</p>
+
+            <div id="pinSetupError" class="auth-error" role="alert" aria-live="assertive"></div>
+
+            <form id="pinSetupForm" novalidate autocomplete="off">
+              <label class="pin-fieldlabel" for="pinSetupNew">Choose a PIN</label>
+              <input type="password" id="pinSetupNew" class="pin-input" inputmode="numeric" pattern="[0-9]*"
+                     maxlength="6" autocomplete="off" placeholder="&#8226;&#8226;&#8226;&#8226;">
+
+              <label class="pin-fieldlabel pin-fieldlabel--spaced" for="pinSetupConfirm">Confirm it</label>
+              <input type="password" id="pinSetupConfirm" class="pin-input" inputmode="numeric" pattern="[0-9]*"
+                     maxlength="6" autocomplete="off" placeholder="&#8226;&#8226;&#8226;&#8226;">
+              <p class="pin-hint">Avoid 1234, 0000 and repeated digits.</p>
+
+              <button type="submit" class="btn-login-solid pin-submit" id="btnPinSetup">
+                <span>Set PIN &amp; continue</span>
+                <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </form>
+
+            <div class="pin-alt">
+              <button type="button" class="auth-link auth-link--cyan" id="btnPinSkip">Skip &mdash; ask for my password instead</button>
+            </div>
+          </div>
+
+          <div class="auth-secure">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2 4 5v6c0 5 3.4 9.1 8 11 4.6-1.9 8-6 8-11V5z"></path>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+            Encrypted session · Bank grade security
+          </div>
+
+        </div>
+      </div>
+
+      <footer class="auth-foot">
+        <span>&copy; 2026 MoneyKal</span>
+        <a href="security.html">Security &amp; Privacy</a>
+        <a href="#" data-terms-open>Terms &amp; Conditions</a>
+      </footer>
+
+    </main>
+
+    <!-- ================= RIGHT: MoneyKal product showcase =================
+         Four MoneyKal surfaces on a loop - Hisaab, Taxes, Ask MoneyKal and
+         Intelligence - carrying the same illustrative figures the marketing
+         pages use. Decorative, so the whole panel is hidden from assistive
+         technology; js/auth-showcase.js advances it. -->
+    <aside class="auth-canvas" aria-hidden="true">
+      <div class="auth-canvas__grid"></div>
+      <div class="auth-canvas__bloom"></div>
+
+      <div class="canvas-kicker"><span class="canvas-kicker__dot"></span>Financial Intelligence</div>
+
+      <div class="auth-stage">
+        <div class="auth-stage__deck" id="authDeck">
+
+          <!-- ---------- Scene 1: Hisaab ---------- -->
+          <section class="ashow" data-scene="hisaab">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:8.6s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Hisaab &middot; August</span>
+                  <span class="ashow__meta">10 entries</span>
+                </header>
+                <ul class="ashow__rows">
+                  <li class="ashow__row" style="--r:0">
+                    <span class="ashow__ico">&#128188;</span>
+                    <span class="ashow__label"><span class="ashow__name">August salary</span><span class="ashow__sub">Salary</span></span>
+                    <span class="ashow__amt is-in">+&#8377;1,18,000</span>
+                  </li>
+                  <li class="ashow__row" style="--r:1">
+                    <span class="ashow__ico">&#127968;</span>
+                    <span class="ashow__label"><span class="ashow__name">Rent</span><span class="ashow__sub">Rent / Housing</span></span>
+                    <span class="ashow__amt">&minus;&#8377;26,000</span>
+                  </li>
+                  <li class="ashow__row ashow__row--focus" style="--r:2">
+                    <span class="ashow__ico">&#128722;</span>
+                    <span class="ashow__label"><span class="ashow__name">Big Basket</span><span class="ashow__sub">Groceries</span></span>
+                    <span class="ashow__amt">&minus;&#8377;4,200</span>
+                  </li>
+                  <li class="ashow__row" style="--r:3">
+                    <span class="ashow__ico">&#128250;</span>
+                    <span class="ashow__label"><span class="ashow__name">Netflix</span><span class="ashow__sub">Subscriptions</span></span>
+                    <span class="ashow__amt">&minus;&#8377;649</span>
+                  </li>
+                  <li class="ashow__row" style="--r:4">
+                    <span class="ashow__ico">&#128187;</span>
+                    <span class="ashow__label"><span class="ashow__name">Freelance invoice</span><span class="ashow__sub">Freelance</span></span>
+                    <span class="ashow__amt is-in">+&#8377;18,000</span>
+                  </li>
+                </ul>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tl" style="--i:1; --fd:7.3s">
+                <span class="ashow__k">This month</span>
+                <div class="ashow__totals">
+                  <div><span class="ashow__sub">In</span><b class="is-in">&#8377;1,36,000</b></div>
+                  <div><span class="ashow__sub">Out</span><b>&#8377;53,619</b></div>
+                  <div><span class="ashow__sub">Net</span><b data-count="82381" data-prefix="&#8377;">&#8377;82,381</b></div>
+                </div>
+              </aside>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--br" style="--i:2; --fd:9.4s">
+                <span class="ashow__k">Where it went</span>
+                <ul class="ashow__bars">
+                  <li class="ashow__bar" style="--r:0"><span>Rent</span><b>&#8377;26,000</b><span class="ashow__track" style="--w:100%"><i></i></span></li>
+                  <li class="ashow__bar" style="--r:1"><span>Shopping</span><b>&#8377;14,000</b><span class="ashow__track" style="--w:54%"><i></i></span></li>
+                  <li class="ashow__bar" style="--r:2"><span>Groceries</span><b>&#8377;7,300</b><span class="ashow__track" style="--w:28%"><i></i></span></li>
+                </ul>
+              </aside>
+
+            </div>
+          </section>
+
+          <!-- ---------- Scene 2: Taxes ---------- -->
+          <section class="ashow" data-scene="taxes">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:9.1s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Taxes &middot; FY 2025&ndash;26</span>
+                  <span class="ashow__state">
+                    <i style="--s:0">Reading</i>
+                    <i style="--s:1">Matching</i>
+                    <i style="--s:2">Checking</i>
+                    <i style="--s:3">Done</i>
+                  </span>
+                </header>
+                <ul class="ashow__rows">
+                  <li class="ashow__row" style="--r:0">
+                    <span class="ashow__ico">&#128202;</span>
+                    <span class="ashow__label"><span class="ashow__name">Investments</span><span class="ashow__sub">Section 80C</span></span>
+                    <span class="ashow__amt is-in">&#8377;1,50,000</span>
+                  </li>
+                  <li class="ashow__row" style="--r:1">
+                    <span class="ashow__ico">&#127973;</span>
+                    <span class="ashow__label"><span class="ashow__name">Health insurance</span><span class="ashow__sub">Section 80D</span></span>
+                    <span class="ashow__amt is-in">&#8377;25,000</span>
+                  </li>
+                  <li class="ashow__row" style="--r:2">
+                    <span class="ashow__ico">&#127968;</span>
+                    <span class="ashow__label"><span class="ashow__name">House rent allowance</span><span class="ashow__sub">HRA</span></span>
+                    <span class="ashow__amt is-in">&#8377;96,000</span>
+                  </li>
+                  <li class="ashow__row ashow__row--focus" style="--r:3">
+                    <span class="ashow__ico">&#127974;</span>
+                    <span class="ashow__label"><span class="ashow__name">Home loan interest</span><span class="ashow__sub">Section 24(b)</span></span>
+                    <span class="ashow__amt is-in">&#8377;78,000</span>
+                  </li>
+                </ul>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tr" style="--i:1; --fd:7.8s">
+                <span class="ashow__k">Deductions found</span>
+                <div class="ashow__fig ashow__fig--accent" data-count="349000" data-prefix="&#8377;">&#8377;3,49,000</div>
+                <p class="ashow__note">Across four sections, read from the documents you uploaded.</p>
+              </aside>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--bl" style="--i:2; --fd:9.6s">
+                <span class="ashow__k">Regime check</span>
+                <div class="ashow__fig ashow__fig--sm">Old regime</div>
+                <p class="ashow__note">Wins by &#8377;18,400 on this year&rsquo;s figures.</p>
+              </aside>
+
+            </div>
+          </section>
+
+          <!-- ---------- Scene 3: Ask MoneyKal ---------- -->
+          <section class="ashow" data-scene="ask">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:8.2s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Tathya</span>
+                  <span class="ashow__meta">Grounded in your ledger</span>
+                </header>
+
+                <p class="ashow__q"><span data-typewriter="Can I afford a new car?" data-i18n-skip>Can I afford a new car?</span><span class="ashow__caret"></span></p>
+
+                <ul class="ashow__chips">
+                  <li style="--r:0">Hisaab</li>
+                  <li style="--r:1">Goals</li>
+                  <li style="--r:2">Upcoming</li>
+                  <li style="--r:3">Brain</li>
+                </ul>
+
+                <div class="ashow__answer">
+                  <p>On today&rsquo;s position, a &#8377;6.5L car is affordable, but it takes your emergency buffer under three months.</p>
+                  <ul class="ashow__figures">
+                    <li>Buffer 5.6 &rarr; 2.4 mo</li>
+                    <li>Available &#8377;4,82,000</li>
+                    <li>EMI &#8377;11,400/mo</li>
+                  </ul>
+                  <p class="ashow__basis">From available money, this month&rsquo;s spending and what is already due.</p>
+                </div>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tl" style="--i:1; --fd:7.5s">
+                <span class="ashow__k">Asked aloud</span>
+                <span class="ashow__wave">
+                  <i style="--r:0"></i><i style="--r:1"></i><i style="--r:2"></i><i style="--r:3"></i><i style="--r:4"></i>
+                  <i style="--r:5"></i><i style="--r:6"></i><i style="--r:7"></i><i style="--r:8"></i><i style="--r:9"></i>
+                </span>
+                <p class="ashow__note">Type it or say it, in English or Hindi.</p>
+              </aside>
+
+            </div>
+          </section>
+
+          <!-- ---------- Scene 4: Intelligence ---------- -->
+          <section class="ashow" data-scene="intelligence">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:8.9s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Intelligence &middot; Simulation</span>
+                  <span class="ashow__meta">12 months</span>
+                </header>
+
+                <div class="ashow__choices">
+                  <span class="ashow__choice is-on">Buy a car</span>
+                  <span class="ashow__choice">Take a loan</span>
+                  <span class="ashow__choice">Increase savings</span>
+                </div>
+
+                <div class="ashow__split">
+                  <div>
+                    <span class="ashow__k">Current path</span>
+                    <div class="ashow__fig ashow__fig--sm" data-count="412000" data-prefix="&#8377;">&#8377;4,12,000</div>
+                  </div>
+                  <span class="ashow__arrow">
+                    <svg viewBox="0 0 60 24" fill="none">
+                      <path d="M2 12h50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                      <path d="M46 6l7 6-7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                  </span>
+                  <div>
+                    <span class="ashow__k">With this decision</span>
+                    <div class="ashow__fig ashow__fig--sm ashow__fig--accent" data-count="218400" data-prefix="&#8377;">&#8377;2,18,400</div>
+                  </div>
+                </div>
+
+                <ul class="ashow__bars" style="margin-top:15px">
+                  <li class="ashow__bar" style="--r:0"><span>Emergency buffer</span><b>2.4 mo</b><span class="ashow__track" style="--w:42%"><i></i></span></li>
+                  <li class="ashow__bar" style="--r:1"><span>Goal progress</span><b>61%</b><span class="ashow__track" style="--w:61%"><i></i></span></li>
+                </ul>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tr" style="--i:1; --fd:7.7s">
+                <span class="ashow__k">Forward paths</span>
+                <svg class="ashow__fan" viewBox="0 0 170 88" fill="none">
+                  <path class="fan-cone" d="M78 46 C 100 40, 126 26, 164 16 L164 76 C 126 68, 100 56, 78 46 Z"></path>
+                  <path class="fan-hist" style="--r:0" d="M6 68 L18 62 L30 65 L42 56 L54 59 L66 49 L78 46"></path>
+                  <path class="fan-p fan-p1" style="--r:1" d="M78 46 C 100 40, 126 26, 164 16"></path>
+                  <path class="fan-p fan-p2" style="--r:2" d="M78 46 C 102 45, 130 44, 164 44"></path>
+                  <path class="fan-p fan-p3" style="--r:3" d="M78 46 C 100 52, 126 66, 164 76"></path>
+                </svg>
+              </aside>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--bl" style="--i:2; --fd:9.3s">
+                <span class="ashow__k">Goal timeline</span>
+                <div class="ashow__fig ashow__fig--sm">Dec &rarr; Feb</div>
+                <p class="ashow__note">Two months later. Holding &#8377;6,000 back keeps it on date.</p>
+              </aside>
+
+            </div>
+          </section>
+
+        </div>
+
+        <div class="auth-stage__rail">
+          <span class="astage-tab">Hisaab</span>
+          <span class="astage-tab">Taxes</span>
+          <span class="astage-tab">Tathya</span>
+          <span class="astage-tab">Intelligence</span>
+        </div>
+
+        <div class="auth-stage__copy">
+          <div class="astage-copy">
+            <h2>Every rupee, <em>accounted for.</em></h2>
+            <p>Money in, money out, categorised as it lands. Hisaab keeps the running answer to where it went.</p>
+          </div>
+          <div class="astage-copy">
+            <h2>The deductions <em>you would have missed.</em></h2>
+            <p>MoneyKal reads your documents, matches them to sections, and checks which regime actually wins.</p>
+          </div>
+          <div class="astage-copy">
+            <h2>Ask it the way <em>you think it.</em></h2>
+            <p>Answers come from your own figures, and the figure used is shown, so you can check the reasoning.</p>
+          </div>
+          <div class="astage-copy">
+            <h2>See the decision <em>before you make it.</em></h2>
+            <p>Run the choice forward and read the trade-off: buffer, goal date and monthly cash flow together.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ================= Forgot-password modal ================= -->
+  <div class="mk-modal" id="forgotModal" role="dialog" aria-modal="true" aria-labelledby="forgotTitle">
+    <div class="mk-modal__scrim" data-forgot-close></div>
+
+    <div class="mk-modal__panel">
+      <button type="button" class="mk-modal__close" data-forgot-close aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+
+      <!-- View 1: request form -->
+      <div class="mk-modal__view is-active" id="forgotFormView">
+        <h2 class="mk-modal__title" id="forgotTitle">Reset your password</h2>
+        <p class="mk-modal__text">Enter the User ID associated with your account and we'll send you a link to set a new
+          password.</p>
+
+        <div id="forgotError" class="auth-error" role="alert" aria-live="assertive"></div>
+
+        <form id="forgotForm" novalidate>
+          <label class="mk-field">
+            <span>User ID</span>
+            <div class="mk-input-shell mk-input-shell--icon">
+              <span class="mk-input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+              </span>
+              <input type="text" id="forgotEmail" class="ob-input" placeholder="you@company.com" autocomplete="username"
+                required autocapitalize="none" autocorrect="off" spellcheck="false">
+            </div>
+          </label>
+
+          <button type="submit" class="btn-login-solid" id="btnForgot" style="margin-top:22px;">
+            <span>Send reset link</span>
+          </button>
+        </form>
+
+        <div class="mk-modal__foot">
+          <button type="button" class="auth-link" data-forgot-close>Return to sign in</button>
+        </div>
+      </div>
+
+      <!-- View 2: sent confirmation -->
+      <div class="mk-modal__view" id="forgotSentView">
+        <div class="mk-modal__success-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <h2 class="mk-modal__title">Check your inbox</h2>
+        <p class="mk-modal__text">If an account matches <strong id="forgotSentTarget"></strong>, a reset link is on its
+          way. The link expires in 30 minutes.</p>
+        <button type="button" class="mk-btn--ghost" data-forgot-close>Back to sign in</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <!-- Must load before any script that calls the API: it resolves the
+       backend base URL for local, tunnelled and deployed builds alike. -->
+  <script src="js/config.js?v=1"></script>
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <!-- Terms content, then the dialog that renders it. Both must be in place
+       before auth.js, which gates the submit on the consent checkbox. -->
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+  <script src="js/pin.js?v=1"></script>
+  <script src="js/auth.js?v=4"></script>
+  <script src="js/auth-showcase.js?v=1"></script>
+</body>
+
+</html>

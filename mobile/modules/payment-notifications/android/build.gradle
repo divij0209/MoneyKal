@@ -1,0 +1,28 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.zenith.moneykal.paymentnotifications'
+version = '1.0.0'
+
+android {
+  namespace 'expo.modules.paymentnotifications'
+
+  // expo-module-gradle-plugin wires up a maven publication for every module it
+  // builds, and that publication requires both of these. Without them the
+  // whole :expo project fails to configure with a misleading
+  // "SoftwareComponent with name 'release' not found".
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  // NotificationCompat / NotificationManagerCompat. Declared rather than relied
+  // on transitively, because the notification has to build correctly on API 24
+  // (no channels) through API 36, and the compat layer is what makes that one
+  // code path instead of three.
+  implementation 'androidx.core:core-ktx:1.13.1'
+}

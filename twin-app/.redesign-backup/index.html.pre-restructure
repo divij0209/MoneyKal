@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyKal: Your money, understood.</title>
+  <meta name="description"
+    content="MoneyKal builds a Financial Decision Twin of your money, so you can understand today and simulate tomorrow before you decide.">
+
+  <link rel="icon" href="logo-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="css/home.css?v=3">
+
+  <script>
+    // Already signed in — go straight to the product. (Unchanged behaviour.)
+    const sess = JSON.parse(localStorage.getItem('twin_session') || '{}');
+    if (sess.token) {
+      window.location.href = 'dashboard.html';
+    }
+    // Paint the correct palette before first frame so a reload never flashes
+    // the wrong theme. i18n.js remains the owner of the toggle and the stored
+    // value; this only mirrors it early.
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <!-- A single hairline that tracks reading progress. The only persistent
+       chrome besides the nav — it gives the page a sense of being one
+       continuous story rather than stacked sections. -->
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <!-- ================= NAVIGATION ================= -->
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="#top" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2.6 27.4 9.3v13.4L16 29.4 4.6 22.7V9.3z" stroke="var(--mk-accent)" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9.8 20.4 14.2 15.8 18 18.7 22.7 12.3" stroke="var(--mk-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19.3 12.3h3.4v3.4" stroke="var(--mk-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="#product" data-i18n="nav-product">Product</a>
+      <a href="#journeys">Journeys</a>
+      <a href="#hisaab">Hisaab</a>
+      <a href="#intelligence">Intelligence</a>
+      <a href="#simulate">Simulate</a>
+      <a href="#twin">Twin</a>
+      <a href="#account-types" data-i18n="nav-solutions">Solutions</a>
+      <a href="#insights" data-i18n="nav-insights">Insights</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <!-- IDs preserved: i18n.js binds the theme and language toggles by id. -->
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login" data-i18n="nav-login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent" data-i18n="nav-getstarted">Get Started</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile menu: a real sheet rather than a squeezed desktop bar. -->
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="#product">Product</a>
+      <a href="#journeys">Journeys</a>
+      <a href="#hisaab">Hisaab</a>
+      <a href="#intelligence">Intelligence</a>
+      <a href="#varta">Varta</a>
+      <a href="#simulate">Simulate</a>
+      <a href="#twin">Twin</a>
+      <a href="#tax">Tax</a>
+      <a href="#news">Market Pulse</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#everywhere">Web &amp; mobile</a>
+      <a href="#cfo">For founders</a>
+      <a href="#account-types">Solutions</a>
+      <a href="#insights">Insights</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Get Started</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <!-- ================= 1. HERO ================= -->
+    <section class="mk-hero">
+      <div class="mk-hero__grid">
+
+        <div class="mk-hero__text">
+          <p class="mk-eyebrow mk-hero__eyebrow">Financial intelligence platform</p>
+
+          <h1 class="mk-hero__title">
+            <span class="mk-line"><span>Your money,</span></span>
+            <span class="mk-line"><span class="mk-accent-text">understood.</span></span>
+          </h1>
+
+          <p class="mk-hero__lede">
+            One intelligent platform to understand, manage, and plan your personal
+            or business finances.
+          </p>
+
+          <!-- The two audiences, stated before the fold. A visitor should not
+               have to scroll to learn whether the product is for them. -->
+          <div class="mk-hero__audience">
+            <a class="mk-aud" href="register.html">
+              <span class="mk-aud__tag">Personal</span>
+              <p class="mk-aud__copy">Manage income, expenses, goals, taxes and financial decisions.</p>
+              <span class="mk-aud__go" aria-hidden="true">&rarr;</span>
+            </a>
+            <a class="mk-aud" href="register.html">
+              <span class="mk-aud__tag">Business</span>
+              <p class="mk-aud__copy">Understand cash flow, finances, taxes and business performance.</p>
+              <span class="mk-aud__go" aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+
+          <div class="mk-hero__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg" data-i18n="hero-getstarted">
+              Get Started <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+            <a href="#product" class="mk-btn mk-btn--ghost mk-btn--lg">Explore MoneyKal</a>
+          </div>
+        </div>
+
+        <!-- Hero visual: a condensed view of the real product surface, so the
+             page shows what MoneyKal is rather than only describing it. The
+             .mk-hero__readout hook is preserved because home-landing.js starts
+             the hero counters from it. -->
+        <div class="mk-hero__visual" aria-hidden="true">
+          <div class="mk-preview">
+
+            <div class="mk-preview__bar">
+              <span class="mk-preview__mark"></span>
+              <span class="mk-preview__name">Overview</span>
+              <span class="mk-preview__chip">This month</span>
+            </div>
+
+            <div class="mk-preview__body">
+
+              <div class="mk-hero__readout mk-preview__headline">
+                <span class="mk-readout__label">Net position</span>
+                <span class="mk-readout__value" data-count="482000" data-prefix="&#8377;">&#8377;0</span>
+                <span class="mk-readout__delta">
+                  <span class="mk-readout__arrow">&uarr;</span>
+                  <span data-count="18" data-suffix="%">0%</span> this quarter
+                </span>
+              </div>
+
+              <svg class="mk-preview__chart" viewBox="0 0 340 104" fill="none" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="mkPrevFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--mk-accent)" stop-opacity="0.28" />
+                    <stop offset="100%" stop-color="var(--mk-accent)" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path class="mk-preview__area"
+                  d="M0 82 L38 74 L76 78 L114 60 L152 66 L190 44 L228 50 L266 30 L304 24 L340 14 L340 104 L0 104 Z"
+                  fill="url(#mkPrevFill)" />
+                <path class="mk-preview__line"
+                  d="M0 82 L38 74 L76 78 L114 60 L152 66 L190 44 L228 50 L266 30 L304 24 L340 14"
+                  stroke="var(--mk-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+
+              <div class="mk-preview__tiles">
+                <div class="mk-tile">
+                  <span class="mk-tile__k">Cash flow</span>
+                  <b class="mk-tile__v">&#8377;64,200</b>
+                </div>
+                <div class="mk-tile">
+                  <span class="mk-tile__k">Goal progress</span>
+                  <b class="mk-tile__v">72%</b>
+                </div>
+                <div class="mk-tile">
+                  <span class="mk-tile__k">Tax set aside</span>
+                  <b class="mk-tile__v">&#8377;38,400</b>
+                </div>
+              </div>
+
+              <div class="mk-preview__rows">
+                <div class="mk-prow">
+                  <span class="mk-prow__k">Essentials</span>
+                  <span class="mk-prow__bar"><i style="width:68%"></i></span>
+                  <span class="mk-prow__v">&#8377;41,800</span>
+                </div>
+                <div class="mk-prow">
+                  <span class="mk-prow__k">Lifestyle</span>
+                  <span class="mk-prow__bar"><i style="width:44%"></i></span>
+                  <span class="mk-prow__v">&#8377;26,300</span>
+                </div>
+                <div class="mk-prow">
+                  <span class="mk-prow__k">Investments</span>
+                  <span class="mk-prow__bar"><i style="width:31%"></i></span>
+                  <span class="mk-prow__v">&#8377;18,500</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <a class="mk-hero__scroll" href="#product" aria-label="Scroll to product">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ================= 2. WHAT IS MONEYKAL ================= -->
+    <section class="mk-section" id="product">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">What MoneyKal is</p>
+          <h2 class="mk-h2">
+            Not another expense tracker.<br>
+            <span class="mk-muted-text">A financial intelligence layer.</span>
+          </h2>
+          <p class="mk-sub">
+            Tracking tells you what already happened. MoneyKal reads your position, explains
+            what it means, and shows you what a decision does to it, in that order, every day.
+          </p>
+        </header>
+
+        <!-- Five steps as one continuous rail, not five cards. The connecting
+             line draws itself as the section enters. -->
+        <ol class="mk-rail" data-reveal>
+          <li class="mk-rail__item" style="--d:0ms">
+            <span class="mk-rail__dot"></span>
+            <h3>Track</h3>
+            <p>Income and spending, captured as it happens.</p>
+          </li>
+          <li class="mk-rail__item" style="--d:90ms">
+            <span class="mk-rail__dot"></span>
+            <h3>Understand</h3>
+            <p>Where the money actually goes, without the spreadsheet.</p>
+          </li>
+          <li class="mk-rail__item" style="--d:180ms">
+            <span class="mk-rail__dot"></span>
+            <h3>Plan</h3>
+            <p>Goals and obligations on one honest timeline.</p>
+          </li>
+          <li class="mk-rail__item" style="--d:270ms">
+            <span class="mk-rail__dot"></span>
+            <h3>Simulate</h3>
+            <p>Run the decision before you commit to it.</p>
+          </li>
+          <li class="mk-rail__item is-final" style="--d:360ms">
+            <span class="mk-rail__dot"></span>
+            <h3>Decide</h3>
+            <p>Act on a number you can defend.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ================= 2b. TWO JOURNEYS =================
+         The map for everything below: one engine, two problems. Placed straight
+         after "what MoneyKal is" so a visitor knows which half of the page is
+         theirs before they start scrolling it. -->
+    <section class="mk-section mk-ambient mk-ambient--grid" id="journeys">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">Two journeys, one engine</p>
+          <h2 class="mk-h2">Your money. And your company's.</h2>
+          <p class="mk-sub">
+            The same financial intelligence layer, pointed at two different problems.
+            Pick the one you are here for.
+          </p>
+        </header>
+
+        <div class="mk-journey" data-reveal data-demo="journeys">
+          <div class="mk-journey__tabs" role="tablist" aria-label="Choose a journey">
+            <button class="mk-journey__tab is-active" role="tab" aria-selected="true" data-journey="individual">
+              <span class="mk-journey__tabk">For individuals</span>
+              <span class="mk-journey__tabd">Daily, personal, intelligent</span>
+            </button>
+            <button class="mk-journey__tab" role="tab" aria-selected="false" data-journey="business">
+              <span class="mk-journey__tabk">For startups &amp; CFOs</span>
+              <span class="mk-journey__tabd">Business financial intelligence</span>
+            </button>
+          </div>
+
+          <div class="mk-journey__body">
+            <ol class="mk-flow" id="mkJourneyFlow" aria-live="polite"></ol>
+            <div class="mk-journey__side">
+              <p class="mk-eyebrow">What you get</p>
+              <ul class="mk-journey__feats" id="mkJourneyFeats"></ul>
+              <a class="mk-link-arrow" id="mkJourneyCta" href="register.html?v=2&amp;type=individual">
+                Build yours <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3. HISAAB — daily tracking =================
+         A month of the ledger builds itself: entries land one by one, the
+         running totals count with them, and the category bars grow to match.
+         The point of the animation is that the summary is *derived*, not typed
+         — so it is shown being derived. -->
+    <section class="mk-section mk-section--tint" id="hisaab">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Hisaab · Daily tracking</p>
+          <h2 class="mk-h2">
+            Every rupee, accounted for.<br>
+            <span class="mk-muted-text">Without the spreadsheet.</span>
+          </h2>
+          <p class="mk-sub">
+            Money in, money out, categorised as it lands. Salary, groceries, that subscription
+            you forgot about. Hisaab keeps the running answer to “where did it go?”
+          </p>
+        </header>
+
+        <div class="mk-hisaab" data-reveal data-demo="hisaab">
+          <div class="mk-hisaab__ledger">
+            <div class="mk-panel__bar">
+              <span class="mk-panel__title">Hisaab · August</span>
+              <span class="mk-panel__meta"><b id="mkHisaabCount">0</b> entries</span>
+            </div>
+            <ul class="mk-hisaab__list" id="mkHisaabList" aria-live="off"></ul>
+          </div>
+
+          <aside class="mk-hisaab__side">
+            <div class="mk-hisaab__totals">
+              <div>
+                <span>In</span>
+                <b class="is-in" id="mkHisaabIn" data-prefix="₹">₹0</b>
+              </div>
+              <div>
+                <span>Out</span>
+                <b class="is-out" id="mkHisaabOut" data-prefix="₹">₹0</b>
+              </div>
+              <div>
+                <span>Net</span>
+                <b id="mkHisaabNet" data-prefix="₹">₹0</b>
+              </div>
+            </div>
+
+            <p class="mk-eyebrow mk-hisaab__catlabel">Where it went</p>
+            <ul class="mk-cats" id="mkHisaabCats"></ul>
+
+            <p class="mk-demo__note">Illustrative month. In the product these are your own entries.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. TATHYA — financial intelligence =================
+         Data → Analysis → Insight, shown as three states of one panel rather
+         than three cards. The middle state is deliberately visible: the value
+         is in the reading, so the reading is what gets animated. -->
+    <section class="mk-section" id="intelligence">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Tathya · Ask. Analyze. Act.</p>
+          <h2 class="mk-h2">
+            It reads the pattern<br>
+            <span class="mk-muted-text">you would have missed.</span>
+          </h2>
+          <p class="mk-sub">
+            Tathya works over your own figures. This week against your usual week, this month
+            against last, the category that actually moved. It surfaces the one thing worth
+            knowing today.
+          </p>
+        </header>
+
+        <div class="mk-tathya" data-reveal data-demo="tathya">
+          <ol class="mk-stages mk-stages--five" id="mkTathyaStages">
+            <li class="is-active" data-stage="0"><span></span>Data</li>
+            <li data-stage="1"><span></span>Analysis</li>
+            <li data-stage="2"><span></span>Patterns</li>
+            <li data-stage="3"><span></span>Insight</li>
+            <li data-stage="4"><span></span>Action</li>
+          </ol>
+
+          <div class="mk-tathya__stage">
+            <!-- STATE 1 — the raw material -->
+            <div class="mk-tathya__panel is-on" data-panel="0">
+              <ul class="mk-chips" id="mkTathyaChips"></ul>
+            </div>
+
+            <!-- STATE 2 — the comparison being made -->
+            <div class="mk-tathya__panel" data-panel="1">
+              <div class="mk-scan" id="mkTathyaScan">
+                <div class="mk-scan__row" style="--h:34%"><span>Wk 1</span><i></i><em>₹5,100</em></div>
+                <div class="mk-scan__row" style="--h:41%"><span>Wk 2</span><i></i><em>₹6,150</em></div>
+                <div class="mk-scan__row" style="--h:38%"><span>Wk 3</span><i></i><em>₹5,700</em></div>
+                <div class="mk-scan__row is-hot" style="--h:100%"><span>Wk 4</span><i></i><em>₹17,200</em></div>
+                <div class="mk-scan__beam" aria-hidden="true"></div>
+              </div>
+              <p class="mk-tathya__reading">
+                Comparing this week against your <b>3-week average of ₹5,650</b>…
+              </p>
+            </div>
+
+            <!-- STATE 3 — every pattern the rules found, and how strong each is.
+                 This is the honest picture of how the engine works: several
+                 candidates are detected, then one is chosen. Showing the
+                 shortlist is what makes the next state read as a decision
+                 rather than a headline. -->
+            <div class="mk-tathya__panel" data-panel="2">
+              <ul class="mk-patterns" id="mkTathyaPatterns"></ul>
+              <p class="mk-tathya__reading">
+                <b>4 patterns</b> detected, ranked by how much they actually move.
+              </p>
+            </div>
+
+            <!-- STATE 4 — the conclusion, with its basis -->
+            <div class="mk-tathya__panel" data-panel="3">
+              <div class="mk-insight">
+                <span class="mk-insight__tag">Insight · Needs attention</span>
+                <h3 class="mk-insight__title">Spending is higher this week</h3>
+                <p class="mk-insight__body">
+                  Your spending this week is <b data-count="204" data-suffix="%">0%</b> higher than your
+                  usual pattern: ₹17,200 against a typical ₹5,650.
+                </p>
+                <p class="mk-insight__basis">
+                  Shopping accounts for ₹14,000 of the difference.
+                </p>
+              </div>
+            </div>
+
+            <!-- STATE 5 — what to do about it. An insight that ends at the
+                 observation is only half the job. -->
+            <div class="mk-tathya__panel" data-panel="4">
+              <div class="mk-action">
+                <span class="mk-action__tag">Recommended action</span>
+                <h3 class="mk-action__title">Move ₹6,000 back before month end</h3>
+                <p class="mk-action__body">
+                  Holding shopping to your usual week for the rest of the month keeps the
+                  Emergency Fund on pace and leaves the buffer above three months.
+                </p>
+                <div class="mk-action__row">
+                  <span class="mk-action__pill">Buffer stays 5.6 mo</span>
+                  <span class="mk-action__pill">Goal holds December</span>
+                </div>
+                <span class="mk-action__cta">Simulate it in What-If <span aria-hidden="true">→</span></span>
+              </div>
+            </div>
+          </div>
+
+          <p class="mk-demo__note">Deterministic rules, not a language model guessing at a headline.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5. VARTA — conversational AI ================= -->
+    <section class="mk-section mk-section--tint" id="varta">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">Varta · Speak. Ask. Understand.</p>
+          <h2 class="mk-h2">Talk to your finances.</h2>
+          <p class="mk-sub">
+            Ask the way you would think it. Varta answers from your twin and shows the figure
+            it used, so you can check the reasoning rather than trust it.
+          </p>
+        </header>
+
+        <div class="mk-varta" data-reveal data-demo="varta">
+          <div class="mk-varta__stage" aria-live="polite">
+            <!-- The asking side: a waveform that only moves while a question is
+                 being spoken, so the motion means something. -->
+            <div class="mk-varta__ask">
+              <span class="mk-wave" id="mkVartaWave" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </span>
+              <p class="mk-varta__q">
+                <span class="mk-varta__typed"></span><span class="mk-ask__caret" aria-hidden="true"></span>
+              </p>
+            </div>
+
+            <!-- Between the question and the answer: the twin actually reading
+                 the position it will answer from. Each source lights as it is
+                 consulted, so the pause has visible content instead of being
+                 dead air. -->
+            <div class="mk-varta__thinking" id="mkVartaThinking" aria-hidden="true">
+              <span class="mk-varta__thinklabel">Reading your position</span>
+              <ul class="mk-varta__sources">
+                <li data-src="0"><span></span>Hisaab</li>
+                <li data-src="1"><span></span>Goals</li>
+                <li data-src="2"><span></span>Upcoming</li>
+                <li data-src="3"><span></span>Twin</li>
+              </ul>
+            </div>
+
+            <div class="mk-varta__a" id="mkVartaAnswer">
+              <span class="mk-varta__badge">Twin</span>
+              <p class="mk-varta__text"></p>
+              <ul class="mk-varta__figures"></ul>
+              <p class="mk-varta__basis"></p>
+            </div>
+          </div>
+
+          <!-- Copy lives in the markup so the script stays presentation-only. -->
+          <ul class="mk-varta__source" hidden>
+            <li data-q="Can I afford a new car?"
+                data-a="On today's position, a ₹6.5L car is affordable, but it takes your emergency buffer under three months."
+                data-f="Buffer 5.6 mo → 2.4 mo|Available ₹4,82,000|EMI ₹11,400/mo"
+                data-b="From available money, this month's spending and what is already due."></li>
+            <li data-q="What happens if I increase my SIP?"
+                data-a="Another ₹5,000 a month pulls your goal in by about four months, and your surplus still stays positive."
+                data-f="Goal Dec → Aug|Surplus ₹22,600/mo|Goal progress 68% → 81%"
+                data-b="From income, stated expenses and your goal's target date."></li>
+            <li data-q="Where am I overspending?"
+                data-a="Shopping. It is ₹14,000 above your own three-week average and accounts for most of this week's jump."
+                data-f="Shopping +204%|Groceries steady|Dining +12%"
+                data-b="From your Hisaab entries, week over week."></li>
+            <li data-q="How much can I save this month?"
+                data-a="About ₹22,600 without changing anything, or ₹31,200 if you hold shopping to your usual week."
+                data-f="Income ₹1,36,000|Committed ₹41,049|Typical spend ₹72,300"
+                data-b="From this month's entries, what is still due and your stated income."></li>
+            <li data-q="Will this affect my Goa goal?"
+                data-a="Yes. At this month's pace the Goa trip slips from December to February. Holding ₹6,000 back keeps it on date."
+                data-f="Goa ₹57,600 / ₹80,000|72% complete|Needs ₹7,400/mo"
+                data-b="From the goal's target date and your current monthly surplus."></li>
+          </ul>
+
+          <div class="mk-ask__dots" id="mkVartaDots" role="tablist" aria-label="Example questions"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 6. SEE TOMORROW (WHAT-IF) ================= -->
+    <section class="mk-section" id="simulate">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">See Tomorrow · What-If</p>
+          <h2 class="mk-h2">Run the decision first.</h2>
+          <p class="mk-sub">
+            Pick a decision and watch the same position resolve differently across savings, goal
+            timeline, monthly cash flow and financial health, all moving together.
+          </p>
+        </header>
+
+        <div class="mk-sim" data-reveal>
+          <div class="mk-sim__choices" role="tablist" aria-label="Choose a scenario">
+            <button class="mk-sim__choice is-active" role="tab" aria-selected="true" data-sim="car">Buy a car</button>
+            <button class="mk-sim__choice" role="tab" aria-selected="false" data-sim="loan">Take a loan</button>
+            <button class="mk-sim__choice" role="tab" aria-selected="false" data-sim="save">Increase savings</button>
+            <button class="mk-sim__choice" role="tab" aria-selected="false" data-sim="spend">Cut spending</button>
+          </div>
+
+          <div class="mk-sim__panel">
+            <div class="mk-sim__side">
+              <p class="mk-eyebrow">Current path</p>
+              <p class="mk-sim__figure" data-sim-base="412000" data-prefix="₹">₹0</p>
+              <p class="mk-sim__note">Where you land in 12 months if nothing changes.</p>
+            </div>
+
+            <div class="mk-sim__arrow" aria-hidden="true">
+              <svg viewBox="0 0 60 24" fill="none">
+                <path d="M2 12h50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  stroke-dasharray="4 5" />
+                <path d="M46 6l7 6-7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+
+            <div class="mk-sim__side mk-sim__side--result">
+              <p class="mk-eyebrow" id="mkSimLabel">With this decision</p>
+              <p class="mk-sim__figure mk-sim__figure--accent" id="mkSimFigure" data-prefix="₹">₹0</p>
+              <p class="mk-sim__note" id="mkSimNote">Sets you back, but the buffer holds.</p>
+            </div>
+          </div>
+
+          <!-- The trade-off, stated rather than buried. Two proportions as bars,
+               three absolutes as figures — each moves when the scenario does. -->
+          <div class="mk-sim__meters">
+            <div class="mk-meter">
+              <span class="mk-meter__label">Emergency buffer</span>
+              <span class="mk-meter__track"><i id="mkMeterBuffer"></i></span>
+              <span class="mk-meter__value" id="mkMeterBufferVal">…</span>
+            </div>
+            <div class="mk-meter">
+              <span class="mk-meter__label">Goal progress</span>
+              <span class="mk-meter__track"><i id="mkMeterGoal"></i></span>
+              <span class="mk-meter__value" id="mkMeterGoalVal">…</span>
+            </div>
+          </div>
+
+          <div class="mk-sim__stats">
+            <div class="mk-stat">
+              <span class="mk-stat__label">Goal timeline</span>
+              <b class="mk-stat__value" id="mkSimMonths">…</b>
+              <span class="mk-stat__delta" id="mkSimMonthsDelta"></span>
+            </div>
+            <div class="mk-stat">
+              <span class="mk-stat__label">Monthly cash flow</span>
+              <b class="mk-stat__value" id="mkSimFlow">…</b>
+              <span class="mk-stat__delta" id="mkSimFlowDelta"></span>
+            </div>
+            <div class="mk-stat">
+              <span class="mk-stat__label">Financial health</span>
+              <b class="mk-stat__value" id="mkSimHealth">…</b>
+              <span class="mk-stat__bar"><i id="mkSimHealthBar"></i></span>
+            </div>
+          </div>
+
+          <p class="mk-demo__note">Illustrative figures. In the product every number comes from your own data.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7. THE FINANCIAL TWIN — living hub =================
+         Everything the twin reads flows in from the left, the core holds it,
+         and the capabilities it powers flow out to the right. The connectors
+         carry a continuous pulse rather than drawing once, because the point
+         is that this keeps running. -->
+    <section class="mk-section mk-section--tint" id="twin">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">The Financial Twin</p>
+          <h2 class="mk-h2" data-i18n="twin-build">Build Your Financial Twin</h2>
+          <p class="mk-sub">
+            One living model of your position, fed by everything MoneyKal knows and powering
+            everything it can do. Not a dashboard on top of your data. The layer underneath it.
+          </p>
+        </header>
+
+        <div class="mk-hub" data-reveal data-demo="hub">
+          <div class="mk-hub__col mk-hub__col--in">
+            <p class="mk-hub__colhead">Reads</p>
+            <div class="mk-hub__node" style="--d:0ms"><span class="mk-hub__dot"></span>Hisaab entries</div>
+            <div class="mk-hub__node" style="--d:90ms"><span class="mk-hub__dot"></span>Goals</div>
+            <div class="mk-hub__node" style="--d:180ms"><span class="mk-hub__dot"></span>Upcoming payments</div>
+            <div class="mk-hub__node" style="--d:270ms"><span class="mk-hub__dot"></span>Financial behaviour</div>
+            <div class="mk-hub__node" style="--d:360ms"><span class="mk-hub__dot"></span>Gmail context</div>
+          </div>
+
+          <div class="mk-hub__core">
+            <div class="mk-hub__ring" aria-hidden="true"></div>
+            <div class="mk-hub__ring mk-hub__ring--2" aria-hidden="true"></div>
+            <div class="mk-hub__coreinner">
+              <span class="mk-hub__corelabel">Financial</span>
+              <span class="mk-hub__corename">TWIN</span>
+              <span class="mk-hub__corestat" id="mkHubStat">syncing</span>
+            </div>
+          </div>
+
+          <div class="mk-hub__col mk-hub__col--out">
+            <p class="mk-hub__colhead">Powers</p>
+            <div class="mk-hub__node" style="--d:0ms"><span class="mk-hub__dot"></span>Tathya insights</div>
+            <div class="mk-hub__node" style="--d:90ms"><span class="mk-hub__dot"></span>Varta answers</div>
+            <div class="mk-hub__node" style="--d:180ms"><span class="mk-hub__dot"></span>What-If simulations</div>
+            <div class="mk-hub__node" style="--d:270ms"><span class="mk-hub__dot"></span>Daily Home</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7b. TAX ASSISTANCE =================
+         Marked as coming soon on purpose: the tax engine is not in the product
+         yet, and a public page must not imply it is. -->
+    <section class="mk-section" id="tax">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Tax <span class="mk-soon">Coming soon</span></p>
+          <h2 class="mk-h2">
+            The one month of the year<br>
+            <span class="mk-muted-text">your twin already has the answers for.</span>
+          </h2>
+          <p class="mk-sub">
+            MoneyKal already knows your income, your spending and your investments. Tax season
+            becomes a read of data you have been keeping all year, not a scramble for it.
+          </p>
+        </header>
+
+        <div class="mk-tax" data-reveal data-demo="tax">
+          <div class="mk-tax__stage">
+            <!-- 1 — what it already holds -->
+            <div class="mk-tax__col">
+              <p class="mk-tax__colhead">Already in your twin</p>
+              <ul class="mk-tax__docs" id="mkTaxDocs"></ul>
+            </div>
+
+            <!-- 2 — the read -->
+            <div class="mk-tax__col mk-tax__col--mid">
+              <div class="mk-tax__scan">
+                <span class="mk-tax__scanring" aria-hidden="true"></span>
+                <span class="mk-tax__scanring mk-tax__scanring--2" aria-hidden="true"></span>
+                <span class="mk-tax__scantext" id="mkTaxStatus">Reading</span>
+              </div>
+            </div>
+
+            <!-- 3 — what it found -->
+            <div class="mk-tax__col mk-tax__col--out">
+              <p class="mk-tax__colhead">Deductions identified</p>
+              <ul class="mk-tax__found" id="mkTaxFound"></ul>
+              <div class="mk-tax__total">
+                <span>Total identified</span>
+                <b id="mkTaxTotal" data-prefix="₹">₹0</b>
+              </div>
+            </div>
+          </div>
+
+          <p class="mk-demo__note">
+            Illustrative. Tax intelligence is on the roadmap. Everything it would read is already
+            being tracked today.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7c. PERSONALISED FINANCIAL NEWS =================
+         This one is real: /market-pulse already scores headlines against the
+         user's own holdings, goal and spending, and returns a why-it-matters
+         line. The demo mirrors that response shape exactly. -->
+    <section class="mk-section mk-section--tint" id="news">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Market Pulse</p>
+          <h2 class="mk-h2">
+            Not a news feed.<br>
+            <span class="mk-muted-text">The news that moves <em>your</em> money.</span>
+          </h2>
+          <p class="mk-sub">
+            Every headline is scored against what you actually hold, what you are saving toward
+            and where you spend, then filtered down to the few that change something for you.
+          </p>
+        </header>
+
+        <div class="mk-news" data-reveal data-demo="news">
+          <aside class="mk-news__context">
+            <p class="mk-eyebrow">Scored against</p>
+            <ul class="mk-news__chips" id="mkNewsChips"></ul>
+            <p class="mk-news__hint">Your own position, nothing generic.</p>
+          </aside>
+
+          <div class="mk-news__feed">
+            <div class="mk-panel__bar">
+              <span class="mk-panel__title">Signals for you</span>
+              <span class="mk-panel__meta"><b id="mkNewsCount">0</b> relevant</span>
+            </div>
+            <ul class="mk-news__list" id="mkNewsList"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7d. WHATSAPP PROACTIVE ALERTS ================= -->
+    <section class="mk-section" id="alerts">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Proactive alerts <span class="mk-soon">Coming soon</span></p>
+          <h2 class="mk-h2">
+            It reaches you.<br>
+            <span class="mk-muted-text">You do not have to remember to check.</span>
+          </h2>
+          <p class="mk-sub">
+            The twin is already watching due dates, unusual spending and goal pace. When something
+            needs you, it says so, right where you already are.
+          </p>
+        </header>
+
+        <div class="mk-alerts" data-reveal data-demo="alerts">
+          <div class="mk-alerts__triggers">
+            <p class="mk-eyebrow">What triggers one</p>
+            <ul class="mk-alerts__list" id="mkAlertTriggers"></ul>
+          </div>
+
+          <!-- A phone, not a card. The message has to look like it arrived. -->
+          <div class="mk-phone" aria-hidden="true">
+            <div class="mk-phone__frame">
+              <div class="mk-phone__notch"></div>
+              <div class="mk-phone__bar">
+                <span class="mk-wa" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor">
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm5.8 14.03c-.24.68-1.42 1.31-1.96 1.35-.5.04-.98.22-3.3-.69-2.78-1.1-4.55-3.94-4.69-4.13-.14-.19-1.13-1.5-1.13-2.87s.72-2.03.98-2.31c.25-.28.55-.35.73-.35l.53.01c.17 0 .4-.06.62.48.24.57.8 1.98.87 2.12.07.14.12.31.02.5-.09.19-.14.31-.28.47l-.42.49c-.14.14-.28.29-.12.57.16.28.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.21 1.36.28.14.44.12.6-.07.17-.19.7-.81.88-1.09.19-.28.37-.23.63-.14.25.09 1.66.78 1.94.92.28.14.47.21.54.33.07.11.07.66-.17 1.34z"/>
+                  </svg>
+                </span>
+                <span class="mk-phone__who">
+                  <b>MoneyKal</b>
+                  <em id="mkPhoneStatus">online</em>
+                </span>
+              </div>
+              <div class="mk-phone__thread" id="mkPhoneThread"></div>
+            </div>
+            <span class="mk-phone__glow" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <p class="mk-demo__note mk-alerts__note">
+          Illustrative. WhatsApp delivery is on the roadmap; the detection behind these messages
+          already runs today.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= 7e. WEB + MOBILE ================= -->
+    <section class="mk-section mk-section--tint" id="everywhere">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center" data-reveal>
+          <p class="mk-eyebrow">Web today · Mobile <span class="mk-soon">Coming soon</span></p>
+          <h2 class="mk-h2">Your financial intelligence, wherever you are.</h2>
+          <p class="mk-sub">
+            The same twin, the same numbers. The full workspace on the web today, and the parts
+            you need in the moment coming to your pocket.
+          </p>
+        </header>
+
+        <div class="mk-devices" data-reveal data-demo="devices" aria-hidden="true">
+          <!-- Browser: the shipped product -->
+          <div class="mk-browser">
+            <div class="mk-browser__bar">
+              <span class="mk-browser__dots"><i></i><i></i><i></i></span>
+              <span class="mk-browser__url">moneykal.app<span class="mk-browser__path">/dashboard</span></span>
+              <span class="mk-browser__live">Live</span>
+            </div>
+            <div class="mk-browser__body">
+              <div class="mk-mini">
+                <span class="mk-mini__label">Available money</span>
+                <span class="mk-mini__value" data-count="482000" data-prefix="₹">₹0</span>
+              </div>
+              <div class="mk-mini">
+                <span class="mk-mini__label">Spent this month</span>
+                <span class="mk-mini__value" data-count="29469" data-prefix="₹">₹0</span>
+              </div>
+              <div class="mk-mini mk-mini--chart">
+                <span class="mk-mini__label">Position</span>
+                <svg class="mk-spark" viewBox="0 0 200 56" fill="none" preserveAspectRatio="none">
+                  <path class="mk-spark__line"
+                    d="M0,48 L25,44 L50,46 L75,34 L100,38 L125,24 L150,28 L175,14 L200,8"
+                    stroke="var(--mk-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div class="mk-mini mk-mini--wide">
+                <span class="mk-mini__label">Insight</span>
+                <span class="mk-mini__text">Spending is higher this week than your usual pattern.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone: the part that comes with you -->
+          <div class="mk-pocket">
+            <div class="mk-pocket__frame">
+              <div class="mk-pocket__notch"></div>
+              <div class="mk-pocket__body">
+                <span class="mk-pocket__eyebrow">Today</span>
+                <span class="mk-pocket__value" data-count="482000" data-prefix="₹">₹0</span>
+                <span class="mk-pocket__row"><i></i>Electricity · due in 3 days</span>
+                <span class="mk-pocket__row"><i></i>Netflix · renews tomorrow</span>
+                <div class="mk-pocket__goal">
+                  <span>Emergency Fund</span>
+                  <span class="mk-pocket__bar"><i></i></span>
+                  <b>68%</b>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="mk-demo__note mk-devices__note">
+          The web workspace is live today. The mobile companion is in build.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= 8. CFO INTELLIGENCE ================= -->
+    <section class="mk-section" id="cfo">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">For founders · CFO intelligence</p>
+          <h2 class="mk-h2">
+            The same engine,<br>
+            <span class="mk-muted-text">pointed at a company.</span>
+          </h2>
+          <p class="mk-sub">
+            Runway, burn, revenue trend and financial health, computed period over period, with
+            the observation that actually matters written underneath.
+          </p>
+        </header>
+
+        <div class="mk-cfo" data-reveal data-demo="cfo">
+          <div class="mk-cfo__timeline" role="tablist" aria-label="Choose a quarter">
+            <button class="mk-cfo__q is-active" role="tab" aria-selected="true" data-q="0">Q1</button>
+            <button class="mk-cfo__q" role="tab" aria-selected="false" data-q="1">Q2</button>
+            <button class="mk-cfo__q" role="tab" aria-selected="false" data-q="2">Q3</button>
+            <button class="mk-cfo__q" role="tab" aria-selected="false" data-q="3">Q4</button>
+            <span class="mk-cfo__progress" id="mkCfoProgress" aria-hidden="true"></span>
+          </div>
+
+          <div class="mk-cfo__body">
+            <div class="mk-cfo__metrics">
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Revenue</span>
+                <b class="mk-stat__value" id="mkCfoRevenue">…</b>
+                <span class="mk-stat__delta" id="mkCfoRevenueD"></span>
+              </div>
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Net burn</span>
+                <b class="mk-stat__value" id="mkCfoBurn">…</b>
+                <span class="mk-stat__delta" id="mkCfoBurnD"></span>
+              </div>
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Runway</span>
+                <b class="mk-stat__value" id="mkCfoRunway">…</b>
+                <span class="mk-stat__delta" id="mkCfoRunwayD"></span>
+              </div>
+              <div class="mk-cfo__metric">
+                <span class="mk-stat__label">Financial health</span>
+                <b class="mk-stat__value" id="mkCfoHealth">…</b>
+                <span class="mk-stat__bar"><i id="mkCfoHealthBar"></i></span>
+              </div>
+            </div>
+
+            <!-- Revenue against burn, quarter by quarter. Bars grow as the
+                 quarter becomes current, so the trend is watched, not read. -->
+            <div class="mk-cfo__chart" aria-hidden="true">
+              <div class="mk-cfo__legend">
+                <span class="is-rev">Revenue</span>
+                <span class="is-burn">Burn</span>
+              </div>
+              <div class="mk-cfo__bars" id="mkCfoBars"></div>
+            </div>
+          </div>
+
+          <p class="mk-cfo__insight" id="mkCfoInsight">
+            <span class="mk-cfo__insighttag">Key insight</span>
+            <span class="mk-cfo__insighttext"></span>
+          </p>
+
+          <p class="mk-demo__note">Illustrative company. The engine behind it is the one that runs your reports.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 9. DAILY INTELLIGENCE ================= -->
+    <section class="mk-section mk-section--tint" id="daily">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Every day</p>
+          <h2 class="mk-h2">
+            A reason to open it<br>
+            <span class="mk-muted-text">even when you are not asking anything.</span>
+          </h2>
+        </header>
+
+        <div class="mk-daily" data-reveal>
+          <div class="mk-daily__item" style="--d:0ms">
+            <span class="mk-daily__num">01</span>
+            <h3>Available money</h3>
+            <p>What you actually have, single-sourced from your stated position.</p>
+          </div>
+          <div class="mk-daily__item" style="--d:80ms">
+            <span class="mk-daily__num">02</span>
+            <h3>Spending awareness</h3>
+            <p>This month against last, and the category that moved.</p>
+          </div>
+          <div class="mk-daily__item" style="--d:160ms">
+            <span class="mk-daily__num">03</span>
+            <h3>What's coming up</h3>
+            <p>Bills, EMIs and renewals before they surprise you.</p>
+          </div>
+          <div class="mk-daily__item" style="--d:240ms">
+            <span class="mk-daily__num">04</span>
+            <h3>Goals</h3>
+            <p>What you are saving toward, and whether you are on pace.</p>
+          </div>
+          <div class="mk-daily__item mk-daily__item--wide" style="--d:320ms">
+            <span class="mk-daily__num">05</span>
+            <h3>One insight that earns its place</h3>
+            <p>
+              The single most useful thing your data supports today, chosen by rules you can
+              audit rather than a model guessing at a headline.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 10. SOLUTIONS ================= -->
+    <section class="mk-section" id="account-types">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Solutions</p>
+          <h2 class="mk-h2" data-i18n="sol-title">Built for every scale of complexity.</h2>
+        </header>
+
+        <div class="mk-solutions" data-reveal>
+          <a class="mk-solution" href="register.html?v=2&amp;type=individual" style="--d:0ms">
+            <span class="mk-solution__k">01</span>
+            <h3 data-i18n="sol-indiv">Individual</h3>
+            <p data-i18n="sol-indiv-desc">
+              Manage personal wealth, optimize monthly expenses, and simulate large purchases.
+            </p>
+            <span class="mk-link-arrow" data-i18n="btn-buildyours">Build Yours <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-solution" href="register.html?v=2&amp;type=startup" style="--d:110ms">
+            <span class="mk-solution__k">02</span>
+            <h3 data-i18n="sol-startup">Startup</h3>
+            <p data-i18n="sol-startup-desc">
+              Monitor runway, model hiring plans, and simulate the exact dilution of your next round.
+            </p>
+            <span class="mk-link-arrow" data-i18n="btn-buildyours">Build Yours <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 11. QUOTE ================= -->
+    <section class="mk-quote">
+      <div class="mk-wrap">
+        <blockquote data-reveal>
+          <p data-i18n="quote-text">“Plans are worthless, but planning is everything.”</p>
+          <cite>Dwight D. Eisenhower</cite>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- ================= 12. INSIGHTS ================= -->
+    <section class="mk-section mk-section--tint" id="insights">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow" data-i18n="mag-header-desc">Strategic financial intelligence, curated.</p>
+          <h2 class="mk-h2" data-i18n="mag-header-title">Global Perspectives</h2>
+        </header>
+      </div>
+
+      <!-- Continuous reading rail. Pauses on hover and on focus so a keyboard
+           user can actually reach the links. -->
+      <div class="mk-marquee" id="mkMarquee">
+        <div class="mk-marquee__track">
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://www.newtraderu.com/2026/08/01/warren-buffetts-rule-number-one-is-never-lose-money-7-habits-that-keep-him-from-breaking-it/">
+            <span class="mk-post__cat" data-i18n="cat-investment">Investment</span>
+            <h3>What Warren Buffett Can Teach You About Simulating Before You Decide</h3>
+            <span class="mk-post__by">Warren Buffett <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://www.economicprinciples.org/how-the-economic-machine-works">
+            <span class="mk-post__cat" data-i18n="cat-economics">Economics</span>
+            <h3>Ray Dalio's “Economic Machine” and Why Your Finances Deserve the Same Thinking</h3>
+            <span class="mk-post__by">Ray Dalio <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://www.nobelprize.org/prizes/economic-sciences/2002/kahneman/facts/">
+            <span class="mk-post__cat" data-i18n="cat-behavioral">Behavioral Finance</span>
+            <h3>Daniel Kahneman and the Money Mistakes You Don't Know You're Making</h3>
+            <span class="mk-post__by">Daniel Kahneman <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener" href="https://fs.blog/charlie-munger-mental-toolbox/">
+            <span class="mk-post__cat" data-i18n="cat-mental">Mental Models</span>
+            <h3>Charlie Munger's Mental Models and Why One Opinion Is Never Enough</h3>
+            <span class="mk-post__by">Charlie Munger <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://diginomica.com/grieves-and-vickers-history-digital-twins">
+            <span class="mk-post__cat" data-i18n="cat-tech">Technology</span>
+            <h3>The Original “Digital Twin” and What It Has to Do With Your Money</h3>
+            <span class="mk-post__by">Digital Twin Tech <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="mk-post" target="_blank" rel="noopener"
+            href="https://blogs.microsoft.com/blog/2025/05/19/microsoft-build-2025-the-age-of-ai-agents-and-building-the-open-agentic-web/">
+            <span class="mk-post__cat" data-i18n="cat-ai">Agentic AI</span>
+            <h3>Satya Nadella and the Shift From AI Tools to AI Agents</h3>
+            <span class="mk-post__by">Satya Nadella <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 13. FINAL CTA ================= -->
+    <section class="mk-final">
+      <div class="mk-wrap">
+        <div class="mk-final__inner" data-reveal>
+          <p class="mk-eyebrow">Start today</p>
+          <h2 class="mk-final__title">
+            <span class="mk-line"><span>See Tomorrow.</span></span>
+            <span class="mk-line"><span class="mk-accent-text">Decide Today.</span></span>
+          </h2>
+          <p class="mk-sub mk-final__sub">
+            Start understanding your money, then see where your next decision takes it.
+          </p>
+          <div class="mk-final__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg" data-i18n="cta-btn">
+              Get Started <span class="mk-btn__arrow" aria-hidden="true">→</span>
+            </a>
+            <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap mk-footer__inner">
+      <a class="mk-nav__brand" href="#top">
+        <span class="mk-nav__logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2.6 27.4 9.3v13.4L16 29.4 4.6 22.7V9.3z" stroke="var(--mk-accent)" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9.8 20.4 14.2 15.8 18 18.7 22.7 12.3" stroke="var(--mk-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19.3 12.3h3.4v3.4" stroke="var(--mk-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+        <span>MoneyKal</span>
+      </a>
+      <nav class="mk-footer__links" aria-label="Footer">
+        <a href="#product">Product</a>
+        <a href="#hisaab">Hisaab</a>
+        <a href="#intelligence">Tathya</a>
+        <a href="#varta">Varta</a>
+        <a href="#simulate">Simulate</a>
+        <a href="#twin">Twin</a>
+        <a href="#tax">Tax</a>
+        <a href="#news">Market Pulse</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#everywhere">Web &amp; mobile</a>
+        <a href="#cfo">For founders</a>
+        <a href="#insights">Insights</a>
+        <a href="login.html">Log In</a>
+        <a href="register.html">Get Started</a>
+      </nav>
+      <p class="mk-footer__legal">© 2026 MoneyKal Financial Technologies. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- i18n.js is shared with the app and owns the theme + language toggles. -->
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=3"></script>
+</body>
+
+</html>

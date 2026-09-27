@@ -1,0 +1,857 @@
+/* ==========================================================================
+   Startup — Fundraise Readiness + Compliance Center
+
+   Every rule here is scoped to #view-fundraise or #view-compliance, so this
+   sheet cannot affect any existing view regardless of load order. It reuses
+   the existing tokens and the existing .panel / .stat-card / .status-chip /
+   .calc-info components rather than introducing a second visual language.
+   ========================================================================== */
+
+/* ---------- Shared: verdict tones ---------- */
+#view-fundraise .tone-good,
+#view-compliance .tone-good { color: var(--status-good); }
+#view-fundraise .tone-warn,
+#view-compliance .tone-warn { color: var(--status-warning); }
+#view-fundraise .tone-critical,
+#view-compliance .tone-critical { color: var(--status-critical); }
+#view-fundraise .tone-neutral,
+#view-compliance .tone-neutral { color: var(--ink-muted); }
+
+/* ---------- Fundraise: headline score ---------- */
+#view-fundraise .fr-hero {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+#view-fundraise .fr-hero__ring {
+  flex-shrink: 0;
+}
+
+#view-fundraise .fr-hero__body {
+  flex: 1;
+  min-width: 240px;
+}
+
+#view-fundraise .fr-hero__label {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+#view-fundraise .fr-hero__summary {
+  color: var(--ink-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0 0 10px;
+}
+
+#view-fundraise .fr-hero__note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+#view-fundraise .fr-stage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+#view-fundraise .fr-stage-row label {
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+/* ---------- Fundraise: benchmark rows ---------- */
+#view-fundraise .fr-bench {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+#view-fundraise .fr-bench:last-child { border-bottom: 0; }
+
+#view-fundraise .fr-bench__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#view-fundraise .fr-bench__label {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+#view-fundraise .fr-bench__value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+#view-fundraise .fr-bench__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+}
+
+/* The benchmark track: where this company sits between critical and target. */
+#view-fundraise .fr-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  margin: 10px 0 8px;
+  overflow: visible;
+}
+
+#view-fundraise .fr-track__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: var(--primary);
+}
+
+#view-fundraise .fr-track__fill.is-weak { background: var(--status-warning); }
+#view-fundraise .fr-track__fill.is-blocker { background: var(--status-critical); }
+
+#view-fundraise .fr-track__target {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  background: var(--ink-faint);
+}
+
+#view-fundraise .fr-bench__note {
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+/* ---------- Verdict pills ---------- */
+#view-fundraise .verdict-pill {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+#view-fundraise .verdict-pill--strong { background: var(--primary-tint); color: var(--primary); }
+#view-fundraise .verdict-pill--acceptable { background: var(--accent-tint); color: var(--accent); }
+#view-fundraise .verdict-pill--weak { background: rgba(255, 176, 32, 0.15); color: var(--status-warning); }
+#view-fundraise .verdict-pill--blocker { background: var(--warn-tint); color: var(--warn); }
+#view-fundraise .verdict-pill--unknown { background: var(--surface-2); color: var(--ink-faint); }
+#view-fundraise .verdict-pill--not_applicable { background: var(--surface-2); color: var(--ink-muted); }
+
+/* ---------- Diligence gaps ---------- */
+#view-fundraise .gap-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--surface);
+}
+
+#view-fundraise .gap-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+#view-fundraise .gap-card__label {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+#view-fundraise .sev-pill {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+}
+
+#view-fundraise .sev-pill--high { background: var(--warn-tint); color: var(--warn); }
+#view-fundraise .sev-pill--medium { background: rgba(255, 176, 32, 0.15); color: var(--status-warning); }
+#view-fundraise .sev-pill--low { background: var(--surface-2); color: var(--ink-muted); }
+
+#view-fundraise .gap-card p {
+  margin: 6px 0;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+}
+
+#view-fundraise .gap-card ul {
+  margin: 6px 0 6px 18px;
+  padding: 0;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+}
+
+#view-fundraise .gap-card li { margin: 3px 0; }
+
+#view-fundraise .gap-card__close {
+  border-left: 2px solid var(--primary);
+  padding-left: 10px;
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+/* ---------- Compliance: summary tiles ---------- */
+#view-compliance .cmp-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#view-compliance .cmp-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--surface);
+}
+
+#view-compliance .cmp-tile__label {
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+#view-compliance .cmp-tile__value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+#view-compliance .cmp-tile__sub {
+  font-size: 11px;
+  color: var(--ink-faint);
+  display: block;
+  margin-top: 4px;
+}
+
+/* ---------- Compliance: calendar rows ---------- */
+#view-compliance .cmp-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-compliance .cmp-row:last-child { border-bottom: 0; }
+
+#view-compliance .cmp-row__date {
+  flex-shrink: 0;
+  width: 72px;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+#view-compliance .cmp-row__day {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+#view-compliance .cmp-row__mon {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#view-compliance .cmp-row__body { flex: 1; min-width: 0; }
+
+#view-compliance .cmp-row__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+#view-compliance .cmp-row__desc {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+#view-compliance .cmp-row__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 5px;
+}
+
+#view-compliance .cmp-chip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+#view-compliance .cmp-chip--overdue { background: var(--warn-tint); color: var(--warn); }
+#view-compliance .cmp-chip--due_soon { background: rgba(255, 176, 32, 0.15); color: var(--status-warning); }
+#view-compliance .cmp-chip--upcoming { background: var(--surface-2); color: var(--ink-muted); }
+#view-compliance .cmp-chip--before_tracking { background: var(--surface-2); color: var(--ink-faint); }
+#view-compliance .cmp-chip--cat { background: var(--accent-tint); color: var(--accent); }
+
+#view-compliance .cmp-penalty {
+  margin-top: 8px;
+  border-left: 2px solid var(--warn);
+  padding-left: 10px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+}
+
+#view-compliance .cmp-penalty b { color: var(--warn); }
+
+#view-compliance .cmp-chip--filed { background: var(--primary-tint); color: var(--primary); }
+#view-compliance .cmp-chip--filed_late { background: rgba(255, 176, 32, 0.15); color: var(--status-warning); }
+#view-compliance .cmp-chip--not_applicable { background: var(--surface-2); color: var(--ink-faint); }
+
+/* ---------- Compliance: recording a filing ---------- */
+#view-compliance .cmp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+#view-compliance .cmp-act {
+  font: inherit;
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line, var(--surface-2));
+  background: var(--surface, transparent);
+  color: var(--ink-muted);
+  cursor: pointer;
+  min-height: 0;
+}
+
+#view-compliance .cmp-act:hover { color: var(--ink); border-color: var(--ink-faint); }
+#view-compliance .cmp-act:disabled { opacity: 0.6; cursor: default; }
+
+#view-compliance .cmp-act--primary {
+  background: var(--primary-tint);
+  color: var(--primary);
+  border-color: transparent;
+}
+
+#view-compliance .cmp-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+#view-compliance .cmp-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink-muted);
+  min-width: 0;
+}
+
+#view-compliance .cmp-form__field .ob-input {
+  margin-bottom: 0;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  max-width: 100%;
+}
+
+#view-compliance .cmp-form__buttons { display: flex; gap: 6px; }
+
+#view-compliance .cmp-form__hint {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+
+/* ---------- Compliance: liability tables ---------- */
+#view-compliance .cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+#view-compliance .cmp-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  font-weight: 500;
+  padding: 8px 10px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-compliance .cmp-table td {
+  padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-muted);
+}
+
+#view-compliance .cmp-table td.num,
+#view-compliance .cmp-table th.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  padding-right: 0;
+}
+
+#view-compliance .cmp-table tr.is-total td {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom: 0;
+}
+
+#view-compliance .cmp-scroll { overflow-x: auto; }
+
+/* ---------- Shared: assumption / disclaimer blocks ---------- */
+#view-fundraise .note-block,
+#view-compliance .note-block {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+#view-fundraise .note-block ul,
+#view-compliance .note-block ul {
+  margin: 6px 0 0 18px;
+  padding: 0;
+}
+
+#view-fundraise .note-block li,
+#view-compliance .note-block li { margin: 3px 0; }
+
+#view-fundraise .empty-note,
+#view-compliance .empty-note {
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  padding: 14px 0;
+}
+
+/* ---------- Filter row ---------- */
+#view-compliance .cmp-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#view-compliance .cmp-filters .ob-input {
+  width: auto;
+  margin-bottom: 0;
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  #view-compliance .cmp-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  #view-compliance .cmp-summary { grid-template-columns: 1fr; }
+  #view-fundraise .fr-hero { gap: 16px; }
+  #view-compliance .cmp-row__date { width: 58px; }
+}
+
+/* ==========================================================================
+   GST Calculator — all rules scoped to #view-gst
+   ========================================================================== */
+
+#view-gst .tone-good { color: var(--status-good); }
+#view-gst .tone-warn { color: var(--status-warning); }
+#view-gst .tone-critical { color: var(--status-critical); }
+
+/* ---------- Headline ---------- */
+#view-gst .gst-headline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+#view-gst .gst-headline__label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+#view-gst .gst-headline__value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+#view-gst .gst-headline__sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  margin-top: 4px;
+}
+
+/* ---------- Line-item table ---------- */
+#view-gst .gst-table-wrap { overflow-x: auto; }
+
+#view-gst .gst-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  min-width: 780px;
+}
+
+#view-gst .gst-table th {
+  text-align: left;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  font-weight: 500;
+  padding: 8px 8px 8px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+/* Every heading starts at the left edge of the field below it. Right-aligning
+   the numeric headings left AMOUNT butted up against RATE with no visible gap,
+   and mixed alignment made the row read unevenly. The numbers inside the
+   fields stay right-aligned. */
+#view-gst .gst-table th,
+#view-gst .gst-table th.num { text-align: left; }
+
+#view-gst .gst-table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+#view-gst .gst-in {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  padding: 7px 9px;
+  outline: none;
+}
+
+#view-gst .gst-in:focus {
+  border-color: var(--primary);
+  background: var(--surface-3);
+}
+
+#view-gst .gst-in--num {
+  text-align: right;
+  font-family: var(--font-mono);
+  min-width: 84px;
+}
+
+#view-gst .gst-in--sm { min-width: 92px; }
+
+#view-gst select.gst-in { cursor: pointer; }
+
+#view-gst .gst-del {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 9px;
+}
+
+#view-gst .gst-del:hover {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+/* ---------- Two-column panel pairs ---------- */
+.gst-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+/* Reuse the compliance table styling inside the GST view so the two screens
+   read as one system rather than two. */
+#view-gst .cmp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+#view-gst .cmp-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  font-weight: 500;
+  padding: 8px 10px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+#view-gst .cmp-table td {
+  padding: 9px 10px 9px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-muted);
+}
+
+#view-gst .cmp-table td.num,
+#view-gst .cmp-table th.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  padding-right: 0;
+}
+
+#view-gst .cmp-table tr.is-total td {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+#view-gst .cmp-scroll { overflow-x: auto; }
+
+#view-gst .cmp-filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#view-gst .cmp-filters .ob-input {
+  width: auto;
+  margin-bottom: 0;
+  padding: 6px 10px;
+  font-size: 12.5px;
+}
+
+#view-gst .note-block {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+#view-gst .note-block ul { margin: 6px 0 0 18px; padding: 0; }
+#view-gst .note-block li { margin: 3px 0; }
+
+#view-gst .empty-note {
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  padding: 14px 0;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .gst-two-col { grid-template-columns: 1fr; }
+  #view-gst .gst-headline { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* ---------- GST: inline field help (mirrors the Tax Calculator) ---------- */
+#view-gst .gst-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  margin-left: 6px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-muted);
+  font-family: var(--font-body);
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+#view-gst .gst-help:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* "i" beside an invoice-table column heading. The heading is uppercase and
+   letter-spaced; the glyph must not inherit either. */
+#view-gst .gst-help--info {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+#view-gst .gst-help--info.is-open {
+  border-color: var(--primary);
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+
+#view-gst #gstLineHelp .gst-line-help { max-width: none; margin-top: 10px; }
+#view-gst #gstLineHelp .gst-line-help b { color: var(--ink); font-weight: 600; }
+
+#view-gst .gst-help-tip {
+  display: block;
+  margin-top: 8px;
+  padding: 10px 12px;
+  max-width: 380px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-left: 2px solid var(--primary);
+  border-radius: var(--radius);
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* ---------- GST: reuse the fundraise benchmark row for applicability ---------- */
+#view-gst .fr-bench {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+#view-gst .fr-bench:last-child { border-bottom: 0; }
+
+#view-gst .fr-bench__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+#view-gst .fr-bench__label { font-weight: 600; font-size: 14px; }
+
+#view-gst .fr-bench__note {
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.55;
+  margin: 5px 0 0;
+}
+
+/* ---------- GST: status chips borrowed from the compliance view ---------- */
+#view-gst .cmp-chip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+#view-gst .cmp-chip--cat { background: var(--accent-tint); color: var(--accent); }
+#view-gst .cmp-chip--upcoming { background: var(--primary-tint); color: var(--primary); }
+#view-gst .cmp-chip--overdue { background: var(--warn-tint); color: var(--warn); }
+
+#view-gst .note-block.tone-good { border-left: 2px solid var(--status-good); color: var(--status-good); }
+#view-gst .note-block.tone-critical { border-left: 2px solid var(--warn); color: var(--warn); }
+#view-gst .note-block.tone-warn { border-left: 2px solid var(--status-warning); color: var(--status-warning); }
+
+#view-gst h4 { font-family: var(--font-display); color: var(--ink); }
+
+
+/* ---------------------------------------------------------------------------
+   Spacing corrections on the CFO overview.
+
+   audit: adjacent CFO values rendered with effectively no gutter — at 1440px
+   "Monthly position" printed as a 26-29px numeral immediately followed by its
+   percentage, reading as run-together text in a screenshot, and one metric
+   label overlapped the "How is this calculated?" toggle by 85x7px.
+
+   Both are spacing rather than broken layout, so these are additive rules:
+   nothing here changes a size, a colour or a grid.
+   --------------------------------------------------------------------------- */
+
+.stat-row,
+.su-stat__values,
+.su-metric__values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 14px;
+  row-gap: 4px;
+}
+
+/* A value and the delta beside it are two separate figures and must never
+   touch, whatever their lengths turn out to be. */
+.su-stat__value + .su-stat__delta,
+.su-metric__value + .su-metric__delta,
+.stat__value + .stat__delta {
+  margin-left: 12px;
+}
+
+/* The calc toggle sits under the label rather than beside it, so a long metric
+   name can no longer run over it. */
+.su-metric__head,
+.calc-info__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+
+.calc-info__toggle,
+.su-metric__calc-toggle {
+  flex: 0 0 auto;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Long assumption text wraps instead of overrunning its neighbour. */
+.su-metric__assumption,
+.calc-info__assumption {
+  flex-basis: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F4F2ED" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070809" media="(prefers-color-scheme: dark)">
+  <title>Get started with MoneyKal</title>
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+  <link rel="stylesheet" href="css/pin.css?v=1">
+  <!-- Inline field errors for the sign-up wizard (js/signup-rules.js). -->
+  <link rel="stylesheet" href="css/signup-validation.css?v=1">
+
+  <!-- The PIN gate. This page holds a live session during ?resume=true
+       onboarding, so a remembered device must pass the PIN to reach it — a
+       gate on the dashboard alone would leave this one as a way round. It
+       does nothing at all for a visitor signing up for the first time, who
+       has no remembered device. -->
+  <script src="js/pin-gate.js?v=2"></script>
+  <!-- Theme, before first paint. Same key and same attribute as every other
+       MoneyKal page, so arriving here from the site keeps the theme you had.
+       The switch itself is the shared control in js/i18n.js. -->
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+
+  <script>
+    (function () {
+      const sess = JSON.parse(localStorage.getItem('twin_session') || '{}');
+      const params = new URLSearchParams(window.location.search);
+      if (sess.token && sess.profileKey && !params.has('resume') && !params.has('zoho')) {
+        window.location.href = 'dashboard.html';
+      }
+    })();
+  </script>
+</head>
+
+<body class="auth-page">
+
+  <div class="auth-shell">
+
+    <!-- ================= LEFT: brand + wizard ================= -->
+    <main class="auth-main">
+
+      <div class="auth-topbar">
+        <a href="/" class="auth-brand">
+          <span class="auth-brand__mark" aria-hidden="true">
+            <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+          </span>
+          <span class="auth-brand__name">Money<em>Kal</em></span>
+        </a>
+
+        <button type="button" class="lang-toggle auth-iconbtn" aria-label="Switch to Hindi"><b>EN</b> | हिं</button>
+        <button type="button" id="theme-toggle" class="auth-iconbtn" aria-label="Toggle theme">
+          <svg id="theme-icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <svg id="theme-icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4.5"></circle>
+            <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="auth-body">
+        <div class="auth-form-wrap auth-form-wrap--wide">
+
+          <!-- Sign in / Sign up. Two pages, one control: each tab is a link to
+               the page that owns that form, so the sign-in form and the
+               multi-step sign-up wizard keep their own markup and scripts. -->
+          <nav class="auth-tabs" data-active="signup" aria-label="Sign in or sign up">
+            <span class="auth-tabs__pill" aria-hidden="true"></span>
+            <a class="auth-tab" href="login.html">Sign In</a>
+            <a class="auth-tab" href="register.html" aria-current="page">Sign Up</a>
+          </nav>
+
+          <span class="auth-eyebrow">Get Started</span>
+          <h1 class="auth-title">Build your financial brain.</h1>
+          <p class="auth-subtitle" id="stepSubtitle">A few details is all it takes to start modelling your decisions
+            before you make them.</p>
+
+          <!-- Progress rail. auth.js drives step changes; the rail reflects them. -->
+          <div class="step-rail" id="stepRail">
+            <span class="step-rail__seg is-current" data-seg="1"></span>
+            <span class="step-rail__seg" data-seg="2"></span>
+            <span class="step-rail__seg" data-seg="3"></span>
+            <span class="step-count" id="stepCount"><em>01</em> / 03</span>
+          </div>
+
+          <div id="regError" class="auth-error" role="alert" aria-live="assertive"></div>
+          <div id="regSuccess" class="mk-alert mk-alert--success" role="status" aria-live="polite"></div>
+
+          <!-- ============ STEP 1: ACCOUNT TYPE ============ -->
+          <div class="step-view is-active" id="step1">
+            <div class="ob-options" id="typeOptions">
+              <div class="ob-option is-selected" data-type="individual">
+                <span class="ob-option__mark"></span>
+                <div>
+                  <h4>Individual</h4>
+                  <p>Personal wealth, income and everyday expenses</p>
+                </div>
+              </div>
+              <div class="ob-option" data-type="startup">
+                <span class="ob-option__mark"></span>
+                <div>
+                  <h4>Startup</h4>
+                  <p>Runway, burn rate and funding decisions</p>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-login-solid" id="btnNext1">
+              <span>Continue</span>
+              <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+
+          </div>
+
+          <!-- ============ STEP 2: ACCOUNT DETAILS ============ -->
+          <div class="step-view" id="step2">
+            <form id="accountForm" novalidate>
+              <div class="field-stack">
+                <label class="mk-field">
+                  <span>Full Name<span class="req">*</span></span>
+                  <div class="mk-input-shell">
+                    <input type="text" id="regName" class="ob-input" placeholder="Your full name" autocomplete="name"
+                      required>
+                  </div>
+                </label>
+
+                <label class="mk-field">
+                  <span>Email Address<span class="req">*</span></span>
+                  <div class="mk-input-shell">
+                    <input type="email" id="regEmail" class="ob-input" placeholder="you@company.com"
+                      autocomplete="email" required autocapitalize="none" autocorrect="off" spellcheck="false">
+                  </div>
+                </label>
+
+                <label class="mk-field">
+                  <span>Password<span class="req">*</span></span>
+                  <div class="mk-input-shell mk-input-shell--action">
+                    <input type="password" id="regPassword" class="ob-input" placeholder="Create a strong password"
+                      autocomplete="new-password" required>
+                    <span class="eye-icon" role="button" tabindex="0" aria-label="Show password"
+                      onclick="togglePasswordVisibility('regPassword', this)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Terms acceptance. Required: js/auth.js refuses to create the
+                   account until it is ticked, and js/terms-consent.js opens the
+                   document in a dialog so the wizard keeps its place. -->
+              <div class="mk-consent" id="regConsent">
+                <label class="mk-check mk-check--consent">
+                  <input type="checkbox" id="regTerms" class="mk-consent__input" required
+                    aria-describedby="regTermsError">
+                  <span class="mk-check__box" aria-hidden="true">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                  <span class="mk-consent__text">I agree to the <button type="button" class="mk-consent__link"
+                      data-terms-open>Terms &amp; Conditions</button> and the <button type="button"
+                      class="mk-consent__link" data-terms-open data-terms-section="privacy">Privacy
+                      Policy</button>.</span>
+                </label>
+                <p class="mk-consent__error" id="regTermsError" role="alert" aria-live="assertive"></p>
+              </div>
+
+              <div class="step-actions">
+                <button type="submit" class="btn-login-solid" id="btnCreateAccount">
+                  <span>Create account</span>
+                  <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+                <button type="button" class="btn-outline" onclick="setStep(1)">Back</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ============ STEP 3: INDIVIDUAL PROFILE ============ -->
+          <div class="step-view" id="step3-individual">
+            <h3 class="step-heading">Personal financial details</h3>
+            <p class="step-note">These figures seed your financial brain. You can refine any of them later.</p>
+
+            <div class="step-tools">
+              <a class="step-tool" href="/onboard/excel/template?persona=individual" data-api-href
+                target="_blank" rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Excel template
+              </a>
+              <span class="step-tools__sep"></span>
+              <label class="step-tool">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Fill from Excel
+                <input type="file" id="regExcelFileInd" accept=".xlsx,.xls,.csv" style="display:none;">
+              </label>
+            </div>
+
+            <form id="individualForm" novalidate>
+              <div class="field-row">
+                <label class="mk-field"><span>Occupation / Role<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="text" id="indOccupation" class="ob-input" required
+                      maxlength="60" autocomplete="organization-title" placeholder="e.g. Software Engineer"></div>
+                </label>
+                <label class="mk-field"><span>Mobile Number<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="tel" id="indMobile" class="ob-input" required
+                      inputmode="numeric" maxlength="10" autocomplete="tel-national"
+                      placeholder="10-digit mobile number"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <!-- Not cosmetic: the HRA exemption is capped at 50% of salary
+                     in Mumbai, Delhi, Kolkata and Chennai and 40% everywhere
+                     else, so this one field changes the tax result. Required at
+                     sign-up; the Tax Calculator still lets it be corrected there. -->
+                <label class="mk-field"><span>City<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="text" id="indCity" class="ob-input" required
+                      maxlength="50" placeholder="e.g. Bengaluru" autocomplete="address-level2"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Monthly Income (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indIncome" class="ob-input" required min="0"
+                      placeholder="0"></div>
+                </label>
+                <label class="mk-field"><span>Total Savings (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indSavings" class="ob-input" required min="0"
+                      placeholder="0"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Monthly Fixed Expenses (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indExpenses" class="ob-input" required min="0"
+                      placeholder="0"></div>
+                </label>
+                <label class="mk-field"><span>Outstanding Loans (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indLoans" class="ob-input" required min="0"
+                      placeholder="0"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Existing Investments (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indInvestments" class="ob-input" required min="0"
+                      placeholder="0"></div>
+                </label>
+                <label class="mk-field"><span>Insurance Coverage (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indInsurance" class="ob-input" required min="0"
+                      placeholder="0"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Dependents<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indDependents" class="ob-input" required min="0"
+                      max="20" step="1" inputmode="numeric" placeholder="0"></div>
+                </label>
+                <label class="mk-field"><span>Financial Goal<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="text" id="indGoalTitle" class="ob-input" required
+                      maxlength="80" placeholder="e.g. House purchase"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Goal Target (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="indGoalTarget" class="ob-input" required min="1"
+                      placeholder="e.g. 5000000"></div>
+                </label>
+                <label class="mk-field"><span>Goal Target Date<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="date" id="indGoalDate" class="ob-input" required></div>
+                </label>
+              </div>
+
+              <div class="step-actions">
+                <button type="submit" class="btn-login-solid" id="btnIndSubmit">
+                  <span>Initialize your brain</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ============ STEP 3: STARTUP PROFILE ============ -->
+          <div class="step-view" id="step3-startup">
+            <h3 class="step-heading">Startup profile</h3>
+            <p class="step-note">Tell us about the company so MoneyKal models the right runway.</p>
+
+            <div class="step-tools">
+              <a class="step-tool" href="/onboard/excel/template?persona=startup" data-api-href target="_blank"
+                rel="noopener">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Excel template
+              </a>
+              <span class="step-tools__sep"></span>
+              <label class="step-tool">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Fill from Excel
+                <input type="file" id="regExcelFileSu" accept=".xlsx,.xls,.csv" style="display:none;">
+              </label>
+            </div>
+
+            <form id="startupProfileForm" novalidate>
+              <div class="field-row">
+                <label class="mk-field"><span>Startup Name<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="text" id="suCompanyName" class="ob-input" required
+                      maxlength="100" placeholder="Company name"></div>
+                </label>
+                <label class="mk-field"><span>Industry<span class="req">*</span></span>
+                  <div class="mk-input-shell">
+                    <select id="suIndustry" class="ob-input" required>
+                      <option value="">Select industry</option>
+                      <option value="SaaS">SaaS / Software</option>
+                      <option value="Fintech">Fintech</option>
+                      <option value="Healthtech">Healthtech</option>
+                      <option value="E-commerce">E-commerce</option>
+                      <option value="Deeptech">Deeptech</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Business Model<span class="req">*</span></span>
+                  <div class="mk-input-shell">
+                    <select id="suBusinessModel" class="ob-input" required>
+                      <option value="">Select model</option>
+                      <option value="B2B">B2B</option>
+                      <option value="B2C">B2C</option>
+                      <option value="B2B2C">B2B2C</option>
+                      <option value="Marketplace">Marketplace</option>
+                    </select>
+                  </div>
+                </label>
+                <label class="mk-field"><span>Stage<span class="req">*</span></span>
+                  <div class="mk-input-shell">
+                    <select id="suStage" class="ob-input" required>
+                      <option value="">Select stage</option>
+                      <option value="Pre-Seed">Pre-Seed</option>
+                      <option value="Seed">Seed</option>
+                      <option value="Series A">Series A</option>
+                      <option value="Series B+">Series B+</option>
+                      <option value="Bootstrapped">Bootstrapped</option>
+                    </select>
+                  </div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Team Size<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="suHeadcount" class="ob-input" min="1" required
+                      step="1" inputmode="numeric" placeholder="Headcount"></div>
+                </label>
+                <label class="mk-field"><span>GST Number<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="text" id="suGstNumber" class="ob-input" required
+                      maxlength="15" autocapitalize="characters" autocomplete="off" spellcheck="false"
+                      placeholder="15-character GSTIN"></div>
+                </label>
+              </div>
+
+              <div class="step-actions">
+                <button type="submit" class="btn-login-solid">
+                  <span>Next: financial data</span>
+                  <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ============ STEP 4: FINANCIAL SETUP CHOICE (startup) ============ -->
+          <div class="step-view" id="step4-startup">
+            <h3 class="step-heading">How do you manage finances?</h3>
+            <p class="step-note">Connect a source and we'll import what we can, or enter the key numbers yourself.</p>
+
+            <div class="ob-options" id="finSetupOptions">
+              <div class="ob-option" data-fin-type="zoho">
+                <span class="ob-option__mark"></span>
+                <div>
+                  <h4>Zoho Books</h4>
+                  <p>Connect securely and import your ledger</p>
+                </div>
+              </div>
+              <div class="ob-option is-selected" data-fin-type="manual">
+                <span class="ob-option__mark"></span>
+                <div>
+                  <h4>Manual Entry</h4>
+                  <p>I'll enter the key numbers myself</p>
+                </div>
+              </div>
+              <div class="ob-option" data-fin-type="other" style="opacity:0.4; pointer-events:none;">
+                <span class="ob-option__mark"></span>
+                <div>
+                  <h4>QuickBooks, Xero &amp; others</h4>
+                  <p>Coming soon</p>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn-login-solid" id="btnNext4Startup">
+              <span>Continue</span>
+              <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- ============ STEP 5: MANUAL FINANCIAL ENTRY (startup) ============ -->
+          <div class="step-view" id="step5-startup">
+            <h3 class="step-heading" id="step5Title">Enter financial details</h3>
+            <p class="step-note">Runway and cash flow update live as you type.</p>
+
+            <p id="zohoMsg">Zoho Books connected. We imported what we could. Please fill in the rest.</p>
+
+            <form id="startupFinForm" novalidate>
+              <div class="field-row">
+                <label class="mk-field"><span>Cash in Bank (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="suCurrentCash" class="ob-input" min="0" required
+                      placeholder="0"></div>
+                </label>
+                <label class="mk-field"><span>Monthly Revenue (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="suMonthlyRevenue" class="ob-input" min="0"
+                      required placeholder="0"></div>
+                </label>
+              </div>
+              <div class="field-row">
+                <label class="mk-field"><span>Monthly Burn (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="suMonthlyBurn" class="ob-input" min="0" required
+                      placeholder="0"></div>
+                </label>
+                <label class="mk-field"><span>Total Funding Raised (&#8377;)<span class="req">*</span></span>
+                  <div class="mk-input-shell"><input type="number" id="suTotalFunding" class="ob-input" min="0" required
+                      placeholder="0"></div>
+                </label>
+              </div>
+              <label class="mk-field" style="margin-bottom:18px;"><span>Debt / Liabilities (&#8377;)<span
+                    class="req">*</span></span>
+                <div class="mk-input-shell"><input type="number" id="suDebt" class="ob-input" min="0" placeholder="0"
+                    required></div>
+              </label>
+
+              <div class="calc-panel">
+                <div>
+                  <div class="calc-panel__label">Runway</div>
+                  <div class="calc-panel__value"><span id="calcRunway">--</span> <span
+                      style="font-size:13px;opacity:.5;">months</span></div>
+                </div>
+                <div>
+                  <div class="calc-panel__label">Net Cash Flow</div>
+                  <div class="calc-panel__value"><span id="calcCashFlow">--</span> <span
+                      style="font-size:13px;opacity:.5;">/mo</span></div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <button type="submit" class="btn-login-solid" id="btnSuSubmit">
+                  <span>Create financial brain</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- The Enterprise / CFO step was removed with the persona.
+               The picker offers Individual and Startup only, and
+               POST /onboard/enterprise now returns 410 — it used to be
+               reachable and would set a profile key that auth.py then
+               refuses to sign in, permanently locking the account. -->
+
+
+        </div>
+      </div>
+
+      <footer class="auth-foot">
+        <span>&copy; 2026 MoneyKal</span>
+        <a href="security.html">Security &amp; Privacy</a>
+        <a href="#" data-terms-open>Terms &amp; Conditions</a>
+      </footer>
+
+    </main>
+
+    <!-- ================= RIGHT: MoneyKal product showcase =================
+         Four MoneyKal surfaces on a loop - Hisaab, Taxes, Ask MoneyKal and
+         Intelligence - carrying the same illustrative figures the marketing
+         pages use. Decorative, so the whole panel is hidden from assistive
+         technology; js/auth-showcase.js advances it. -->
+    <aside class="auth-canvas" aria-hidden="true">
+      <div class="auth-canvas__grid"></div>
+      <div class="auth-canvas__bloom"></div>
+
+      <div class="canvas-kicker"><span class="canvas-kicker__dot"></span>Financial Intelligence</div>
+
+      <div class="auth-stage">
+        <div class="auth-stage__deck" id="authDeck">
+
+          <!-- ---------- Scene 1: Hisaab ---------- -->
+          <section class="ashow" data-scene="hisaab">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:8.6s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Hisaab &middot; August</span>
+                  <span class="ashow__meta">10 entries</span>
+                </header>
+                <ul class="ashow__rows">
+                  <li class="ashow__row" style="--r:0">
+                    <span class="ashow__ico">&#128188;</span>
+                    <span class="ashow__label"><span class="ashow__name">August salary</span><span class="ashow__sub">Salary</span></span>
+                    <span class="ashow__amt is-in">+&#8377;1,18,000</span>
+                  </li>
+                  <li class="ashow__row" style="--r:1">
+                    <span class="ashow__ico">&#127968;</span>
+                    <span class="ashow__label"><span class="ashow__name">Rent</span><span class="ashow__sub">Rent / Housing</span></span>
+                    <span class="ashow__amt">&minus;&#8377;26,000</span>
+                  </li>
+                  <li class="ashow__row ashow__row--focus" style="--r:2">
+                    <span class="ashow__ico">&#128722;</span>
+                    <span class="ashow__label"><span class="ashow__name">Big Basket</span><span class="ashow__sub">Groceries</span></span>
+                    <span class="ashow__amt">&minus;&#8377;4,200</span>
+                  </li>
+                  <li class="ashow__row" style="--r:3">
+                    <span class="ashow__ico">&#128250;</span>
+                    <span class="ashow__label"><span class="ashow__name">Netflix</span><span class="ashow__sub">Subscriptions</span></span>
+                    <span class="ashow__amt">&minus;&#8377;649</span>
+                  </li>
+                  <li class="ashow__row" style="--r:4">
+                    <span class="ashow__ico">&#128187;</span>
+                    <span class="ashow__label"><span class="ashow__name">Freelance invoice</span><span class="ashow__sub">Freelance</span></span>
+                    <span class="ashow__amt is-in">+&#8377;18,000</span>
+                  </li>
+                </ul>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tl" style="--i:1; --fd:7.3s">
+                <span class="ashow__k">This month</span>
+                <div class="ashow__totals">
+                  <div><span class="ashow__sub">In</span><b class="is-in">&#8377;1,36,000</b></div>
+                  <div><span class="ashow__sub">Out</span><b>&#8377;53,619</b></div>
+                  <div><span class="ashow__sub">Net</span><b data-count="82381" data-prefix="&#8377;">&#8377;82,381</b></div>
+                </div>
+              </aside>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--br" style="--i:2; --fd:9.4s">
+                <span class="ashow__k">Where it went</span>
+                <ul class="ashow__bars">
+                  <li class="ashow__bar" style="--r:0"><span>Rent</span><b>&#8377;26,000</b><span class="ashow__track" style="--w:100%"><i></i></span></li>
+                  <li class="ashow__bar" style="--r:1"><span>Shopping</span><b>&#8377;14,000</b><span class="ashow__track" style="--w:54%"><i></i></span></li>
+                  <li class="ashow__bar" style="--r:2"><span>Groceries</span><b>&#8377;7,300</b><span class="ashow__track" style="--w:28%"><i></i></span></li>
+                </ul>
+              </aside>
+
+            </div>
+          </section>
+
+          <!-- ---------- Scene 2: Taxes ---------- -->
+          <section class="ashow" data-scene="taxes">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:9.1s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Taxes &middot; FY 2025&ndash;26</span>
+                  <span class="ashow__state">
+                    <i style="--s:0">Reading</i>
+                    <i style="--s:1">Matching</i>
+                    <i style="--s:2">Checking</i>
+                    <i style="--s:3">Done</i>
+                  </span>
+                </header>
+                <ul class="ashow__rows">
+                  <li class="ashow__row" style="--r:0">
+                    <span class="ashow__ico">&#128202;</span>
+                    <span class="ashow__label"><span class="ashow__name">Investments</span><span class="ashow__sub">Section 80C</span></span>
+                    <span class="ashow__amt is-in">&#8377;1,50,000</span>
+                  </li>
+                  <li class="ashow__row" style="--r:1">
+                    <span class="ashow__ico">&#127973;</span>
+                    <span class="ashow__label"><span class="ashow__name">Health insurance</span><span class="ashow__sub">Section 80D</span></span>
+                    <span class="ashow__amt is-in">&#8377;25,000</span>
+                  </li>
+                  <li class="ashow__row" style="--r:2">
+                    <span class="ashow__ico">&#127968;</span>
+                    <span class="ashow__label"><span class="ashow__name">House rent allowance</span><span class="ashow__sub">HRA</span></span>
+                    <span class="ashow__amt is-in">&#8377;96,000</span>
+                  </li>
+                  <li class="ashow__row ashow__row--focus" style="--r:3">
+                    <span class="ashow__ico">&#127974;</span>
+                    <span class="ashow__label"><span class="ashow__name">Home loan interest</span><span class="ashow__sub">Section 24(b)</span></span>
+                    <span class="ashow__amt is-in">&#8377;78,000</span>
+                  </li>
+                </ul>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tr" style="--i:1; --fd:7.8s">
+                <span class="ashow__k">Deductions found</span>
+                <div class="ashow__fig ashow__fig--accent" data-count="349000" data-prefix="&#8377;">&#8377;3,49,000</div>
+                <p class="ashow__note">Across four sections, read from the documents you uploaded.</p>
+              </aside>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--bl" style="--i:2; --fd:9.6s">
+                <span class="ashow__k">Regime check</span>
+                <div class="ashow__fig ashow__fig--sm">Old regime</div>
+                <p class="ashow__note">Wins by &#8377;18,400 on this year&rsquo;s figures.</p>
+              </aside>
+
+            </div>
+          </section>
+
+          <!-- ---------- Scene 3: Ask MoneyKal ---------- -->
+          <section class="ashow" data-scene="ask">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:8.2s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Tathya</span>
+                  <span class="ashow__meta">Grounded in your ledger</span>
+                </header>
+
+                <p class="ashow__q"><span data-typewriter="Can I afford a new car?" data-i18n-skip>Can I afford a new car?</span><span class="ashow__caret"></span></p>
+
+                <ul class="ashow__chips">
+                  <li style="--r:0">Hisaab</li>
+                  <li style="--r:1">Goals</li>
+                  <li style="--r:2">Upcoming</li>
+                  <li style="--r:3">Brain</li>
+                </ul>
+
+                <div class="ashow__answer">
+                  <p>On today&rsquo;s position, a &#8377;6.5L car is affordable, but it takes your emergency buffer under three months.</p>
+                  <ul class="ashow__figures">
+                    <li>Buffer 5.6 &rarr; 2.4 mo</li>
+                    <li>Available &#8377;4,82,000</li>
+                    <li>EMI &#8377;11,400/mo</li>
+                  </ul>
+                  <p class="ashow__basis">From available money, this month&rsquo;s spending and what is already due.</p>
+                </div>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tl" style="--i:1; --fd:7.5s">
+                <span class="ashow__k">Asked aloud</span>
+                <span class="ashow__wave">
+                  <i style="--r:0"></i><i style="--r:1"></i><i style="--r:2"></i><i style="--r:3"></i><i style="--r:4"></i>
+                  <i style="--r:5"></i><i style="--r:6"></i><i style="--r:7"></i><i style="--r:8"></i><i style="--r:9"></i>
+                </span>
+                <p class="ashow__note">Type it or say it, in English or Hindi.</p>
+              </aside>
+
+            </div>
+          </section>
+
+          <!-- ---------- Scene 4: Intelligence ---------- -->
+          <section class="ashow" data-scene="intelligence">
+            <div class="ashow__stack">
+
+              <article class="ashow__card ashow__card--main" style="--i:0; --fd:8.9s">
+                <header class="ashow__head">
+                  <span class="ashow__dot"></span>
+                  <span class="ashow__title">Intelligence &middot; Simulation</span>
+                  <span class="ashow__meta">12 months</span>
+                </header>
+
+                <div class="ashow__choices">
+                  <span class="ashow__choice is-on">Buy a car</span>
+                  <span class="ashow__choice">Take a loan</span>
+                  <span class="ashow__choice">Increase savings</span>
+                </div>
+
+                <div class="ashow__split">
+                  <div>
+                    <span class="ashow__k">Current path</span>
+                    <div class="ashow__fig ashow__fig--sm" data-count="412000" data-prefix="&#8377;">&#8377;4,12,000</div>
+                  </div>
+                  <span class="ashow__arrow">
+                    <svg viewBox="0 0 60 24" fill="none">
+                      <path d="M2 12h50" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                      <path d="M46 6l7 6-7 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                  </span>
+                  <div>
+                    <span class="ashow__k">With this decision</span>
+                    <div class="ashow__fig ashow__fig--sm ashow__fig--accent" data-count="218400" data-prefix="&#8377;">&#8377;2,18,400</div>
+                  </div>
+                </div>
+
+                <ul class="ashow__bars" style="margin-top:15px">
+                  <li class="ashow__bar" style="--r:0"><span>Emergency buffer</span><b>2.4 mo</b><span class="ashow__track" style="--w:42%"><i></i></span></li>
+                  <li class="ashow__bar" style="--r:1"><span>Goal progress</span><b>61%</b><span class="ashow__track" style="--w:61%"><i></i></span></li>
+                </ul>
+              </article>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--tr" style="--i:1; --fd:7.7s">
+                <span class="ashow__k">Forward paths</span>
+                <svg class="ashow__fan" viewBox="0 0 170 88" fill="none">
+                  <path class="fan-cone" d="M78 46 C 100 40, 126 26, 164 16 L164 76 C 126 68, 100 56, 78 46 Z"></path>
+                  <path class="fan-hist" style="--r:0" d="M6 68 L18 62 L30 65 L42 56 L54 59 L66 49 L78 46"></path>
+                  <path class="fan-p fan-p1" style="--r:1" d="M78 46 C 100 40, 126 26, 164 16"></path>
+                  <path class="fan-p fan-p2" style="--r:2" d="M78 46 C 102 45, 130 44, 164 44"></path>
+                  <path class="fan-p fan-p3" style="--r:3" d="M78 46 C 100 52, 126 66, 164 76"></path>
+                </svg>
+              </aside>
+
+              <aside class="ashow__card ashow__card--sat ashow__card--bl" style="--i:2; --fd:9.3s">
+                <span class="ashow__k">Goal timeline</span>
+                <div class="ashow__fig ashow__fig--sm">Dec &rarr; Feb</div>
+                <p class="ashow__note">Two months later. Holding &#8377;6,000 back keeps it on date.</p>
+              </aside>
+
+            </div>
+          </section>
+
+        </div>
+
+        <div class="auth-stage__rail">
+          <span class="astage-tab">Hisaab</span>
+          <span class="astage-tab">Taxes</span>
+          <span class="astage-tab">Tathya</span>
+          <span class="astage-tab">Intelligence</span>
+        </div>
+
+        <div class="auth-stage__copy">
+          <div class="astage-copy">
+            <h2>Every rupee, <em>accounted for.</em></h2>
+            <p>Money in, money out, categorised as it lands. Hisaab keeps the running answer to where it went.</p>
+          </div>
+          <div class="astage-copy">
+            <h2>The deductions <em>you would have missed.</em></h2>
+            <p>MoneyKal reads your documents, matches them to sections, and checks which regime actually wins.</p>
+          </div>
+          <div class="astage-copy">
+            <h2>Ask it the way <em>you think it.</em></h2>
+            <p>Answers come from your own figures, and the figure used is shown, so you can check the reasoning.</p>
+          </div>
+          <div class="astage-copy">
+            <h2>See the decision <em>before you make it.</em></h2>
+            <p>Run the choice forward and read the trade-off: buffer, goal date and monthly cash flow together.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <!-- Must load before any script that calls the API: it resolves the
+       backend base URL for local, tunnelled and deployed builds alike. -->
+  <script src="js/config.js?v=1"></script>
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <!-- Terms content, then the dialog that renders it. Both must be in place
+       before auth.js, which gates account creation on the consent checkbox. -->
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+  <script src="js/signup-rules.js?v=1"></script>
+  <script src="js/auth.js?v=5"></script>
+  <script src="js/auth-showcase.js?v=1"></script>
+</body>
+
+</html>

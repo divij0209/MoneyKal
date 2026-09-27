@@ -1,0 +1,374 @@
+/* ==========================================================================
+   MoneyKal — PIN surfaces
+
+   Two places, one look:
+     1. unlock.html          — the full-page lock screen
+     2. Account ▸ Security   — set / change / turn off the PIN
+
+   Every colour here is a token from css/login.css (the auth palette) or
+   css/app-theme.css (the in-app palette), so both surfaces follow the
+   app-wide theme without restating a single hex value. Nothing in this file
+   decides the theme; it only consumes it.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. LOCK SCREEN
+   ========================================================================== */
+
+/* The auth pages use a two-column shell with a marketing panel. A lock screen
+   has nothing to sell — the user already bought in — so this is a single
+   centred column, reusing the same topbar, footer and field styling. */
+.pin-shell {
+  min-height: 100vh;
+  min-height: 100dvh;          /* mobile browsers whose chrome hides on scroll */
+  display: flex;
+  flex-direction: column;
+  background: var(--mk-black);
+}
+
+.pin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px clamp(18px, 5vw, 48px);
+}
+
+.pin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 18px 40px;
+}
+
+.pin-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--mk-panel);
+  border: 1px solid var(--mk-line);
+  border-radius: 18px;
+  box-shadow: var(--mk-card-shadow);
+  padding: clamp(26px, 5vw, 38px) clamp(22px, 5vw, 34px) 30px;
+  text-align: center;
+}
+
+.pin-lockmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  color: var(--mk-cyan);
+  background: var(--mk-cyan-06);
+  border: 1px solid var(--mk-cyan-20);
+}
+
+.pin-title {
+  margin: 0 0 6px;
+  font-family: 'Poppins', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: clamp(19px, 2.4vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--mk-off);
+}
+
+.pin-sub {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--mk-off-dim);
+}
+
+/* When the account address is known it replaces the generic line, so the
+   emphasis belongs on the address itself. */
+.pin-sub--account {
+  color: var(--mk-off);
+  font-weight: 500;
+  word-break: break-all;        /* long addresses must not widen the card */
+}
+
+.pin-fieldlabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+}
+
+/* The PIN field.
+
+   `type="password"` is doing the masking, so the characters are already dots;
+   the wide tracking and centred alignment are what make it read as a PIN pad
+   rather than a password box. Deliberately NOT four separate boxes: those
+   break paste, fight password managers, confuse screen readers, and would
+   have to be rebuilt anyway the moment the PIN is six digits instead of four. */
+.pin-input {
+  width: 100%;
+  height: 62px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--mk-line-strong);
+  background: var(--mk-elev);
+  color: var(--mk-off);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.42em;
+  /* The tracking adds a trailing gap after the last character, which throws
+     the value off-centre. Half of it back as padding re-centres the row. */
+  text-indent: 0.42em;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.pin-input::placeholder {
+  color: var(--mk-off-ghost);
+  letter-spacing: 0.42em;
+}
+
+.pin-input:hover:not(:focus) { border-color: var(--mk-line-strong); background: var(--mk-elev-2); }
+
+.pin-input:focus {
+  outline: none;
+  border-color: var(--mk-cyan);
+  background: var(--mk-elev-2);
+  box-shadow: 0 0 0 3px var(--mk-cyan-12);
+}
+
+.pin-input:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.pin-hint {
+  margin: 9px 0 20px;
+  font-size: 12px;
+  color: var(--mk-off-faint);
+}
+
+.pin-submit { width: 100%; }
+
+.pin-alt {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mk-line-soft);
+}
+
+/* The three-day countdown. Quiet, because it is context rather than a
+   warning — right up until the day it runs out, which is still not an error. */
+.pin-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mk-off-faint);
+}
+
+.pin-secure { margin-top: 4px; }
+
+.pin-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 20px clamp(18px, 5vw, 48px) 26px;
+}
+
+/* While the lock screen checks for an unlocked tab, nothing is shown. The
+   check takes a fraction of a second; see unlock.html. */
+html.pin-checking .pin-card,
+html.pin-checking .pin-secure { visibility: hidden; }
+
+/* The auth error banner is hidden until something goes wrong; login.html sets
+   this inline, and this page needs the same starting state. */
+.pin-page .auth-error { display: none; margin-bottom: 16px; }
+
+@media (max-width: 420px) {
+  .pin-card { padding: 24px 18px 26px; border-radius: 16px; }
+  .pin-input { height: 56px; font-size: 22px; }
+}
+
+/* ==========================================================================
+   2. ACCOUNT ▸ SECURITY — PIN management
+
+   Lives inside the account dialog, so it borrows that dialog's own tokens
+   (--acct-*) where they exist and the app theme's elsewhere.
+   ========================================================================== */
+
+.acct-pin {
+  margin: 18px 0 4px;
+  padding: 16px 16px 14px;
+  border: 1px solid var(--mk-line, rgba(127, 127, 127, 0.18));
+  border-radius: 12px;
+  background: var(--mk-wash, rgba(127, 127, 127, 0.04));
+}
+
+.acct-pin__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.acct-pin__title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: inherit;
+}
+
+/* The on/off badge. Colour is the only difference, so the text says the state
+   too — "PIN on" / "Not set" — rather than relying on green-vs-grey alone. */
+.acct-pin__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid currentColor;
+  opacity: 0.9;
+}
+
+.acct-pin__badge--on  { color: var(--mk-cyan, #00B4C8); }
+.acct-pin__badge--off { color: var(--mk-off-faint, rgba(127, 127, 127, 0.7)); }
+
+.acct-pin__lede {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  opacity: 0.72;
+}
+
+.acct-pin__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.acct-pin__form { margin-top: 14px; }
+.acct-pin__form[hidden] { display: none; }
+
+.acct-pin__row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.acct-pin__field {
+  flex: 1 1 140px;
+  min-width: 0;                 /* lets the row wrap instead of overflowing */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.acct-pin__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.acct-pin__input {
+  width: 100%;
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 9px;
+  border: 1px solid var(--mk-line-strong, rgba(127, 127, 127, 0.3));
+  background: var(--mk-elev, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 13.5px;
+}
+
+.acct-pin__input:focus {
+  outline: none;
+  border-color: var(--mk-cyan, #00B4C8);
+  box-shadow: 0 0 0 3px var(--mk-cyan-12, rgba(0, 180, 200, 0.12));
+}
+
+/* Status line under the form. `role="status"` on the element means a screen
+   reader announces changes without the focus moving. */
+.acct-pin__status {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  min-height: 1em;
+}
+
+.acct-pin__status--err { color: var(--mk-danger, #D14343); }
+.acct-pin__status--ok  { color: var(--mk-cyan, #00B4C8); }
+
+/* ==========================================================================
+   3. FIRST-TIME PIN SETUP — a step inside login.html
+
+   Not its own page, on purpose: the account password needed by
+   POST /auth/pin/set is the one the user typed a second ago, and keeping this
+   on the same document means it can be reused straight from memory instead of
+   being stored anywhere or asked for twice.
+   ========================================================================== */
+
+/* The sign-in form and this step are alternatives, never both at once. The
+   body flag is what swaps them, so a single class on <body> drives the whole
+   change rather than six separate `hidden` attributes. */
+body.pin-setup-open #loginForm,
+body.pin-setup-open .auth-utility-row,
+body.pin-setup-open .mk-consent,
+body.pin-setup-open .auth-tabs,
+body.pin-setup-open .auth-eyebrow,
+body.pin-setup-open .auth-title,
+body.pin-setup-open .auth-subtitle,
+body.pin-setup-open .pin-inline-note,
+body.pin-setup-open #loginError { display: none; }
+
+.pin-setup[hidden] { display: none; }
+
+.pin-setup {
+  text-align: center;
+  animation: pin-setup-in 0.28s ease both;
+}
+
+@keyframes pin-setup-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Someone who prefers less motion gets the step without the slide. */
+@media (prefers-reduced-motion: reduce) {
+  .pin-setup { animation: none; }
+}
+
+.pin-setup .auth-error { display: none; margin-bottom: 14px; text-align: left; }
+
+.pin-setup .pin-title { margin-top: 2px; }
+
+/* The second field in the pair needs air above it; the first sits directly
+   under the heading and does not. */
+.pin-fieldlabel--spaced { margin-top: 16px; }
+
+.pin-setup .pin-input { margin-bottom: 0; }
+
+.pin-setup .pin-hint { margin-bottom: 18px; }
+
+/* The one-line explanation under "Keep me signed in on this device". Quiet,
+   because it explains a checkbox rather than asking for anything. */
+.pin-inline-note {
+  margin: -2px 0 16px 28px;    /* aligned with the checkbox label, not its box */
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mk-off-faint);
+}
+
+/* The device checkbox sits on its own row, so it does not compete with
+   "Forgot password?" for the eye. */
+.auth-utility-row--device { margin-top: -6px; margin-bottom: 4px; }

@@ -1,0 +1,22 @@
+# Keep secrets and local state out of the Docker build context.
+#
+# The Dockerfile copies backend/ wholesale, so without this file a local
+# `docker build` bakes backend/.env -- the database URL, JWT secret and every API
+# key -- into the image. Render builds from the git checkout, where .env does not
+# exist, so this matters most on a developer's machine, which is exactly where
+# an image is most likely to be pushed somewhere it should not be.
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local databases and their backups.
+**/*.db
+**/*.db.bak*
+**/*.sqlite*
+
+# Nothing the API image uses.
+.git
+**/__pycache__
+**/node_modules
+mobile/
+marketing/

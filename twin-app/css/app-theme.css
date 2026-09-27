@@ -1,0 +1,781 @@
+/* ==========================================================================
+   MoneyKal — application design system
+   Brings Hisaab, Ask MoneyKal, Simulate and Reports up to the
+   Overview's visual language.
+
+   OVERVIEW IS THE REFERENCE AND IS NOT MODIFIED BY THIS FILE.
+   The token blocks below carry the *same values* as the ones in overview.css
+   but are scoped one class lower — `html[data-ov-theme] body` (0,1,2) versus
+   overview.css's `html[data-ov-theme] body.ov-active` (0,2,2) — so on the
+   Overview the original rules still win and nothing there changes. Everywhere
+   else, these tokens are what the shared components in styles.css read, which
+   is why most of this file is tokens rather than per-page restyling.
+
+   Load order matters: styles.css -> app-theme.css -> overview.css.
+   ========================================================================== */
+
+/* ============ DARK — black + cyan (also the fallback if unset) ============ */
+html:not([data-ov-theme="light"]) body{
+  --bg:#000000;
+  --surface:#08090a;
+  --surface-2:#0d0f10;
+  --surface-3:#16191b;
+  --ink:#ffffff;
+  --ink-muted:#a8b0b6;
+  --ink-faint:#6e767c;
+  --line:rgba(255,255,255,0.08);
+  --line-strong:rgba(255,255,255,0.16);
+  --nav-hover-text:#ffffff;
+
+  --accent:#00e5ff;
+  --accent-tint:rgba(0,229,255,0.12);
+  --primary:#00e5ff;
+  --primary-dark:#5cefff;
+  --primary-text:#000a0c;
+  --primary-tint:rgba(0,229,255,0.12);
+
+  --warn:#c9d1d9;
+  --warn-tint:rgba(201,209,215,0.10);
+  --status-good:#00e5ff;
+  --status-warning:#00e5ff;
+  --status-serious:#00e5ff;
+  --status-critical:#00e5ff;
+  --status-neutral:#6e767c;
+
+  --chart-blue:#00e5ff;
+  --chart-orange:#0098ad;
+  --chart-aqua:#7cecf9;
+  --chart-yellow:#a8b0b6;
+  --chart-magenta:#e6edf3;
+  --chart-violet:#4a5257;
+  --chart-green:#00e5ff;
+  --chart-red:#c9d1d9;
+  --chart-grid:rgba(255,255,255,0.05);
+  --chart-axis:#6e767c;
+
+  --ov-sidebar-bg:#000000;
+  --ov-card-bg:linear-gradient(180deg, #0c0e0f, #060708);
+  --ov-card-shadow:none;
+  --ov-card-shadow-hover:0 10px 30px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,229,255,0.08);
+  --ov-card-border-hover:rgba(0,229,255,0.40);
+  --ov-nav-active-bg:linear-gradient(90deg, rgba(0,229,255,0.16), rgba(0,229,255,0.02));
+  --ov-btn-bg:linear-gradient(135deg, #5cefff, #00e5ff);
+  --ov-btn-bg-hover:linear-gradient(135deg, #8af5ff, #22ecff);
+  --ov-btn-shadow:0 4px 18px rgba(0,229,255,0.25);
+  --ov-on-accent:#000a0c;
+  --ov-accent-border:rgba(0,229,255,0.35);
+  --ov-accent-hover:rgba(0,229,255,0.22);
+  --ov-pos:#00e5ff;
+  --ov-neg:#c9d1d9;
+  --ov-pos-tint:rgba(0,229,255,0.12);
+  --ov-neg-tint:rgba(255,255,255,0.07);
+  --ov-ring-track:rgba(255,255,255,0.08);
+}
+
+/* ============ LIGHT — warm editorial off-white + cyan ============ */
+html[data-ov-theme="light"] body{
+  --bg:#e7ece3;
+  --surface:#f0f3ec;
+  --surface-2:#e2e8dc;
+  --surface-3:#d7dfd0;
+  --ink:#1b201c;
+  --ink-muted:#5b6459;
+  --ink-faint:#87907f;
+  --line:rgba(27,32,28,0.12);
+  --line-strong:rgba(27,32,28,0.22);
+  --nav-hover-text:#1b201c;
+
+  --accent:#03899e;
+  --accent-tint:rgba(3,137,158,0.10);
+  --primary:#03899e;
+  --primary-dark:#026b7c;
+  --primary-text:#ffffff;
+  --primary-tint:rgba(3,137,158,0.10);
+
+  --warn:#6b736b;
+  --warn-tint:rgba(107,115,107,0.10);
+  --status-good:#03899e;
+  --status-warning:#03899e;
+  --status-serious:#03899e;
+  --status-critical:#03899e;
+  --status-neutral:#87907f;
+
+  --chart-blue:#03899e;
+  --chart-orange:#0ab4cf;
+  --chart-aqua:#6fcbd8;
+  --chart-yellow:#8a9385;
+  --chart-magenta:#b9c2b3;
+  --chart-violet:#4c554a;
+  --chart-green:#03899e;
+  --chart-red:#6b736b;
+  --chart-grid:rgba(27,32,28,0.08);
+  --chart-axis:#87907f;
+
+  --ov-sidebar-bg:#dfe5d9;
+  --ov-card-bg:linear-gradient(180deg, #f4f6f0, #eef2e9);
+  --ov-card-shadow:0 1px 2px rgba(38,46,36,0.05), 0 8px 24px rgba(38,46,36,0.05);
+  --ov-card-shadow-hover:0 2px 4px rgba(38,46,36,0.07), 0 14px 32px rgba(38,46,36,0.10);
+  --ov-card-border-hover:rgba(3,137,158,0.45);
+  --ov-nav-active-bg:linear-gradient(90deg, rgba(3,137,158,0.14), rgba(3,137,158,0.02));
+  --ov-btn-bg:linear-gradient(135deg, #0aa6bf, #037f93);
+  --ov-btn-bg-hover:linear-gradient(135deg, #0bb8d3, #038ea3);
+  --ov-btn-shadow:0 4px 14px rgba(3,137,158,0.22);
+  --ov-on-accent:#ffffff;
+  --ov-accent-border:rgba(3,137,158,0.35);
+  --ov-accent-hover:rgba(3,137,158,0.16);
+  --ov-pos:#03899e;
+  --ov-neg:#6b736b;
+  --ov-pos-tint:rgba(3,137,158,0.12);
+  --ov-neg-tint:rgba(27,32,28,0.06);
+  --ov-ring-track:rgba(27,32,28,0.10);
+}
+
+body{
+  --font-display-serif:'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ============ Shared shell ============ */
+.shell{ background-color:var(--bg); }
+.sidebar{ background:var(--ov-sidebar-bg); border-right:1px solid var(--line); }
+.navitem.is-active{
+  background:var(--ov-nav-active-bg);
+  color:var(--accent);
+  box-shadow:inset 2px 0 0 var(--accent);
+}
+.navitem.is-active svg{ color:var(--accent); }
+
+/* Brand lockup — the real MoneyKal mark, as used on Home and Login.
+   Only the mark itself is sized here; the existing brand typography and
+   padding are left alone so the sidebar is otherwise unchanged. */
+.sidebar__brand-logo{
+  width:22px; height:22px;
+  display:block;
+  flex-shrink:0;
+}
+.sidebar__brand-logo svg,
+.sidebar__brand-logo img{ width:100%; height:100%; display:block; object-fit:contain; }
+
+/* ============ Topbar (hidden on Overview, which has its own header) ======= */
+.topbar{
+  align-items:flex-end;
+  padding-bottom:22px;
+  margin-bottom:32px;
+  border-bottom:1px solid var(--line);
+}
+.topbar__title h1{
+  font-family:var(--font-display-serif);
+  font-weight:400;
+  font-size:32px;
+  letter-spacing:-0.015em;
+  color:var(--ink);
+}
+.topbar__title p{ font-size:13px; color:var(--ink-muted); margin-top:6px; }
+
+/* The one theme control on these pages, styled like the Overview's */
+#theme-toggle{
+  width:38px; height:38px;
+  border-radius:10px !important;
+  background:var(--surface) !important;
+  border:1px solid var(--line) !important;
+  color:var(--ink-muted) !important;
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color 0.15s ease, color 0.15s ease;
+}
+#theme-toggle:hover{ border-color:var(--accent) !important; color:var(--accent) !important; }
+
+/* ---------- language control ----------
+   One compact EN | हिं, sized and shaped like the theme control beside it so
+   the two read as a pair. The active half is bold: js/i18n.js writes the
+   markup, this only styles it. */
+.lang-toggle{
+  height:38px;
+  padding:0 11px;
+  border-radius:10px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  color:var(--ink-faint);
+  font-family:var(--font-body);
+  font-size:11.5px;
+  letter-spacing:0.06em;
+  line-height:1;
+  display:inline-flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+  cursor:pointer;
+  transition:border-color 0.15s ease, color 0.15s ease;
+}
+.lang-toggle b{ color:var(--ink); font-weight:600; }
+.lang-toggle:hover{ border-color:var(--accent); color:var(--accent); }
+.lang-toggle:hover b{ color:var(--accent); }
+.lang-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+#btnLogout{ color:var(--ink-faint) !important; }
+#btnLogout:hover{ color:var(--accent) !important; }
+
+/* ==========================================================================
+   Flat section language for the other views.
+   Panels lose their box; a tracked uppercase label and a hairline do the work,
+   exactly as on the Overview. Scoped by view id so Overview is never matched.
+   ========================================================================== */
+#view-hisaab .panel,
+#view-reports .panel,
+#view-simulate .panel,
+#view-alerts .panel{
+  background:none;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  padding:0;
+  margin-top:0 !important;
+}
+#view-hisaab .panel + .panel,
+#view-reports .panel + .panel,
+#view-simulate .panel + .panel{
+  border-top:1px solid var(--line);
+  padding-top:30px;
+  margin-top:30px !important;
+}
+#view-hisaab .panel__head,
+#view-reports .panel__head,
+#view-simulate .panel__head,
+#view-alerts .panel__head{
+  align-items:baseline;
+  margin-bottom:18px;
+}
+#view-hisaab .panel__head h3,
+#view-reports .panel__head h3,
+#view-simulate .panel__head h3,
+#view-alerts .panel__head h3{
+  font-family:var(--font-body);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.13em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+}
+
+/* Buttons — the Overview's .ov-btn shape */
+.view .btn,
+.view .btn-outline{
+  border-radius:10px;
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  color:var(--ink-muted);
+  font-size:13px;
+  font-weight:500;
+  padding:10px 17px;
+  transition:border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.view .btn:hover,
+.view .btn-outline:hover{ border-color:var(--accent); color:var(--ink); background:var(--surface-2); }
+.view .btn--primary{
+  background:var(--ov-btn-bg);
+  border-color:transparent;
+  color:var(--ov-on-accent);
+  font-weight:600;
+  box-shadow:var(--ov-btn-shadow);
+}
+.view .btn--primary:hover{ background:var(--ov-btn-bg-hover); color:var(--ov-on-accent); }
+
+/* Inputs */
+.view .ob-input,
+.view textarea.ob-input,
+.view select.ob-input{
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--ink);
+  font-size:13.5px;
+  padding:11px 13px;
+  transition:border-color 0.15s ease;
+}
+.view .ob-input:focus{ outline:none; border-color:var(--ov-accent-border); }
+
+/* Chips */
+.view .chip{
+  background:none;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--ink-muted);
+  font-size:12.5px;
+  padding:8px 15px;
+  transition:border-color 0.15s ease, color 0.15s ease;
+}
+.view .chip:hover{ border-color:var(--ov-accent-border); color:var(--accent); }
+
+/* Metric strips reused outside Overview (Hisaab totals) — figures, not cards */
+#view-hisaab .stat-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:0;
+  margin-bottom:0;
+}
+#view-hisaab .stat-card{
+  background:none;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  padding:0 26px;
+  display:flex;
+  flex-direction:column-reverse;
+  align-items:flex-start;
+  gap:8px;
+}
+#view-hisaab .stat-card:first-child{ padding-left:0; }
+#view-hisaab .stat-card + .stat-card{ border-left:1px solid var(--line); }
+#view-hisaab .stat-card__label{
+  font-size:11px; letter-spacing:0.09em; text-transform:uppercase;
+  color:var(--ink-faint); margin:0;
+}
+#view-hisaab .stat-card__value{
+  font-family:var(--font-display-serif);
+  font-weight:400;
+  font-size:28px;
+  letter-spacing:-0.01em;
+  margin:0;
+}
+
+/* ============ Hisaab ============ */
+#view-hisaab .hisaab-summary{ margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--line); }
+#view-hisaab .hisaab-cat-list li{ border-bottom:1px solid var(--line); padding:10px 0; }
+#view-hisaab .hisaab-row{ padding:13px 0; }
+#view-hisaab .hisaab-row__amount--in{ color:var(--ov-pos); }
+#view-hisaab .hisaab-row__amount--out{ color:var(--ov-neg); }
+#view-hisaab .hisaab-row__action-btn{ text-decoration:none; border-bottom:1px solid transparent; }
+#view-hisaab .hisaab-row__action-btn:hover{ color:var(--accent); border-bottom-color:var(--ov-accent-border); }
+#view-hisaab .decision-list__title{ font-size:13.5px; }
+
+/* ============ Ask Twin ============ */
+#view-ask .chat-glow-bg{
+  background:radial-gradient(ellipse 60% 50% at 50% 0%, var(--accent-tint), transparent 70%);
+  opacity:0.5;
+}
+#view-ask .chat-history-sidebar{
+  background:none;
+  border-right:1px solid var(--line);
+  padding-right:18px;
+}
+#view-ask .btn-new-chat-gemini{
+  border-radius:10px;
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  color:var(--ink-muted);
+}
+#view-ask .btn-new-chat-gemini:hover{ border-color:var(--accent); color:var(--accent); }
+#view-ask .history-label{
+  font-size:11px; font-weight:600; letter-spacing:0.13em;
+  text-transform:uppercase; color:var(--ink-faint);
+  margin:22px 0 10px;
+}
+#view-ask .chat-panel{
+  background:none;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  padding-left:26px;
+}
+/* The shared rule paints this with a blue→purple→pink gradient; reset the
+   clip/fill so it renders as plain type in the app palette. */
+#view-ask .chat-greeting h2{
+  font-family:var(--font-display-serif);
+  font-weight:400;
+  font-size:34px;
+  letter-spacing:-0.015em;
+  background:none;
+  -webkit-background-clip:border-box;
+  background-clip:border-box;
+  -webkit-text-fill-color:currentColor;
+  color:var(--ink);
+  opacity:1;
+}
+#view-ask .chat-greeting h2 span{ color:var(--accent); font-style:italic; }
+#view-ask .bubble{ font-size:14px; line-height:1.65; }
+#view-ask .bubble--twin{
+  background:none;
+  border-left:1px solid var(--ov-accent-border);
+  border-radius:0;
+  padding-left:16px;
+  color:var(--ink);
+  max-width:70ch;
+}
+#view-ask .bubble--user{
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  backdrop-filter:none;
+}
+#view-ask .chat-input{
+  border-radius:999px;
+  border:1px solid var(--line-strong);
+  background:var(--surface);
+  transition:border-color 0.18s ease;
+}
+#view-ask .chat-input:focus-within{ border-color:var(--ov-accent-border); }
+#view-ask .btn-send-gemini{
+  background:var(--accent-tint);
+  border:1px solid var(--ov-accent-border);
+  color:var(--accent);
+  border-radius:50%;
+}
+#view-ask .btn-send-gemini:hover{ background:var(--ov-accent-hover); }
+#view-ask .btn-voice-gemini,
+#view-ask .btn-attach{ color:var(--ink-faint); }
+#view-ask .btn-voice-gemini:hover,
+#view-ask .btn-attach:hover{ color:var(--accent); }
+#view-ask .chat-note{ font-size:11.5px; color:var(--ink-faint); }
+
+/* ============ Simulate ============ */
+#view-simulate .sim-layout{ gap:44px; }
+#view-simulate .sim-form{ border-right:1px solid var(--line); padding-right:34px; }
+#view-simulate .field > span{
+  font-size:11px; font-weight:600; letter-spacing:0.11em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+#view-simulate .field > span b{ color:var(--accent); letter-spacing:0; text-transform:none; }
+#view-simulate .empty-state{
+  border:none;
+  border-left:1px solid var(--line);
+  border-radius:0;
+  padding:4px 0 4px 18px;
+  text-align:left;
+  background:none;
+}
+#view-simulate .sim-section__title,
+#view-simulate .sim-summary-card__label{
+  font-size:11px; font-weight:600; letter-spacing:0.13em;
+  text-transform:uppercase; color:var(--ink-faint);
+}
+#view-simulate .sim-summary-card,
+#view-simulate .compare-card,
+#view-simulate .impact-tile,
+#view-simulate .outcome-card{
+  background:none;
+  border:none;
+  border-left:1px solid var(--line);
+  border-radius:0;
+  padding:2px 0 2px 18px;
+}
+#view-simulate .sim-summary-grid,
+#view-simulate .compare-grid,
+#view-simulate .impact-grid{ gap:22px 0; }
+#view-simulate .compare-card__after,
+#view-simulate .impact-tile__value,
+#view-simulate .outcome-card__row b{
+  font-family:var(--font-display-serif);
+  font-weight:400;
+  font-size:19px;
+}
+#view-simulate .sim-scenario-text{
+  font-family:var(--font-display-serif);
+  font-style:normal;
+  font-size:21px;
+  color:var(--ink);
+  line-height:1.5;
+}
+#view-simulate .sim-trace{ background:none; border-top:1px solid var(--line); border-radius:0; padding:14px 0 0; }
+#view-simulate .pipe-step{ border-bottom:1px solid var(--line); }
+
+/* ============ Reports ============ */
+#view-reports .brief-list li{ font-size:14px; line-height:1.65; }
+#view-reports .metric-row{ border-bottom:1px solid var(--line); }
+#view-reports .metric-row__value{
+  font-family:var(--font-display-serif);
+  font-weight:400;
+  font-size:19px;
+}
+#view-reports table{ width:100%; border-collapse:collapse; }
+#view-reports th{
+  text-align:left;
+  font-size:10.5px; font-weight:600; letter-spacing:0.1em;
+  text-transform:uppercase; color:var(--ink-faint);
+  padding:10px 12px 10px 0;
+  border-bottom:1px solid var(--line);
+}
+#view-reports td{
+  font-size:13px; color:var(--ink);
+  padding:12px 12px 12px 0;
+  border-bottom:1px solid var(--line);
+}
+
+
+
+/* ============ Hisaab spacing fixes ============ */
+/* The by-category block is rendered inside #hisaabSummary and carries an
+   inline margin the panel reset above cancels — restore real separation. */
+#view-hisaab #hisaabSummary .panel{
+  margin-top:34px !important;
+  padding-top:26px;
+  border-top:1px solid var(--line);
+}
+#view-hisaab .chat-note{ text-align:left; padding:0; }
+
+/* ============ VARTA voice overlay ============
+   The shared orb encodes its state in blue / red / green gradients. States stay
+   distinguishable through their existing animations, so recolour to the cyan
+   ramp and keep the palette to black, white and cyan. */
+.voice-orb{
+  background:radial-gradient(circle at 30% 30%, #d7fbff, #00e5ff);
+  box-shadow:0 0 40px rgba(0,229,255,0.40), inset 0 0 20px rgba(255,255,255,0.35);
+}
+.voice-orb-ring{ border-color:rgba(0,229,255,0.5); }
+.state-processing .voice-orb{
+  background:radial-gradient(circle at 50% 0%, #ffffff, #00b8cc);
+  box-shadow:0 0 40px rgba(0,229,255,0.45), inset 0 0 20px rgba(255,255,255,0.35);
+}
+.state-speaking .voice-orb{
+  background:radial-gradient(circle at 70% 30%, #eafdff, #00c8dc);
+  box-shadow:0 0 60px rgba(0,229,255,0.60), inset 0 0 20px rgba(255,255,255,0.35);
+}
+/* Redefined (same name, later in the cascade) to drop the blue glow */
+@keyframes orb-breathe {
+  0%   { transform: scale(1);    box-shadow: 0 0 40px rgba(0,229,255,0.40); }
+  100% { transform: scale(1.05); box-shadow: 0 0 60px rgba(0,229,255,0.60); }
+}
+.voice-status{ font-family:var(--font-display-serif); font-weight:400; }
+.voice-btn{ border-color:var(--ov-accent-border); color:var(--accent); }
+
+@media (max-width: 900px){
+  #view-simulate .sim-form{ border-right:none; padding-right:0; }
+  #view-ask .chat-panel{ padding-left:0; }
+  #view-hisaab .stat-grid{ grid-template-columns:1fr; }
+  #view-hisaab .stat-card{ padding:16px 0; }
+  #view-hisaab .stat-card + .stat-card{ border-left:none; border-top:1px solid var(--line); }
+}
+
+/* Form controls do not inherit type from their container by default, so a
+   button's label silently falls back to the UA font. Inheriting the family
+   (not the size, which components set themselves) keeps every control inside
+   the two-font system. */
+/* Form controls do not inherit type from their container by default, so a
+   button's label silently falls back to the UA font. Inheriting the family
+   (not the size, which components set themselves) keeps every control inside
+   the two-font system. */
+button, input, select, textarea, optgroup {
+  font-family: inherit;
+}
+
+/* ============ Floating Right-Side Call Button ============ */
+.floating-call-btn {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 40px;
+  background: linear-gradient(135deg, #00e5ff, #0098ad);
+  color: #000a0c;
+  border: 1px solid rgba(0, 229, 255, 0.6);
+  font-family: var(--font-display-serif);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 229, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.floating-call-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(0, 229, 255, 0.5), 0 4px 12px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, #5cefff, #00e5ff);
+}
+
+.floating-call-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.floating-call-btn svg {
+  flex-shrink: 0;
+  stroke: #000a0c;
+  animation: call-icon-wiggle 3s ease-in-out infinite;
+}
+
+.floating-call-btn__pulse {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 42px;
+  border: 2px solid rgba(0, 229, 255, 0.8);
+  animation: call-pulse 2s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes call-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.25, 1.4); opacity: 0; }
+}
+
+@keyframes call-icon-wiggle {
+  0%, 80%, 100% { transform: rotate(0deg); }
+  85% { transform: rotate(-12deg); }
+  90% { transform: rotate(12deg); }
+  95% { transform: rotate(-6deg); }
+}
+
+@media (max-width: 600px) {
+  .floating-call-btn {
+    bottom: 20px;
+    right: 20px;
+    padding: 12px;
+    border-radius: 50%;
+  }
+  .floating-call-btn__label {
+    display: none;
+  }
+  .floating-call-btn__pulse {
+    border-radius: 50%;
+  }
+}
+
+
+/* ============ Varta sidebar entry (an action, not a destination) ==========
+   The other sidebar items carry their label as a raw text node, which the
+   720px rule `.navitem span{display:none}` does not touch. Varta's label is a
+   span so the call states can rewrite it, so it is exempted below to keep the
+   two looking identical at every width. */
+.navitem__hint{
+  margin-left:auto;
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:0.02em;
+  color:var(--ink-muted);
+  opacity:0.75;
+}
+
+.navitem[aria-busy="true"],
+.floating-call-btn[aria-busy="true"]{
+  opacity:0.75;
+  cursor:progress;
+}
+
+.navitem.is-unavailable,
+.floating-call-btn.is-unavailable{
+  opacity:0.45;
+  cursor:not-allowed;
+}
+
+.floating-call-btn.is-unavailable .floating-call-btn__pulse{
+  animation:none;
+  opacity:0;
+}
+
+.floating-call-btn:disabled:hover{
+  transform:none;
+  box-shadow:0 8px 24px rgba(0, 229, 255, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 720px){
+  .navitem .navitem__label{ display:inline; }
+  .navitem .navitem__hint{ display:none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Simulate — the at-rest example in the results column.
+
+   The column used to hold one line of placeholder text across ~60% of the
+   screen, including for the 13-22 seconds a run takes. This is what sits there
+   instead. Every rule is scoped to .sim-example so nothing here can reach a
+   real result, which js/app.js renders into the same container.
+   --------------------------------------------------------------------------- */
+
+.sim-example { display: flex; flex-direction: column; gap: 16px; }
+
+.sim-example__lead {
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.sim-example__card {
+  position: relative;
+  border: 1px dashed var(--line-strong, var(--line));
+  border-radius: 10px;
+  padding: 20px 18px 18px;
+  background: var(--surface);
+}
+
+/* Dashed border plus an explicit flag: two independent signals that this is
+   illustrative, so neither a screenshot nor a glance can misread it. */
+.sim-example__flag {
+  position: absolute;
+  top: -9px;
+  left: 16px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong, var(--line));
+  color: var(--ink-faint, var(--ink-muted));
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sim-example__q {
+  margin: 4px 0 16px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.sim-example__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 14px 18px;
+  margin-bottom: 16px;
+}
+
+.sim-example__k {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ink-faint, var(--ink-muted));
+  margin-bottom: 4px;
+}
+
+.sim-example__v {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-example__u { font-size: 12px; font-weight: 400; color: var(--ink-muted); }
+.sim-example__v--ok { color: var(--primary, var(--accent)); }
+
+.sim-example__formula {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-muted);
+  overflow-wrap: anywhere;
+}
+
+.sim-example__notes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.sim-example__notes li { margin-bottom: 4px; }
+
+.sim-example__foot {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}

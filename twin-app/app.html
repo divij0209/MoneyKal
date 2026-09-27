@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The MoneyKal app | MoneyKal</title>
+  <meta name="description" content="MoneyKal on mobile: the same account and the same figures as the web, built with React Native for iOS and Android.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html" class="is-current">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <section class="mk-phero">
+      <div class="mk-wrap mk-phero__inner">
+        <a class="mk-crumb" href="index.html"><span aria-hidden="true">&larr;</span> MoneyKal</a>
+        <h1 class="mk-phero__title">The app</h1>
+      </div>
+
+      <div class="mk-wrap mk-phero__visual">
+        <div class="mk-devices" data-reveal data-demo="devices" aria-hidden="true">
+          <!-- Browser: the shipped product -->
+          <div class="mk-browser">
+            <div class="mk-browser__bar">
+              <span class="mk-browser__dots"><i></i><i></i><i></i></span>
+              <span class="mk-browser__url">moneykal.app<span class="mk-browser__path">/dashboard</span></span>
+              <span class="mk-browser__live">Live</span>
+            </div>
+            <div class="mk-browser__body">
+              <div class="mk-mini">
+                <span class="mk-mini__label">Available money</span>
+                <span class="mk-mini__value" data-count="482000" data-prefix="₹">₹0</span>
+              </div>
+              <div class="mk-mini">
+                <span class="mk-mini__label">Spent this month</span>
+                <span class="mk-mini__value" data-count="29469" data-prefix="₹">₹0</span>
+              </div>
+              <div class="mk-mini mk-mini--chart">
+                <span class="mk-mini__label">Position</span>
+                <svg class="mk-spark" viewBox="0 0 200 56" fill="none" preserveAspectRatio="none">
+                  <path class="mk-spark__line"
+                    d="M0,48 L25,44 L50,46 L75,34 L100,38 L125,24 L150,28 L175,14 L200,8"
+                    stroke="var(--mk-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <div class="mk-mini mk-mini--wide">
+                <span class="mk-mini__label">Insight</span>
+                <span class="mk-mini__text">Spending is higher this week than your usual pattern.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone: the part that comes with you -->
+          <div class="mk-pocket">
+            <div class="mk-pocket__frame">
+              <div class="mk-pocket__notch"></div>
+              <div class="mk-pocket__body">
+                <span class="mk-pocket__eyebrow">Today</span>
+                <span class="mk-pocket__value" data-count="482000" data-prefix="₹">₹0</span>
+                <span class="mk-pocket__row"><i></i>Electricity · due in 3 days</span>
+                <span class="mk-pocket__row"><i></i>Netflix · renews tomorrow</span>
+                <div class="mk-pocket__goal">
+                  <span>Emergency Fund</span>
+                  <span class="mk-pocket__bar"><i></i></span>
+                  <b>68%</b>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="mk-demo__note mk-devices__note">
+          The web workspace is live today. The mobile companion is in build.
+        </p>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">What you can do</p>
+          <h2 class="mk-h2">The product, in your pocket</h2>
+          <p class="mk-sub">The app is a full client rather than a companion. It reads and writes the same data as the web.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Daily</span>
+            <h3>Home and Hisaab</h3>
+            <p>Your position, readings and calendar on opening, and the full ledger for logging an expense or scanning a receipt the moment it happens rather than remembering it later.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Ask</span>
+            <h3>Questions and voice</h3>
+            <p>Ask a question in writing or open Varta and speak it. Answers come from the same computed figures the web uses.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Decide</span>
+            <h3>Simulate and reports</h3>
+            <p>Run a decision forward on the phone and read the weekly and monthly reports without waiting to get back to a desk.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Watch</span>
+            <h3>Alerts and Market Pulse</h3>
+            <p>Due dates, unusual spending and goal pace surface as alerts, with market context filtered to what you actually hold.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">For founders</span>
+            <h3>A startup view</h3>
+            <p>Accounts set up as a startup get their own tab set built around cash, runway and burn instead of personal spending.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Protection</span>
+            <h3>A lock on the app itself</h3>
+            <p>Set a passcode, and use your device biometrics to unlock. Credentials are held in the device keychain rather than ordinary app storage.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">How it is built</p>
+          <h2 class="mk-h2">One backend, two clients</h2>
+          <p class="mk-sub">Worth knowing where the app is in its life.</p>
+        </header>
+
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Built with React Native and Expo</h3>
+            <p>The app targets iOS and Android from one codebase and talks to the same MoneyKal API as the website, so a change made on either side is immediately true on the other. It is not yet published on the app stores; it currently runs as a development build.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">At a glance</p>
+          <h2 class="mk-h2">The app today</h2>
+          <p class="mk-sub">Specifics rather than promises.</p>
+        </header>
+
+        <table class="mk-spec" data-reveal>
+          <tbody>
+            <tr><th>Platforms</th><td>iOS and Android, from a single React Native codebase</td></tr>
+            <tr><th>Account</th><td>The same MoneyKal account and data as the web</td></tr>
+            <tr><th>Session</th><td>Stored in the device keychain, refreshed so a sign in lasts</td></tr>
+            <tr><th>App lock</th><td>Passcode, with device biometric unlock</td></tr>
+            <tr><th>Availability</th><td>Development build, not yet published to the app stores</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+
+    <section class="mk-section mk-section--tint" id="everywhere">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--center mk-head--solo" data-reveal>
+          <p class="mk-eyebrow">Web today · Mobile <span class="mk-soon">Coming soon</span></p>
+          <h2 class="mk-h2">Your financial intelligence, wherever you are.</h2>
+          <p class="mk-sub">
+            The same financial brain, the same numbers. The full workspace on the web today, and the parts
+            you need in the moment coming to your pocket.
+          </p>
+        </header>
+      </div>
+    </section>
+
+    <section class="mk-pcta">
+      <div class="mk-wrap">
+        <h2>Start today</h2>
+        <p>Build the picture once, then let MoneyKal keep it current.</p>
+        <div class="mk-pcta__row">
+          <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+            Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+        </div>
+        <div class="mk-more">
+        <a href="hisaab.html">Hisaab</a>
+        <a href="taxes.html">Taxes</a>
+        <a href="intelligence.html">Intelligence</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="security.html">Security &amp; Privacy</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

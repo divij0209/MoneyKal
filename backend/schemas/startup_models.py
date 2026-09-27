@@ -1,0 +1,254 @@
+from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
+
+
+# ---------------------------------------------------------------------------
+# Onboarding request
+# ---------------------------------------------------------------------------
+
+class FounderInfo(BaseModel):
+    name: str
+    email: str
+    mobile: Optional[str] = None
+    preferred_language: Optional[str] = None
+
+
+class CompanyInfo(BaseModel):
+    name: str
+    industry: Optional[str] = None
+    business_model: Optional[str] = None
+    founded_year: Optional[int] = None
+    stage: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
+    headcount: Optional[int] = None
+    gst_number: Optional[str] = None
+
+
+class RevenueInfo(BaseModel):
+    is_pre_revenue: bool = False
+    monthly_revenue: Optional[float] = None
+    revenue_streams: List[str] = []
+    revenue_growth_pct: Optional[float] = None
+    paying_customers: Optional[int] = None
+
+
+class ExpensesInfo(BaseModel):
+    fixed_costs: Optional[float] = None
+    variable_costs: Optional[float] = None
+
+
+class CashInfo(BaseModel):
+    current_cash: Optional[float] = None
+    monthly_burn: Optional[float] = None  # fallback if fixed/variable costs weren't itemized
+
+
+class DebtInfo(BaseModel):
+    business_loans_debt: Optional[float] = None
+
+
+class FundingInfo(BaseModel):
+    total_funding: Optional[float] = None
+    last_round: Optional[str] = None
+    currently_fundraising: bool = False
+    fundraising_target: Optional[float] = None
+
+
+class TeamInfo(BaseModel):
+    planned_hires: Optional[int] = None
+    cost_per_hire: Optional[float] = None
+
+
+class GoalInput(BaseModel):
+    type: str  # extend_runway | revenue_milestone | fundraise | profitability | custom
+    label: str
+    target_value: Optional[float] = None
+    target_unit: Optional[str] = None
+    target_date: Optional[str] = None
+
+
+class StartupOnboardingRequest(BaseModel):
+    founder: FounderInfo
+    company: CompanyInfo
+    revenue: RevenueInfo
+    expenses: ExpensesInfo
+    cash: CashInfo
+    debt: DebtInfo
+    funding: FundingInfo
+    team: TeamInfo
+    goals: List[GoalInput] = []
+    current_decision: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Computed / response models
+# ---------------------------------------------------------------------------
+
+class MetricResultModel(BaseModel):
+    id: str
+    label: str
+    value: Optional[float]
+    unit: str
+    display: str
+    status: str
+    calculation: Dict[str, Any]
+
+
+class GoalProgressModel(BaseModel):
+    type: str
+    label: str
+    target_value: Optional[float] = None
+    target_unit: Optional[str] = None
+    target_date: Optional[str] = None
+    current_value: Optional[float] = None
+    progress_pct: Optional[float] = None
+    status: str
+    note: Optional[str] = None
+    expected_completion_date: Optional[str] = None
+    projection_note: Optional[str] = None
+
+
+class AlertItemModel(BaseModel):
+    category: str
+    level: str
+    severity: str  # critical | high | medium | low
+    metric: Optional[str] = None
+    text: str
+
+
+class DecisionLogItemModel(BaseModel):
+    title: str
+    decision_type: Optional[str] = None
+    outcome: Optional[str] = None
+    tag: str
+    created_at: str
+    predicted: Optional[Dict[str, Any]] = None
+    actual_now: Optional[Dict[str, Any]] = None
+    decision_status: Optional[str] = None  # on_track | diverged | pending | unknown
+
+
+class HealthIndicatorModel(BaseModel):
+    id: str
+    label: str
+    status: str  # good | warning | serious | critical | insufficient_data
+    display: str
+    detail: str
+
+
+class CompanyProfileModel(BaseModel):
+    """The company block of GET /startup/overview.
+
+    The seven fields below carry `= None` defaults rather than being bare
+    `Optional[...]` annotations. In Pydantic v2 an Optional field without a
+    default is still *required* — it accepts None, but it must be present — and
+    that is not what this model wanted. The individual branch of /startup/overview
+    builds a three-key company dict (name, industry, business model), so response
+    validation failed with seven "Field required" errors and the endpoint returned
+    500 for every Individual. The daily brief on the web has therefore never
+    loaded for them, despite the branch existing specifically to avoid a 404.
+
+    Purely additive: the Startup path already supplies all ten, so its responses
+    are byte-identical. The first three keep no default because both branches
+    always set them, and a company block without a name is a bug worth surfacing
+    rather than defaulting away.
+    """
+    company_name: Optional[str]
+    industry: Optional[str]
+    business_model: Optional[str]
+    founded_year: Optional[int] = None
+    stage: Optional[str] = None
+    location: Optional[str] = None
+    website: Optional[str] = None
+    headcount: Optional[int] = None
+    founder_name: Optional[str] = None
+    preferred_language: Optional[str] = None
+    gst_number: Optional[str] = None
+
+
+class StartupOverviewResponse(BaseModel):
+    currency: str
+    company: CompanyProfileModel
+    metrics: Dict[str, MetricResultModel]
+    cash_projection: Dict[str, Any]
+    hiring_capacity: Dict[str, Any]
+    goals: List[GoalProgressModel]
+    alerts: List[AlertItemModel]
+    recent_decisions: List[DecisionLogItemModel]
+    daily_brief: Dict[str, Any]
+    health_indicators: List[HealthIndicatorModel]
+    history: List[Dict[str, Any]]
+    expense_breakdown: Dict[str, Any]
+    revenue_breakdown: Dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# Hisaab
+# ---------------------------------------------------------------------------
+
+class TransactionCreate(BaseModel):
+    type: str  # 'in' | 'out'
+    category: str
+    amount: float
+    description: Optional[str] = None
+    txn_date: Optional[str] = None
+    source: Optional[str] = "manual"  # 'manual' | 'auto'
+
+
+class TransactionUpdate(BaseModel):
+    type: Optional[str] = None
+    category: Optional[str] = None
+    amount: Optional[float] = None
+    description: Optional[str] = None
+    txn_date: Optional[str] = None
+
+
+class TransactionResponse(BaseModel):
+    id: int
+    type: str
+    category: str
+    amount: float
+    description: Optional[str]
+    txn_date: str
+    source: str
+    created_at: str
+    updated_at: Optional[str] = None
+
+
+class HisaabSummaryResponse(BaseModel):
+    currency: str
+    money_in: float
+    money_out: float
+    net: float
+    by_category: List[Dict[str, Any]]
+    transactions: List[TransactionResponse]
+
+
+class WeeklyReportResponse(BaseModel):
+    status: str
+    window_days: int
+    days_present: int
+    points: List[Dict[str, Any]]
+    note: Optional[str] = None
+    health_delta: Optional[float] = None
+    cash_delta: Optional[float] = None
+    runway_delta: Optional[float] = None
+    category_spend: Optional[Dict[str, Any]] = None
+
+
+class WeeklySpendReportResponse(BaseModel):
+    id: int
+    week_start: str
+    week_end: str
+    currency: str
+    category_spend: Dict[str, Any]
+    flags: List[Dict[str, Any]]
+    suggestions: List[Dict[str, Any]]
+    created_at: str
+
+
+class WeeklySpendReportListItem(BaseModel):
+    id: int
+    week_start: str
+    week_end: str
+    this_week_total: Optional[float] = None
+    created_at: str

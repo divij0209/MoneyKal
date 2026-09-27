@@ -1,0 +1,56 @@
+On branch mokshi
+Your branch is behind 'origin/mokshi' by 8 commits, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Changes to be committed:
+	new file:   alembic/versions/54c4d08832d8_add_gmail_connections.py
+	modified:   backend/.env.example
+	modified:   backend/main.py
+	modified:   backend/models/domain.py
+	modified:   backend/requirements.txt
+	modified:   backend/scheduler.py
+	new file:   backend/services/gmail_import_service.py
+	modified:   twin-app/css/login.css
+	modified:   twin-app/dashboard.html
+	modified:   twin-app/index.html
+	modified:   twin-app/js/api.js
+	modified:   twin-app/js/app.js
+	modified:   twin-app/js/auth.js
+	modified:   twin-app/js/startup.js
+	modified:   twin-app/login.html
+	modified:   twin-app/register.html
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+	both added:      backend/routers/gmail.py
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   alembic/versions/f86cb78ea0d2_initial_postgresql_schema.py
+	modified:   backend/main.py
+	modified:   backend/models/domain.py
+	modified:   backend/routers/onboarding.py
+	modified:   backend/routers/profile.py
+	modified:   backend/routers/startup.py
+	modified:   backend/schemas/startup_models.py
+	modified:   error.log
+	modified:   twin-app/css/styles.css
+	modified:   twin-app/dashboard.html
+	modified:   twin-app/js/app.js
+	modified:   twin-app/js/auth.js
+	modified:   twin-app/register.html
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	alembic/versions/65e5f09943e9_add_enterprise_profiles.py
+	alembic/versions/77f6a10054b1_add_gst_number_to_startup_profiles.py
+	alembic/versions/7d3d78c3ca00_add_raw_inputs_to_profiles.py
+	test_payload.py
+	tests/
+	tmp/
+

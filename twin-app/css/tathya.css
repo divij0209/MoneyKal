@@ -1,0 +1,692 @@
+/* ==========================================================================
+   TATHYA — the conversational surface
+   VARTA  — the voice surface
+
+   Presentation only. Every rule is scoped to #view-ask or .voice-overlay, and
+   the file loads last so it refines the shared chat rules in styles.css and
+   app-theme.css without either of them being modified — reverting the look is
+   a matter of removing one <link>.
+
+   Nothing here changes markup the scripts read: .chip keeps its text as its
+   only content (the composer reads chip.textContent), .chat-greeting keeps its
+   h2, and every id and handler target is untouched.
+   ========================================================================== */
+
+#view-ask {
+  --ta-radius: 4px;
+  --ta-measure: 760px;
+}
+
+/* Two tones carry the whole surface: a wash for rows and a slightly stronger
+   one for the composer. Both are near-invisible — the type does the work. */
+html:not([data-ov-theme="light"]) #view-ask,
+html:not([data-ov-theme="light"]) .voice-overlay {
+  --ta-wash: rgba(255, 255, 255, 0.030);
+  --ta-field: rgba(255, 255, 255, 0.035);
+  --ta-line: rgba(255, 255, 255, 0.12);
+  --ta-line-strong: rgba(255, 255, 255, 0.22);
+  --ta-ring: rgba(0, 229, 255, 0.16);
+}
+
+html[data-ov-theme="light"] #view-ask,
+html[data-ov-theme="light"] .voice-overlay {
+  --ta-wash: rgba(27, 32, 28, 0.032);
+  --ta-field: #ffffff;
+  --ta-line: rgba(27, 32, 28, 0.14);
+  --ta-line-strong: rgba(27, 32, 28, 0.26);
+  --ta-ring: rgba(3, 137, 158, 0.14);
+}
+
+
+/* ==========================================================================
+   1 — GROUND
+   The shared rule paints a violet/blue/cyan radial here. One faint wash of
+   the product's own accent, high on the page, is enough to stop the screen
+   reading as flat black — and it is the only decorative thing on it.
+   ========================================================================== */
+
+#view-ask .chat-glow-bg {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 420px;
+  background: radial-gradient(ellipse 70% 100% at 50% 0%, var(--accent-tint), transparent 72%);
+  opacity: 0.5;
+}
+
+
+/* ==========================================================================
+   2 — HISTORY RAIL
+   Same content, same order, same handlers. It just stops looking like a
+   stack of pills and starts looking like a list of conversations.
+   ========================================================================== */
+
+#view-ask .chat-history-sidebar {
+  width: 252px;
+  padding: 4px 22px 16px 0;
+  border-right: 1px solid var(--ta-line);
+}
+
+#view-ask .btn-new-chat-gemini {
+  width: 100%;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--ta-line-strong);
+  border-radius: var(--ta-radius);
+  background: transparent;
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 30px;
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+#view-ask .btn-new-chat-gemini:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+
+#view-ask .btn-new-chat-gemini svg { flex: 0 0 auto; }
+
+#view-ask .history-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 12px;
+  padding-left: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* The same short accent tick the rest of the product uses for a section
+   heading, so this rail reads as part of it. */
+#view-ask .history-label::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 2px;
+  height: 10px;
+  background: var(--primary);
+}
+
+#view-ask .gemini-history-list { gap: 1px; }
+
+#view-ask .gemini-history-list li {
+  position: relative;
+  padding: 10px 10px 10px 12px;
+  border-radius: var(--ta-radius);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+#view-ask .gemini-history-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+#view-ask .gemini-history-list li:hover {
+  background: var(--ta-wash);
+  color: var(--ink);
+}
+
+#view-ask .gemini-history-list li:hover::before { background: var(--primary); }
+
+
+/* ==========================================================================
+   3 — LANDING STATE
+   An introduction, not a headline floating in the middle of nothing: the
+   name, the line it is greeting you with, and what it does.
+   ========================================================================== */
+
+#view-ask .chat-panel { padding-left: 30px; }
+
+#view-ask .chat-greeting {
+  align-items: flex-end;
+  padding: 0 0 36px;
+}
+
+/* Only in the landing state. addBubble() adds .hidden the moment a
+   conversation starts, which hands the log its space back — a state link in
+   CSS, so no script has to tell the layout which state it is in. */
+#view-ask .chat-greeting:not(.hidden) ~ .chat-log {
+  flex: 0 0 auto;
+  padding: 0;
+}
+
+#view-ask .tathya-hero {
+  width: 100%;
+  max-width: var(--ta-measure);
+  margin: 0 auto;
+  text-align: left;
+}
+
+#view-ask .tathya-hero__brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 0 18px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+#view-ask .tathya-hero__brand::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 3px;
+  height: 13px;
+  background: var(--primary);
+}
+
+/* The greeting line. seedChat() rewrites its text on every new conversation,
+   so only the type is set here. */
+#view-ask .chat-greeting h2 {
+  max-width: 22ch;
+  margin: 0;
+  font-family: var(--font-display-serif);
+  font-size: clamp(30px, 4.4vw, 46px);
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.028em;
+  text-align: left;
+  color: var(--ink);
+}
+
+#view-ask .chat-greeting h2 span {
+  color: var(--accent);
+  font-style: normal;
+}
+
+#view-ask .tathya-hero__tag {
+  position: relative;
+  margin: 24px 0 0;
+  padding-top: 20px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+}
+
+#view-ask .tathya-hero__tag::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 1px;
+  background: var(--ta-line-strong);
+}
+
+
+/* ==========================================================================
+   4 — TRANSCRIPT
+   The answer is the product. It gets the measure and the accent rail; the
+   question gets a quiet block that stays out of its way.
+   ========================================================================== */
+
+#view-ask .chat-log {
+  max-width: var(--ta-measure);
+  padding: 28px 0 8px;
+  gap: 28px;
+  scroll-behavior: smooth;
+}
+
+#view-ask .bubble {
+  font-size: 14.5px;
+  line-height: 1.72;
+  animation: tathyaBubbleIn 0.26s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+#view-ask .bubble--twin {
+  border-left: 2px solid var(--accent);
+  padding-left: 20px;
+  max-width: 68ch;
+  color: var(--ink);
+}
+
+/* ---------- answer typography ----------
+   An answer arrives as markdown, and the app's global `p { margin: 0 }` ran
+   every paragraph of it together. These are the elements marked() actually
+   emits, set so a multi-part answer can be read rather than parsed. */
+
+#view-ask .bubble--twin > :first-child { margin-top: 0; }
+#view-ask .bubble--twin > :last-child { margin-bottom: 0; }
+
+#view-ask .bubble--twin p {
+  margin: 0 0 13px;
+  color: inherit;
+}
+
+#view-ask .bubble--twin ul,
+#view-ask .bubble--twin ol {
+  margin: 0 0 13px;
+  padding-left: 20px;
+}
+
+#view-ask .bubble--twin li { margin-bottom: 6px; }
+#view-ask .bubble--twin li:last-child { margin-bottom: 0; }
+#view-ask .bubble--twin li::marker { color: var(--ink-faint); }
+
+/* A figure is the point of most answers, so bold carries real weight. */
+#view-ask .bubble--twin strong {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+#view-ask .bubble--twin em { font-style: italic; color: var(--ink-muted); }
+
+#view-ask .bubble--twin h1,
+#view-ask .bubble--twin h2,
+#view-ask .bubble--twin h3,
+#view-ask .bubble--twin h4 {
+  margin: 20px 0 9px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+#view-ask .bubble--twin code {
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--ta-wash);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+}
+
+#view-ask .bubble--twin pre {
+  margin: 0 0 13px;
+  padding: 12px 14px;
+  border: 1px solid var(--ta-line);
+  border-radius: var(--ta-radius);
+  background: var(--ta-wash);
+  overflow-x: auto;
+}
+
+#view-ask .bubble--twin pre code { padding: 0; background: none; }
+
+#view-ask .bubble--twin blockquote {
+  margin: 0 0 13px;
+  padding-left: 14px;
+  border-left: 1px solid var(--ta-line-strong);
+  color: var(--ink-muted);
+}
+
+#view-ask .bubble--twin a { color: var(--accent); text-decoration: none; }
+#view-ask .bubble--twin a:hover { text-decoration: underline; }
+
+#view-ask .bubble--twin hr {
+  height: 0;
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--ta-line);
+}
+
+/* Tables stay inside their own scroller so a wide one cannot push the
+   transcript sideways. */
+#view-ask .bubble--twin table {
+  display: block;
+  width: 100%;
+  margin: 0 0 13px;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+#view-ask .bubble--twin th,
+#view-ask .bubble--twin td {
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--ta-line);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+#view-ask .bubble--twin th {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+#view-ask .bubble--user {
+  padding: 13px 17px;
+  border: 1px solid var(--ta-line);
+  border-radius: var(--ta-radius);
+  background: var(--ta-wash);
+  color: var(--ink);
+  font-weight: 500;
+  max-width: 60ch;
+}
+
+#view-ask .bubble--thinking {
+  border-left-color: var(--ta-line-strong);
+  color: var(--ink-faint);
+  font-style: normal;
+  letter-spacing: 0.01em;
+}
+
+@keyframes tathyaBubbleIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+
+/* ==========================================================================
+   5 — SUGGESTED PROMPTS
+   Markup untouched: the composer reads chip.textContent, so a chip holds
+   nothing but its text.
+   ========================================================================== */
+
+#view-ask .chat-suggestions {
+  width: 100%;
+  max-width: var(--ta-measure);
+  gap: 8px;
+  padding: 0 0 14px;
+}
+
+#view-ask .chat-suggestions .chip {
+  padding: 9px 15px;
+  border: 1px solid var(--ta-line);
+  border-radius: 100px;
+  background: transparent;
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+#view-ask .chat-suggestions .chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+
+
+/* ==========================================================================
+   6 — COMPOSER
+   A single bar on a hairline, not an oversized floating pill. The send action
+   is the only filled thing on the screen, which is what makes it read as the
+   one action that commits.
+   ========================================================================== */
+
+#view-ask .chat-bottom-area {
+  max-width: var(--ta-measure);
+  padding-bottom: 20px;
+}
+
+#view-ask .chat-input,
+#view-ask .gemini-input-pill {
+  align-items: flex-end;
+  gap: 6px;
+  padding: 8px 8px 8px 10px;
+  border: 1px solid var(--ta-line-strong);
+  border-radius: 10px;
+  background: var(--ta-field);
+  box-shadow: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+#view-ask .chat-input:focus-within,
+#view-ask .gemini-input-pill:focus-within {
+  border-color: var(--accent);
+  background: var(--ta-field);
+  box-shadow: 0 0 0 3px var(--ta-ring);
+}
+
+#view-ask .gemini-input-pill input {
+  padding: 9px 4px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+#view-ask .gemini-input-pill input::placeholder {
+  color: var(--ink-faint);
+  opacity: 0.85;
+}
+
+#view-ask .btn-attach {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--ta-radius);
+  color: var(--ink-faint);
+  transition: color 0.16s ease, background 0.16s ease;
+}
+
+#view-ask .btn-attach:hover {
+  color: var(--accent);
+  background: var(--ta-wash);
+}
+
+#view-ask .gemini-input-actions {
+  gap: 6px;
+  padding-bottom: 1px;
+}
+
+/* ---------- Varta: the voice capability, named ----------
+   A labelled control rather than an anonymous icon, so the microphone reads
+   as a distinct capability the product has rather than a button on a form. */
+
+#view-ask .btn-voice-gemini {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: auto;
+  height: 34px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--ta-line);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--ink-muted);
+  transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+}
+
+#view-ask .btn-voice-gemini svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+#view-ask .varta-chip__name {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#view-ask .btn-voice-gemini:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tint);
+}
+
+#view-ask .btn-voice-gemini:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- send ---------- */
+
+#view-ask .btn-send-gemini {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--ta-radius);
+  background: var(--primary);
+  color: var(--primary-text);
+  transition: background 0.16s ease, opacity 0.16s ease;
+}
+
+#view-ask .btn-send-gemini:hover {
+  background: var(--primary-dark);
+  color: var(--primary-text);
+  filter: none;
+}
+
+#view-ask .btn-send-gemini svg { width: 16px; height: 16px; }
+
+#view-ask .btn-send-gemini:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#view-ask .chat-note {
+  width: 100%;
+  max-width: var(--ta-measure);
+  margin: 12px auto 0;
+  padding: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink-faint);
+  text-align: left;
+}
+
+
+/* ==========================================================================
+   7 — SIDEBAR: the Tathya item, when you are in it
+   Scoped to this one nav item so the rest of the navigation is untouched.
+   ========================================================================== */
+
+.navitem[data-view="ask"].is-active {
+  color: var(--accent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.navitem[data-view="ask"].is-active svg { color: var(--accent); }
+
+
+/* ==========================================================================
+   8 — VARTA: the voice surface
+   The overlay names the capability persistently, above the line that reports
+   what it is doing. The orb and every control keep their existing behaviour.
+   ========================================================================== */
+
+.voice-overlay .varta-lockup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 34px;
+}
+
+.voice-overlay .varta-lockup__name {
+  font-family: var(--font-display, inherit);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.voice-overlay .varta-lockup__role {
+  position: relative;
+  padding-top: 9px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* A short rule between the name and its role, centred under the lockup. */
+.voice-overlay .varta-lockup__role::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 1px;
+  background: var(--ta-line-strong);
+}
+
+.voice-overlay .voice-status {
+  font-family: var(--font-display-serif, inherit);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.voice-overlay .voice-hint {
+  letter-spacing: 0.01em;
+  color: var(--ink-faint);
+}
+
+/* voice.js swaps the mic and stop glyphs by toggling .hidden on them, but no
+   stylesheet defines a generic .hidden rule, so both were drawing at once and
+   the control never showed its state. Scoped to these two icons, so the class
+   keeps whatever meaning it has elsewhere. Behaviour is unchanged — this only
+   lets the swap the script already performs become visible. */
+.voice-overlay .voice-btn svg.hidden { display: none; }
+
+
+/* ==========================================================================
+   9 — RESPONSIVE
+   The existing breakpoints keep their behaviour; these only stop the new
+   type and the named voice control from crowding a narrow screen.
+   ========================================================================== */
+
+@media (max-width: 1000px) {
+  #view-ask .chat-history-sidebar {
+    width: 208px;
+    padding-right: 16px;
+  }
+  #view-ask .chat-panel { padding-left: 20px; }
+}
+
+@media (max-width: 760px) {
+  /* The rail is the first thing to go when there is no room for two columns,
+     and it is reachable again as soon as there is. */
+  #view-ask .chat-history-sidebar { display: none; }
+  #view-ask .chat-panel { padding-left: 0; }
+  #view-ask .chat-greeting { padding-bottom: 24px; }
+  #view-ask .chat-greeting h2 { max-width: none; }
+  #view-ask .tathya-hero__brand { margin-bottom: 14px; }
+  #view-ask .chat-log { padding-top: 20px; gap: 22px; }
+  #view-ask .bubble--twin { padding-left: 16px; }
+
+  /* The name would eat the composer at this width, so the control falls back
+     to the icon — the same button, the same handler, just unlabelled. */
+  #view-ask .varta-chip__name { display: none; }
+  #view-ask .btn-voice-gemini {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--ta-radius);
+  }
+
+  #view-ask .gemini-input-pill input { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #view-ask .bubble { animation: none; }
+  #view-ask .chat-log { scroll-behavior: auto; }
+  #view-ask .btn-new-chat-gemini,
+  #view-ask .gemini-history-list li,
+  #view-ask .gemini-history-list li::before,
+  #view-ask .chat-suggestions .chip,
+  #view-ask .chat-input,
+  #view-ask .btn-attach,
+  #view-ask .btn-voice-gemini,
+  #view-ask .btn-send-gemini {
+    transition: none;
+  }
+}

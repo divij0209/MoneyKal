@@ -1,0 +1,315 @@
+/* ==========================================================================
+   MoneyKal — Terms & Conditions consent
+
+   Loaded after css/login.css on login.html and register.html, so every colour,
+   radius and easing below is one of that file's existing custom properties.
+   Nothing here introduces a new palette value or restyles an existing auth
+   control; it adds the consent row and the Terms dialog and nothing else.
+
+   The dialog reuses `.mk-modal` / `.mk-modal__panel` from login.css — same
+   scrim, same entrance, same close button — and only overrides what a long
+   scrolling document needs that a short form dialog does not.
+   ========================================================================== */
+
+/* Set while the dialog is open, so the page behind it does not scroll away
+   under the reader. */
+body.mk-scroll-locked { overflow: hidden; }
+
+/* --------------------------------------------------------------------------
+   Consent row
+   -------------------------------------------------------------------------- */
+.mk-consent {
+  margin: 0 0 22px;
+}
+
+/* The label wraps to two or three lines on a narrow screen, so the box aligns
+   to the first line rather than to the centre of the block.
+
+   The vertical padding is the tap target. Clicking the label toggles the
+   checkbox, and one line of 13.2px text is a 20px-tall strip — fine for a
+   mouse, mean on a phone for a control that is required. The padding takes
+   the whole row to 40px without changing how it looks. */
+.mk-check--consent {
+  align-items: flex-start;
+  gap: 11px;
+  padding: 10px 0;
+  font-size: 13.2px;
+  line-height: 1.55;
+  color: var(--mk-off-dim);
+}
+
+.mk-check--consent .mk-check__box {
+  margin-top: 2px;
+}
+
+.mk-consent__text {
+  flex: 1;
+}
+
+/* The two document triggers. Buttons, not links: they open a dialog rather
+   than navigating, and `type="button"` means a stray Enter never submits the
+   form they sit inside. */
+.mk-consent__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--mk-cyan);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s var(--mk-ease);
+}
+
+.mk-consent__link:hover { color: var(--mk-off); }
+
+.mk-consent__link:focus-visible {
+  outline: 2px solid var(--mk-cyan);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Validation state. The message is rendered by js/terms-consent.js; the
+   element is always present so a screen reader's live region exists before
+   the text lands in it. */
+.mk-consent__error {
+  display: none;
+  margin: 9px 0 0 27px;
+  font-size: 12.6px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--mk-danger);
+}
+
+.mk-consent.is-invalid .mk-consent__error {
+  display: block;
+  animation: mkConsentIn 0.26s var(--mk-ease) both;
+}
+
+.mk-consent.is-invalid .mk-check__box {
+  border-color: var(--mk-danger);
+  box-shadow: 0 0 0 3px var(--mk-danger-12);
+}
+
+.mk-consent.is-invalid .mk-check--consent { color: var(--mk-off); }
+
+@keyframes mkConsentIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   Terms dialog
+   -------------------------------------------------------------------------- */
+.mk-modal__panel--terms {
+  max-width: 720px;
+  /* A document, not a form: fill the height available and scroll inside. */
+  height: min(84vh, 820px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.mk-terms__header {
+  flex-shrink: 0;
+  padding: 30px 34px 18px;
+  border-bottom: 1px solid var(--mk-line);
+}
+
+.mk-terms__header .mk-modal__title { margin: 0; padding-right: 34px; }
+
+.mk-terms__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px 34px 30px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mk-line-strong) transparent;
+}
+
+.mk-terms__body:focus-visible {
+  outline: 2px solid var(--mk-cyan);
+  outline-offset: -2px;
+}
+
+.mk-terms__body::-webkit-scrollbar { width: 9px; }
+.mk-terms__body::-webkit-scrollbar-track { background: transparent; }
+
+.mk-terms__body::-webkit-scrollbar-thumb {
+  background: var(--mk-line-strong);
+  border-radius: 99px;
+  border: 3px solid var(--mk-elev);
+}
+
+.mk-terms__foot {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 34px;
+  border-top: 1px solid var(--mk-line);
+  background: var(--mk-elev);
+}
+
+/* ---------- Document typography ---------- */
+.mk-terms__meta {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mk-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mk-off-faint);
+  margin-bottom: 16px;
+}
+
+.mk-terms__version { color: var(--mk-cyan); }
+
+.mk-terms__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--mk-off-ghost);
+}
+
+.mk-terms__lead {
+  font-size: 14.4px;
+  line-height: 1.68;
+  color: var(--mk-off-dim);
+  margin: 0 0 20px;
+}
+
+.mk-terms__callout {
+  padding: 15px 17px;
+  margin: 0 0 30px;
+  border: 1px solid var(--mk-cyan-20);
+  border-left-width: 2px;
+  border-radius: var(--mk-radius);
+  background: var(--mk-cyan-06);
+  font-size: 13.4px;
+  line-height: 1.65;
+  color: var(--mk-off-dim);
+}
+
+.mk-terms__callout strong { color: var(--mk-cyan); font-weight: 600; }
+
+.mk-terms__section {
+  padding-top: 22px;
+  border-top: 1px solid var(--mk-line-soft);
+  scroll-margin-top: 12px;
+  border-radius: var(--mk-radius);
+  transition: background 0.5s var(--mk-ease);
+}
+
+.mk-terms__section + .mk-terms__section { margin-top: 4px; }
+
+/* Brief highlight when the dialog is opened straight onto one clause. */
+.mk-terms__section.is-targeted {
+  background: var(--mk-cyan-06);
+  box-shadow: 0 0 0 10px var(--mk-cyan-06);
+}
+
+.mk-terms__heading {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  font-family: var(--mk-display);
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--mk-off);
+  margin: 0 0 11px;
+}
+
+.mk-terms__num {
+  font-family: var(--mk-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--mk-cyan);
+  flex-shrink: 0;
+}
+
+.mk-terms__p {
+  font-size: 13.6px;
+  line-height: 1.72;
+  color: var(--mk-off-dim);
+  margin: 0 0 12px;
+}
+
+.mk-terms__p strong { color: var(--mk-off); font-weight: 600; }
+
+.mk-terms__list {
+  margin: 0 0 14px;
+  padding-left: 18px;
+  list-style: none;
+}
+
+.mk-terms__list li {
+  position: relative;
+  font-size: 13.4px;
+  line-height: 1.68;
+  color: var(--mk-off-dim);
+  margin-bottom: 8px;
+}
+
+.mk-terms__list li::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 10px;
+  width: 4px;
+  height: 1px;
+  background: var(--mk-cyan);
+}
+
+.mk-terms__link {
+  color: var(--mk-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.2s var(--mk-ease);
+}
+
+.mk-terms__link:hover { color: var(--mk-off); }
+
+/* --------------------------------------------------------------------------
+   Responsive — on a phone the dialog becomes a full-height sheet, because a
+   centred card with margins wastes the height a long document needs.
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  .mk-modal--terms { padding: 0; }
+
+  .mk-modal__panel--terms {
+    max-width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .mk-terms__header { padding: 22px 20px 14px; }
+  .mk-terms__body   { padding: 20px 20px 26px; }
+  .mk-terms__foot   { padding: 14px 20px; }
+
+  .mk-terms__body::-webkit-scrollbar { width: 0; }
+}
+
+@media (max-width: 480px) {
+  .mk-consent { margin: 4px 0 20px; }
+  .mk-check--consent { font-size: 13px; }
+  .mk-terms__heading { font-size: 15px; }
+  .mk-terms__p,
+  .mk-terms__list li { font-size: 13.2px; }
+}
+
+/* Devanagari: the tracked-out uppercase meta line is a Latin convention, and
+   letter-spacing pulls conjuncts apart. Same relaxation login.css applies. */
+[data-lang="hi"] .mk-terms__meta,
+[data-lang="hi"] .mk-terms__num {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}

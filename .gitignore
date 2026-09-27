@@ -1,0 +1,86 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables
+.env
+.env.local
+
+# Database
+*.sqlite3
+*.db
+twin.db
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Local tunnel binary for voice mode (voice_tunnel.py)
+.tools/
+
+# Local database snapshots taken before migrations (not project source)
+twin.db.bak-*
+
+# Documentation drafts (not project source)
+docs/
+
+# Runtime logs. error.log is written by the running backend, so two branches
+# that both ran the app always conflict on it — 782f85a is a commit whose only
+# purpose was resolving exactly that. Not project source; keep it out.
+error.log
+oauth_debug.log
+*.log
+
+# Database backups taken before/during the Supabase migration. These contain
+# bcrypt password hashes and live Gmail OAuth refresh tokens — never commit them.
+backups/
+*.dump
+*.sql.gz
+
+# Video. The repository carried 115 MB of it — twin-app/video.mp4 (18 MB),
+# twin-app/quote.mp4 (39 MB) and two copies of a 29 MB live.life.fully
+# backdrop — none of which was referenced by any HTML, CSS or JS by the time
+# they were removed. twin-app/ is the directory that gets published as the
+# static site (see vercel.json and render.yaml), so anything dropped in there
+# ships to every visitor. Commit footage only when something actually loads it,
+# and prefer a CDN or Git LFS over the repository.
+*.mp4
+*.mov
+*.webm
+
+# Marketing renders. Output, not source — they are rebuilt from their projects
+# and have no place in the application repository.
+marketing/
+
+# Added when twin-app/ was linked to Vercel: .vercel holds the project link
+# and .env.local the OIDC token the CLI refreshes on every link.
+.vercel
+.env*
+# ...but the committed templates are the whole point of having them, and
+# .dockerignore already carries the same exception.
+!**/.env.example
+
+# Generated reports. These are written into the workspace for the person who
+# asked for them, not for the repository: they are large binaries that change
+# wholesale on every regeneration, they carry no information the source and the
+# commit messages do not already hold, and a repository is the wrong place to
+# distribute a document. Keep them locally and share them directly.
+MoneyKal_*_Report.pdf
+*_Deployment_Report.pdf

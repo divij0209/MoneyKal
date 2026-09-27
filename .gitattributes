@@ -1,0 +1,40 @@
+# Keep binary files byte-identical through a clone.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# core.autocrlf is true on the Windows machines this repo is developed on, so
+# git rewrites line endings on checkout for anything it decides is text. It
+# decides by looking for a NUL byte in the first 8 KiB, and a PDF's header and
+# object table are plain ASCII — so `git add` of the report printed:
+#
+#     warning: ... LF will be replaced by CRLF the next time Git touches it
+#
+# The committed blob is correct; a fresh clone on Windows would not be. Every
+# lone 0x0A inside the compressed streams would become 0x0D 0x0A, the byte
+# offsets in the xref table would no longer point at the objects, and the file
+# would open as a damaged PDF. The same trap applies to any asset git happens
+# to sniff as text.
+#
+# Marking these `binary` (which is shorthand for -text -diff) turns the
+# conversion off and stops git trying to diff them as lines.
+
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.mp4  binary
+*.mov  binary
+*.webm binary
+*.woff binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.xlsx binary
+*.docx binary
+*.pptx binary
+*.db   binary
+*.sqlite binary
+*.sqlite3 binary

@@ -1,0 +1,48 @@
+# What NOT to upload to EAS Build.
+#
+# EAS_NO_VCS=1 is used for this project because the working tree carries files
+# that are not committed yet, and a git-based upload would omit them and fail
+# the build. In that mode eas-cli does NOT read .gitignore, so everything it
+# should skip has to be listed here — without this the tarball reached 146 MB
+# and the upload died mid-transfer.
+#
+# EAS installs dependencies itself from package.json + package-lock.json, so
+# node_modules must never be uploaded.
+
+# dependencies
+node_modules/
+
+# Expo / build output
+.expo/
+dist/
+dist-android/
+dist-web/
+web-build/
+expo-env.d.ts
+
+# generated native folders (prebuild regenerates these on the builder)
+/ios
+/android
+.kotlin/
+
+# signing material — credentials come from the EAS server, never the tarball
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# local env files: EXPO_PUBLIC_API_URL comes from the EAS "preview"
+# environment, so a stray local .env must not shadow it on the builder
+.env
+.env*.local
+
+# Metro / debug / editor noise
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.tsbuildinfo
+.DS_Store
+.git/

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taxes in MoneyKal | MoneyKal</title>
+  <meta name="description" content="A full Indian individual tax calculator inside MoneyKal: income heads, HRA, deductions, regime comparison, recommendations and ITR form selection.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html" class="is-current">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <section class="mk-phero">
+      <div class="mk-wrap mk-phero__inner">
+        <a class="mk-crumb" href="index.html"><span aria-hidden="true">&larr;</span> MoneyKal</a>
+        <h1 class="mk-phero__title">Taxes</h1>
+      </div>
+
+      <div class="mk-wrap mk-phero__visual">
+        <div class="mk-tax" data-reveal data-demo="tax">
+          <div class="mk-tax__stage">
+            <!-- 1 — what it already holds -->
+            <div class="mk-tax__col">
+              <p class="mk-tax__colhead">Already in MoneyKal</p>
+              <ul class="mk-tax__docs" id="mkTaxDocs"></ul>
+            </div>
+
+            <!-- 2 — the read -->
+            <div class="mk-tax__col mk-tax__col--mid">
+              <div class="mk-tax__scan">
+                <span class="mk-tax__scanring" aria-hidden="true"></span>
+                <span class="mk-tax__scanring mk-tax__scanring--2" aria-hidden="true"></span>
+                <span class="mk-tax__scantext" id="mkTaxStatus">Reading</span>
+              </div>
+            </div>
+
+            <!-- 3 — what it found -->
+            <div class="mk-tax__col mk-tax__col--out">
+              <p class="mk-tax__colhead">Deductions identified</p>
+              <ul class="mk-tax__found" id="mkTaxFound"></ul>
+              <div class="mk-tax__total">
+                <span>Total identified</span>
+                <b id="mkTaxTotal" data-prefix="₹">₹0</b>
+              </div>
+            </div>
+          </div>
+
+          <p class="mk-demo__note">
+            Illustrative. These are the deduction heads the tax engine identifies from figures
+            MoneyKal already holds.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">What it does</p>
+          <h2 class="mk-h2">Your return, computed from your own numbers</h2>
+          <p class="mk-sub">Every figure is calculated from the income you enter and the rules for
+            the assessment year, not estimated from a rule of thumb.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Income heads</span>
+            <h3>All five heads, collected properly</h3>
+            <p>Salary, house property, business and profession, capital gains, and other sources.
+              Business income can be declared presumptively or under normal provisions, and capital
+              gains are separated by holding period and asset class.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Salary detail</span>
+            <h3>HRA and perquisites worked out in full</h3>
+            <p>House rent allowance is computed against the statutory three way test, with metro
+              status resolved from your city. Motor car perquisites are valued by engine capacity
+              and usage, and each statutory ceiling is noted when it actually bites.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Deductions</span>
+            <h3>Limits applied, not assumed</h3>
+            <p>Chapter VI A deductions and TDS already paid are collected and capped at their real
+              limits. Where a deduction exists only under the old regime, it is reported rather than
+              silently netted off the new one.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Computation</span>
+            <h3>Slabs, surcharge, cess and marginal relief</h3>
+            <p>Tax is built band by band, then surcharge is applied at the right threshold, marginal
+              relief is granted where it applies, and cess is added last. The slab breakdown is shown
+              so the total can be traced.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Regime comparison</span>
+            <h3>Old against new, on your figures</h3>
+            <p>Both regimes are computed in full and set side by side. Where the old regime loses,
+              MoneyKal calculates how much additional deduction would be needed to break even, so
+              the choice is a number rather than a guess.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Filing</span>
+            <h3>Recommendations and the right ITR form</h3>
+            <p>You get specific actions based on what your return actually shows, and a recommended
+              ITR form with the reason each other form was ruled out.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">How it works</p>
+          <h2 class="mk-h2">Six steps, in the order a return is built</h2>
+          <p class="mk-sub">The flow follows the computation itself, so nothing is asked for before
+            it is needed.</p>
+        </header>
+
+        <ol class="mk-steps" data-reveal>
+          <li class="mk-step"><span class="mk-step__n">01</span><div>
+            <h3>Income heads</h3>
+            <p>Enter what you earned, head by head. Only the heads that apply to you are asked for.</p>
+          </div></li>
+          <li class="mk-step"><span class="mk-step__n">02</span><div>
+            <h3>HRA exemption</h3>
+            <p>Rent, basic pay and city decide the exempt portion under the statutory test.</p>
+          </div></li>
+          <li class="mk-step"><span class="mk-step__n">03</span><div>
+            <h3>Deductions and TDS</h3>
+            <p>Chapter VI A deductions are capped at their limits, and tax already deducted is credited.</p>
+          </div></li>
+          <li class="mk-step"><span class="mk-step__n">04</span><div>
+            <h3>Computation and regime comparison</h3>
+            <p>Both regimes are computed through slabs, surcharge, marginal relief and cess, then compared.</p>
+          </div></li>
+          <li class="mk-step"><span class="mk-step__n">05</span><div>
+            <h3>Recommendations</h3>
+            <p>Specific actions drawn from what your own computation shows.</p>
+          </div></li>
+          <li class="mk-step"><span class="mk-step__n">06</span><div>
+            <h3>ITR form selection</h3>
+            <p>The form that fits your return, with the reason each alternative was ruled out.</p>
+          </div></li>
+        </ol>
+      </div>
+    </section>
+    <section class="mk-section" id="tax">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--solo" data-reveal>
+          <p class="mk-eyebrow">Tax <span class="mk-soon">Coming soon</span></p>
+          <h2 class="mk-h2">
+            The one month of the year<br>
+            <span class="mk-muted-text">MoneyKal already has the answers for.</span>
+          </h2>
+          <p class="mk-sub">
+            MoneyKal already knows your income, your spending and your investments. Tax season
+            becomes a read of data you have been keeping all year, not a scramble for it.
+          </p>
+        </header>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Worth knowing</p>
+          <h2 class="mk-h2">Scope</h2>
+        </header>
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Individual returns, and it does not file for you</h3>
+            <p>The calculator covers Indian individual taxpayers, and the rules are held in
+              configuration per assessment year rather than hard coded. It computes and recommends;
+              it does not submit a return to the income tax portal, and it is not a substitute for a
+              chartered accountant on a complex case.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-pcta">
+      <div class="mk-wrap">
+        <h2>Start today</h2>
+        <p>Build the picture once, then let MoneyKal keep it current.</p>
+        <div class="mk-pcta__row">
+          <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+            Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+        </div>
+        <div class="mk-more">
+        <a href="hisaab.html">Hisaab</a>
+        <a href="intelligence.html">Intelligence</a>
+        <a href="app.html">App</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="security.html">Security &amp; Privacy</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

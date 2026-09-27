@@ -1,0 +1,84 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!--
+    Lets MoneyKal post its own notification about a payment it detected.
+
+    Unrelated to notification *access*, which is what lets it read other apps'
+    notifications and is granted through a separate Settings screen. The feature
+    needs both: access to notice the payment, this to tell you about it. Android
+    13 and later also require it to be requested at runtime.
+
+    Still no SMS permission of any kind.
+  -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <application>
+
+    <!--
+      The notification listener.
+
+      This is a *library* manifest: AGP merges it into the app's manifest at
+      build time, which is what puts "MoneyKal" in Android's Notification
+      access list. Keeping it here rather than in a config plugin means the
+      module is self contained. Regenerating android/ from scratch with a clean
+      prebuild does not lose it, because it belongs to the module rather than
+      to the generated project.
+
+      android:permission pins the binder to the system.
+      BIND_NOTIFICATION_LISTENER_SERVICE is a signature permission that only
+      the OS holds, so no third party app can bind this service and read the
+      notification stream through us. exported must still be true, because the
+      component has an intent filter and the system is an external caller, and
+      since API 31 that has to be stated explicitly.
+
+      The class is named in full rather than relatively, so it does not depend
+      on how the merger resolves a short name against a library namespace.
+
+      There is deliberately no SMS permission of any kind here. This service
+      sees notifications and nothing else.
+    -->
+    <service
+      android:name="expo.modules.paymentnotifications.PaymentNotificationListenerService"
+      android:label="MoneyKal payment detection"
+      android:exported="true"
+      android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+      <intent-filter>
+        <action android:name="android.service.notification.NotificationListenerService" />
+      </intent-filter>
+    </service>
+
+    <!--
+      "ADD TO MONEYKAL" and a tap on the notification body.
+
+      An activity rather than a receiver because Android 12 forbids
+      notification trampolines: a receiver may no longer start an activity, so
+      anything that brings MoneyKal to the front has to be an activity
+      PendingIntent from the start.
+
+      It draws nothing. The translucent theme plus noHistory and
+      excludeFromRecents mean it never appears, never lands in Recents, and
+      never stays on the back stack. Its own taskAffinity keeps it out of the
+      app's task, so bringing MoneyKal forward behaves exactly as tapping the
+      launcher does.
+
+      exported="false": only MoneyKal's own PendingIntents reach it.
+    -->
+    <activity
+      android:name="expo.modules.paymentnotifications.PaymentActionActivity"
+      android:theme="@android:style/Theme.Translucent.NoTitleBar"
+      android:excludeFromRecents="true"
+      android:noHistory="true"
+      android:taskAffinity=""
+      android:exported="false" />
+
+    <!--
+      "IGNORE". A receiver, so dismissing a suggestion does not open the app.
+      It starts no activity, so the trampoline restriction does not apply.
+    -->
+    <receiver
+      android:name="expo.modules.paymentnotifications.PaymentActionReceiver"
+      android:exported="false" />
+
+  </application>
+
+</manifest>

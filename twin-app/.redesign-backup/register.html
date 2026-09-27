@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Started - MoneyKal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;1,400&family=Merriweather:wght@400;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css">
+  <script>
+    (function () {
+      const sess = JSON.parse(localStorage.getItem('twin_session') || '{}');
+      const params = new URLSearchParams(window.location.search);
+      if (sess.token && sess.profileKey && !params.has('resume') && !params.has('zoho')) {
+        window.location.href = 'dashboard.html';
+      }
+    })();
+  </script>
+  <style>
+    /* Registration specific overrides for the white card */
+    .step-view {
+      display: none;
+    }
+
+    .step-view.is-active {
+      display: block;
+    }
+
+    .ob-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .ob-option {
+      border: 1px solid var(--auth-input-border);
+      padding: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--auth-input-bg);
+    }
+
+    .ob-option:hover {
+      border-color: var(--auth-accent);
+      background: var(--auth-input-bg-focus);
+    }
+
+    .ob-option.is-selected {
+      border-color: var(--auth-accent-solid);
+      background: var(--auth-accent-glow);
+      box-shadow: inset 0 0 0 1px var(--auth-accent-solid);
+    }
+
+    .ob-option h4 {
+      margin: 0 0 4px 0;
+      color: var(--auth-text);
+      font-weight: 600;
+    }
+
+    .ob-option p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--auth-text-muted);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .register-subtitle {
+      text-align: center;
+      color: var(--auth-text-muted);
+      margin-bottom: 24px;
+      font-size: 14px;
+      font-style: italic;
+    }
+
+    /* Simple button outline */
+    .btn-outline {
+      background: transparent;
+      color: var(--auth-text-muted);
+      border: 1px solid var(--auth-input-border);
+      border-radius: 4px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      background: var(--auth-input-bg);
+    }
+
+    /* Make login card a bit wider for register forms */
+    .register-card {
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+
+<body class="auth-page">
+
+  <button id="theme-toggle" class="auth-theme-toggle" aria-label="Toggle Theme">
+    <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      style="display:none;">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+    <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </button>
+
+  <div class="auth-blobs" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <div class="hdfc-layout">
+
+    <!-- Left Background & Branding -->
+    <div class="brand-panel">
+
+      <div class="brand-header">
+        <a href="/" class="brand-logo-link">
+          <img src="logo-icon.png" alt="MoneyKal" class="brand-logo-icon-auth" />
+          <span class="brand-wordmark-auth">MoneyKal</span>
+        </a>
+        <div class="brand-tags">
+          <span>Fast</span>
+          <span class="dot">&bull;</span>
+          <span>Online</span>
+          <span class="dot">&bull;</span>
+          <span>Intelligent</span>
+        </div>
+      </div>
+
+      <!-- Cinematic Text Reveal Container -->
+      <div class="cinematic-text-container">
+        <div class="cinematic-phrase active">
+          <span class="word">See</span> <span class="word">Tomorrow.</span>
+        </div>
+        <div class="cinematic-phrase">
+          <span class="word">Simulate</span> <span class="word">Decisions.</span>
+        </div>
+        <div class="cinematic-phrase">
+          <span class="word">Understand</span> <span class="word">Possibilities.</span>
+        </div>
+        <div class="cinematic-phrase">
+          <span class="word">Build</span> <span class="word">Your</span> <span class="word">Financial</span> <span
+            class="word">Twin.</span>
+        </div>
+      </div>
+
+      <img src="sticker.png" alt="MoneyKal Users" class="brand-hero-image" />
+    </div>
+
+    <!-- Right White Overlay Registration Card -->
+    <div class="login-panel-wrapper">
+      <div class="login-card register-card">
+        <div class="login-card-accent"></div>
+
+        <span class="login-eyebrow">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.1 8 11 4.6-1.9 8-6 8-11V5z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          Get Started
+        </span>
+        <h2 class="login-title">Create Your Twin</h2>
+        <div class="register-subtitle" id="stepSubtitle">See Tomorrow. Decide Today.</div>
+
+        <div id="regError" class="auth-error">An error occurred</div>
+
+        <!-- STEP 1: ACCOUNT TYPE -->
+        <div class="step-view is-active" id="step1">
+          <div class="ob-options" id="typeOptions">
+            <div class="ob-option is-selected" data-type="individual">
+              <div>
+                <h4>Individual</h4>
+                <p>Personal wealth and expenses</p>
+              </div>
+            </div>
+            <div class="ob-option" data-type="startup">
+              <div>
+                <h4>Startup</h4>
+                <p>Runway and burn management</p>
+              </div>
+            </div>
+
+          </div>
+          <button class="btn-login-solid" id="btnNext1" style="margin-bottom:16px;">Next &rarr;</button>
+          <div class="auth-footer-links">
+            Already have an account? <a href="login.html" class="bold-link">Log In</a>
+          </div>
+        </div>
+
+        <!-- STEP 2: ACCOUNT DETAILS -->
+        <div class="step-view" id="step2">
+          <form id="accountForm">
+            <div class="hdfc-field" style="margin-bottom: 16px;">
+              <span>Full Name<span class="req">*</span></span>
+              <input type="text" id="regName" class="ob-input" placeholder="Enter Full Name" required>
+            </div>
+            <div class="hdfc-field" style="margin-bottom: 16px;">
+              <span>Email Address<span class="req">*</span></span>
+              <input type="email" id="regEmail" class="ob-input" placeholder="Enter Email" required>
+            </div>
+            <div class="hdfc-field" style="margin-bottom: 24px;">
+              <span>Password<span class="req">*</span></span>
+              <div class="password-wrapper">
+                <div class="password-mascot" aria-hidden="true">
+                  <svg viewBox="0 0 40 40" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="19" style="fill: var(--auth-mascot-bg); stroke: var(--auth-mascot-border);" stroke-width="1.5" />
+                    <circle cx="10" cy="14" r="5" fill="none" style="stroke: var(--auth-accent);" stroke-width="1.8" />
+                    <circle cx="30" cy="14" r="5" fill="none" style="stroke: var(--auth-accent);" stroke-width="1.8" />
+                    <circle cx="20" cy="21" r="11" fill="none" style="stroke: var(--auth-accent);" stroke-width="1.8" />
+                    <circle class="mascot-eye" cx="16" cy="20" r="1.5" style="fill: var(--auth-accent);" />
+                    <circle class="mascot-eye" cx="24" cy="20" r="1.5" style="fill: var(--auth-accent);" />
+                    <path d="M16 25.5 Q20 28.5 24 25.5" style="stroke: var(--auth-accent);" stroke-width="1.8" fill="none" stroke-linecap="round" />
+                    <g class="mascot-hand mascot-hand-left">
+                      <circle cx="14.5" cy="30.5" r="4" style="fill: var(--auth-mascot-bg); stroke: var(--auth-accent);" stroke-width="1.6" />
+                      <path d="M12 28.3 11.3 27 M14.5 27.5 14.5 26 M17 28.3 17.7 27" style="stroke: var(--auth-accent);" stroke-width="1.1" stroke-linecap="round" />
+                    </g>
+                    <g class="mascot-hand mascot-hand-right">
+                      <circle cx="25.5" cy="30.5" r="4" style="fill: var(--auth-mascot-bg); stroke: var(--auth-accent);" stroke-width="1.6" />
+                      <path d="M23 28.3 22.3 27 M25.5 27.5 25.5 26 M28 28.3 28.7 27" style="stroke: var(--auth-accent);" stroke-width="1.1" stroke-linecap="round" />
+                    </g>
+                  </svg>
+                </div>
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <input type="password" id="regPassword" class="ob-input" placeholder="Create Password" required>
+                <span class="eye-icon" onclick="togglePasswordVisibility('regPassword', this)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                </span>
+              </div>
+            </div>
+            <button type="submit" class="btn-login-solid" id="btnCreateAccount" style="margin-bottom: 12px;">Create
+              Account & Continue</button>
+            <button type="button" class="btn-outline" onclick="setStep(1)">Back</button>
+          </form>
+        </div>
+
+        <!-- STEP 3: INDIVIDUAL PROFILE -->
+        <div class="step-view" id="step3-individual">
+          <h3 style="margin-bottom:8px; font-size: 16px; color: var(--auth-text);">Personal Financial Details</h3>
+          <div style="margin-bottom: 16px; font-size: 12px; display: flex; gap: 12px; align-items: center;">
+            <a href="http://127.0.0.1:8000/onboard/excel/template?persona=individual" target="_blank" style="color:var(--primary); text-decoration: underline;">📥 Download Excel Template</a> | 
+            <label style="color:var(--primary); cursor:pointer; text-decoration: underline; margin:0;">
+              📤 Auto-fill via Excel
+              <input type="file" id="regExcelFileInd" accept=".xlsx,.xls,.csv" style="display:none;">
+            </label>
+          </div>
+          <form id="individualForm">
+            <div class="field-row">
+              <label class="hdfc-field"><span>Occupation / Role</span><input type="text" id="indOccupation" class="ob-input" placeholder="e.g. Software Engineer"></label>
+              <label class="hdfc-field"><span>Mobile Number</span><input type="text" id="indMobile" class="ob-input" placeholder="Enter Mobile Number"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Monthly Salary/Income (₹)<span class="req">*</span></span><input type="number" id="indIncome" class="ob-input" required min="0"></label>
+              <label class="hdfc-field"><span>Total Savings (₹)<span class="req">*</span></span><input type="number" id="indSavings" class="ob-input" required min="0"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Monthly Fixed Expenses (₹)<span class="req">*</span></span><input type="number" id="indExpenses" class="ob-input" required min="0"></label>
+              <label class="hdfc-field"><span>Outstanding Loans (₹)<span class="req">*</span></span><input type="number" id="indLoans" class="ob-input" required min="0" value="0"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Existing Investments (₹)</span><input type="number" id="indInvestments" class="ob-input" min="0" value="0"></label>
+              <label class="hdfc-field"><span>Insurance Coverage (₹)</span><input type="number" id="indInsurance" class="ob-input" min="0" value="0"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Dependents</span><input type="number" id="indDependents" class="ob-input" min="0" value="0"></label>
+              <label class="hdfc-field"><span>Financial Goal Title</span><input type="text" id="indGoalTitle" class="ob-input" placeholder="e.g. House Purchase"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Goal Target Amount (₹)</span><input type="number" id="indGoalTarget" class="ob-input" min="0" placeholder="e.g. 5000000"></label>
+              <label class="hdfc-field"><span>Goal Target Date</span><input type="date" id="indGoalDate" class="ob-input"></label>
+            </div>
+            <button type="submit" class="btn-login-solid" id="btnIndSubmit" style="margin-top:16px; margin-bottom: 0;">Initialize Twin</button>
+          </form>
+        </div>
+
+        <!-- STEP 3: STARTUP PROFILE (New Flow) -->
+        <div class="step-view" id="step3-startup">
+          <h3 style="margin-bottom:8px; font-size: 16px; color: var(--auth-text);">Startup Profile</h3>
+          <div style="margin-bottom: 16px; font-size: 12px; display: flex; gap: 12px; align-items: center;">
+            <a href="http://127.0.0.1:8000/onboard/excel/template?persona=startup" target="_blank" style="color:var(--primary); text-decoration: underline;">📥 Download Excel Template</a> | 
+            <label style="color:var(--primary); cursor:pointer; text-decoration: underline; margin:0;">
+              📤 Auto-fill via Excel
+              <input type="file" id="regExcelFileSu" accept=".xlsx,.xls,.csv" style="display:none;">
+            </label>
+          </div>
+          <form id="startupProfileForm">
+            <div class="field-row">
+              <label class="hdfc-field"><span>Startup Name<span class="req">*</span></span><input type="text"
+                  id="suCompanyName" class="ob-input" required></label>
+              <label class="hdfc-field"><span>Industry<span class="req">*</span></span>
+                <select id="suIndustry" class="ob-input" required>
+                  <option value="">Select Industry</option>
+                  <option value="SaaS">SaaS / Software</option>
+                  <option value="Fintech">Fintech</option>
+                  <option value="Healthtech">Healthtech</option>
+                  <option value="E-commerce">E-commerce</option>
+                  <option value="Deeptech">Deeptech</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Business Model<span class="req">*</span></span>
+                <select id="suBusinessModel" class="ob-input" required>
+                  <option value="">Select Model</option>
+                  <option value="B2B">B2B</option>
+                  <option value="B2C">B2C</option>
+                  <option value="B2B2C">B2B2C</option>
+                  <option value="Marketplace">Marketplace</option>
+                </select>
+              </label>
+              <label class="hdfc-field"><span>Startup Stage<span class="req">*</span></span>
+                <select id="suStage" class="ob-input" required>
+                  <option value="">Select Stage</option>
+                  <option value="Pre-Seed">Pre-Seed</option>
+                  <option value="Seed">Seed</option>
+                  <option value="Series A">Series A</option>
+                  <option value="Series B+">Series B+</option>
+                  <option value="Bootstrapped">Bootstrapped</option>
+                </select>
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Team Size (Headcount)<span class="req">*</span></span><input type="number" id="suHeadcount" class="ob-input" min="1" required></label>
+              <label class="hdfc-field"><span>GST Number (GSTIN)</span><input type="text" id="suGstNumber" class="ob-input" placeholder="15-digit GSTIN (Optional)"></label>
+            </div>
+            <button type="submit" class="btn-login-solid" style="margin-bottom: 0;">Next: Financial Data &rarr;</button>
+          </form>
+        </div>
+
+        <!-- STEP 4: FINANCIAL SETUP CHOICE (Startup only) -->
+        <div class="step-view" id="step4-startup">
+          <h3 style="margin-bottom:16px; font-size: 16px; color: var(--auth-text);">How do you manage your finances?</h3>
+          <div class="ob-options" id="finSetupOptions">
+            <div class="ob-option" data-fin-type="zoho">
+              <div>
+                <h4>Zoho Books</h4>
+                <p>Connect securely to import data</p>
+              </div>
+            </div>
+            <div class="ob-option is-selected" data-fin-type="manual">
+              <div>
+                <h4>Manual Entry</h4>
+                <p>I will enter the key numbers myself</p>
+              </div>
+            </div>
+            <div class="ob-option" data-fin-type="other" style="opacity:0.5; pointer-events:none;">
+              <div>
+                <h4>Other (Quickbooks, Xero, etc.)</h4>
+                <p>Coming soon...</p>
+              </div>
+            </div>
+          </div>
+          <button class="btn-login-solid" id="btnNext4Startup" style="margin-top:24px; width: 100%;">Continue
+            &rarr;</button>
+        </div>
+
+        <!-- STEP 5: MANUAL FINANCIAL ENTRY (Startup only) -->
+        <div class="step-view" id="step5-startup">
+          <h3 style="margin-bottom:16px; font-size: 16px; color: var(--auth-text);" id="step5Title">Enter Financial Details</h3>
+          <p id="zohoMsg" style="display:none; color:var(--auth-accent); font-size:13px; margin-bottom:16px;">✅ Zoho Books
+            connected. We imported what we could. Please fill in the rest.</p>
+          <form id="startupFinForm">
+            <div class="field-row">
+              <label class="hdfc-field"><span>Current Cash in Bank (₹)<span class="req">*</span></span><input
+                  type="number" id="suCurrentCash" class="ob-input" min="0" required></label>
+              <label class="hdfc-field"><span>Monthly Revenue (₹)<span class="req">*</span></span><input type="number"
+                  id="suMonthlyRevenue" class="ob-input" min="0" required></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Monthly Expenses/Burn (₹)<span class="req">*</span></span><input
+                  type="number" id="suMonthlyBurn" class="ob-input" min="0" required></label>
+              <label class="hdfc-field"><span>Total Funding Raised (₹)<span class="req">*</span></span><input
+                  type="number" id="suTotalFunding" class="ob-input" min="0" required></label>
+            </div>
+            <label class="hdfc-field" style="margin-bottom: 16px;"><span>Debt / Liabilities (₹)<span
+                  class="req">*</span></span><input type="number" id="suDebt" class="ob-input" min="0" value="0"
+                required></label>
+
+            <div
+              style="background: rgba(0,0,0,0.05); padding: 12px; border-radius: 8px; margin-top: 16px; font-size: 13px;">
+              <strong>Auto-calculated metrics:</strong><br>
+              Runway: <span id="calcRunway">--</span> months <br>
+              Net Cash Flow: <span id="calcCashFlow">--</span> /mo
+            </div>
+
+            <button type="submit" class="btn-login-solid" id="btnSuSubmit" style="margin-top:24px;">Create Financial
+              Twin</button>
+          </form>
+        </div>
+
+
+        <!-- STEP 3: ENTERPRISE PROFILE -->
+        <div class="step-view" id="step3-enterprise">
+          <h3 style="margin-bottom:8px; font-size: 16px; color: #1F2937;">Enterprise / CFO Profile Details</h3>
+          <div style="margin-bottom: 16px; font-size: 12px; display: flex; gap: 12px; align-items: center;">
+            <a href="http://127.0.0.1:8000/onboard/excel/template?persona=enterprise" target="_blank" style="color:var(--primary); text-decoration: underline;">📥 Download Excel Template</a> | 
+            <label style="color:var(--primary); cursor:pointer; text-decoration: underline; margin:0;">
+              📤 Auto-fill via Excel
+              <input type="file" id="regExcelFileEnt" accept=".xlsx,.xls,.csv" style="display:none;">
+            </label>
+          </div>
+          <form id="enterpriseForm">
+            <div class="field-row">
+              <label class="hdfc-field"><span>CFO / Executive Name</span><input type="text" id="entCfoName" class="ob-input" placeholder="e.g. Rahul Sharma"></label>
+              <label class="hdfc-field"><span>Corporate Mobile</span><input type="text" id="entCorporateMobile" class="ob-input" placeholder="Enter Contact Mobile"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Organization Name<span class="req">*</span></span><input type="text" id="entOrgName" class="ob-input" required placeholder="e.g. Acme Corp Ltd"></label>
+              <label class="hdfc-field"><span>Industry / Sector</span><input type="text" id="entIndustry" class="ob-input" placeholder="e.g. Manufacturing / BFSI"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>GST Number (GSTIN)<span class="req">*</span></span><input type="text" id="entGstNumber" class="ob-input" required placeholder="15-digit GSTIN (e.g. 27AAAAA0000A1Z5)"></label>
+              <label class="hdfc-field"><span>Headcount</span><input type="number" id="entHeadcount" class="ob-input" min="1" placeholder="e.g. 250"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Treasury Balance (₹ Cr)<span class="req">*</span></span><input type="number" id="entTreasury" class="ob-input" min="0" step="0.01" required></label>
+              <label class="hdfc-field"><span>Annual Turnover (₹ Cr)</span><input type="number" id="entTurnover" class="ob-input" min="0" step="0.01" value="0"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>Qtr Cash Flow (₹ Cr)<span class="req">*</span></span><input type="number" id="entCashFlow" class="ob-input" step="0.01" required></label>
+              <label class="hdfc-field"><span>Operating Expenses (₹ Cr)</span><input type="number" id="entOperatingExpenses" class="ob-input" min="0" step="0.01" value="0"></label>
+            </div>
+            <div class="field-row">
+              <label class="hdfc-field"><span>FX Exposure (%)<span class="req">*</span></span><input type="number" id="entFx" class="ob-input" min="0" max="100" step="0.1" required></label>
+              <label class="hdfc-field"><span>Debt Amount (₹ Cr)</span><input type="number" id="entDebt" class="ob-input" min="0" step="0.01" value="0"></label>
+            </div>
+            <button type="submit" class="btn-login-solid" id="btnEntSubmit" style="margin-top:16px; margin-bottom: 0;">Initialize Twin</button>
+          </form>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/login-bg.js"></script>
+</body>
+
+</html>

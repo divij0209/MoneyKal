@@ -1,0 +1,366 @@
+"""Orchestrator for the Startup journey's Ask Twin and Simulate flows.
+
+Structurally mirrors `backend/agents/orchestrator.py`, but is a fully
+separate class grounded in the Startup twin (`startup_engine.py` /
+`startup_scenario.py`) instead of the Individual's `financial_simulator.py`.
+Reuses genuinely persona-agnostic infrastructure only: the generic `Agent`
+class and its `risk_agent`/`compliance_agent` instances from `sub_agents.py`,
+and `gemini_service`.
+"""
+from backend.core.money import group_indian
+import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
+from backend.agents.sub_agents import Agent, risk_agent, compliance_agent
+from backend.agents.startup_prompts import (
+    STARTUP_EXPLAINER_SYSTEM_PROMPT, STARTUP_RECOMMEND_SYSTEM_PROMPT, STARTUP_TEACH_SYSTEM_PROMPT,
+    STARTUP_WEEKLY_SUGGESTIONS_SYSTEM_PROMPT,
+)
+from backend.schemas.api_models import ChatResponse, ScenarioSimulateResponse, StageTrace
+from backend.services.gemini_service import gemini_service
+from backend.services.startup_engine import (
+    StartupContext, MetricResult, build_context, compute_metrics, compute_goals, generate_alerts,
+    metric_history, build_expense_breakdown, build_weekly_category_spend, flag_category_concerns,
+)
+from backend.services.startup_scenario import (
+    classify_intent, parse_scenario, describe_understanding, run_calculator, validate_result,
+    generate_comparison_variants,
+)
+from backend.market_intelligence.service import MarketIntelligenceService
+
+startup_explainer_agent = Agent(
+    name="Tathya",
+    description="Converts Startup Financial Twin data + simulation output into the final structured, human-readable response.",
+    system_prompt_override=STARTUP_EXPLAINER_SYSTEM_PROMPT,
+)
+
+# Deterministic keyword routing for Ask Twin's "show a relevant chart" behavior
+# — never an LLM judgment call. Only numeric/trend-shaped questions get a
+# visualization; small talk and qualitative questions don't force one.
+_RUNWAY_VISUAL_KEYWORDS = ("runway", "cash out", "cash left", "how much cash", "how much money", "money left")
+_BURN_VISUAL_KEYWORDS = ("burn", "expense", "expenses", "spending", "spend", "cost", "costs")
+_REVENUE_GOAL_VISUAL_KEYWORDS = ("revenue", "arr", "mrr", "goal", "on track", "growth", "customer", "grew", "growing")
+
+
+def _classify_visual_intent(text: str) -> Optional[str]:
+    t = text.lower()
+    if any(k in t for k in _RUNWAY_VISUAL_KEYWORDS):
+        return "runway"
+    if any(k in t for k in _BURN_VISUAL_KEYWORDS):
+        return "burn"
+    if any(k in t for k in _REVENUE_GOAL_VISUAL_KEYWORDS):
+        return "revenue_goal"
+    return None
+
+
+def _build_visualization(visual_intent: str, ctx: StartupContext, metrics: Dict[str, Any], goals: List[Dict[str, Any]], profile: Any) -> Optional[Dict[str, Any]]:
+    history = metric_history(list(profile.startup_snapshots))
+    if visual_intent == "runway":
+        return {
+            "type": "cash_runway", "history": history,
+            "projection": metrics["cash_projection"],
+            "runway": metrics["runway"].to_dict(), "cash_position": metrics["cash_position"].to_dict(),
+        }
+    if visual_intent == "burn":
+        out_txns = [t for t in profile.startup_transactions if t.type == "out"]
+        return {
+            "type": "expense_breakdown", "history": history,
+            "breakdown": build_expense_breakdown(ctx, out_txns),
+            "gross_burn": metrics["gross_burn"].to_dict(), "expense_growth": metrics["expense_growth"].to_dict(),
+        }
+    if visual_intent == "revenue_goal":
+        return {
+            "type": "revenue_goals", "history": history, "goals": goals,
+            "revenue": metrics["revenue"].to_dict(), "revenue_growth": metrics["revenue_growth"].to_dict(),
+        }
+    return None
+
+
+_EXCHANGE_KEYWORDS = ("usd", "dollar", "exchange rate", "forex", "currency", "inr rate")
+_NEWS_KEYWORDS = ("news", "headline", "sentiment", "market news", "industry news", "market intelligence")
+_ECONOMIC_KEYWORDS = ("inflation", "interest rate", "repo rate", "economic", "fred")
+_STOCK_KEYWORDS = ("stock", "stocks", "market", "nifty", "sensex", "shares")
+
+
+def _classify_market_intent(text: str) -> List[str]:
+    t = text.lower()
+    intents = []
+    if any(k in t for k in _EXCHANGE_KEYWORDS):
+        intents.append("exchange_rate")
+    if any(k in t for k in _NEWS_KEYWORDS):
+        intents.append("news")
+    if any(k in t for k in _ECONOMIC_KEYWORDS):
+        intents.append("economic")
+    if any(k in t for k in _STOCK_KEYWORDS):
+        intents.append("stock")
+    return intents
+
+
+def _fetch_market_data(intents: List[str], db: Any, ctx: "StartupContext") -> Dict[str, Any]:
+    if not intents or db is None:
+        return {}
+    mi = MarketIntelligenceService(db)
+    data: Dict[str, Any] = {}
+    try:
+        if "exchange_rate" in intents:
+            data["usd_inr_rate"] = mi.get_exchange_rate("USDINR=X")
+        if "news" in intents:
+            topic = ctx.industry or "startup"
+            data["news"] = mi.get_news_sentiment(topic)
+        if "economic" in intents:
+            data["inflation_in"] = mi.get_economic_indicator("INFLATION_IN", "CPIAUCSL")
+            data["repo_rate_in"] = mi.get_economic_indicator("REPO_RATE_IN", "INTDSRINM193N")
+        if "stock" in intents:
+            data["nifty_index"] = mi.get_stock_price("^NSEI")
+    except Exception:
+        pass
+    return data
+
+
+def _ctx_and_metrics(profile: Any) -> Tuple[StartupContext, Dict[str, Any], list]:
+    ctx = build_context(profile.startup_profile)
+    snapshots = list(profile.startup_snapshots)
+    metrics = compute_metrics(ctx, snapshots)
+    return ctx, metrics, snapshots
+
+
+def _metrics_to_dict(metrics: Dict[str, Any]) -> Dict[str, Any]:
+    return {k: (v.to_dict() if isinstance(v, MetricResult) else v) for k, v in metrics.items()}
+
+
+class StartupOrchestrator:
+    def process_query(self, profile: Any, query: str, chat_history: List[Dict[str, str]] = None, db: Any = None) -> ChatResponse:
+        trace = []
+        ctx, metrics, _snapshots = _ctx_and_metrics(profile)
+        goals = compute_goals(ctx, metrics)
+        alerts = generate_alerts(ctx, metrics, goals)
+
+        from backend.services.startup_engine import build_expense_breakdown, build_revenue_breakdown
+        out_txns = [t for t in profile.startup_transactions if t.type == "out"]
+        in_txns = [t for t in profile.startup_transactions if t.type == "in"]
+
+        recent_txns = []
+        if hasattr(profile, "startup_transactions") and profile.startup_transactions:
+            sorted_txns = sorted(profile.startup_transactions, key=lambda x: x.txn_date.isoformat() if x.txn_date else "", reverse=True)
+            for t in sorted_txns[:30]:
+                recent_txns.append({
+                    "date": str(t.txn_date) if t.txn_date else None,
+                    "type": t.type,
+                    "category": t.category,
+                    "amount": t.amount,
+                    "desc": t.description
+                })
+
+        data_ctx = {
+            "currency": ctx.currency,
+            "company": {"name": ctx.company_name, "stage": ctx.stage},
+            "metrics": _metrics_to_dict(metrics),
+            "goals": goals,
+            "alerts": alerts[:3],
+            "expense_breakdown": build_expense_breakdown(ctx, out_txns),
+            "revenue_breakdown": build_revenue_breakdown(ctx, in_txns),
+            "recent_transactions": recent_txns,
+        }
+
+        market_intents = _classify_market_intent(query)
+        market_data = _fetch_market_data(market_intents, db, ctx)
+        if market_data:
+            data_ctx["market_data"] = market_data
+            trace.append({"agent": "Market", "action": f"Fetched live data for: {', '.join(market_intents)}", "output": str(market_data)})
+
+        data_res = str(data_ctx)
+        trace.append({"agent": "Data", "action": "Fetched your startup position, goals and alerts", "output": data_res})
+
+        # Explainer Agent (Single-pass inference to avoid Groq rate limits)
+        # We collapse Risk and Compliance into the Explainer's instruction
+        # since it's capable of doing all three steps in a single prompt.
+        exp_res = startup_explainer_agent.process(
+            {"data": data_res},
+            f"Simulate financial impact, check for unlicensed advice flags, and format response for query: {query}",
+            chat_history=chat_history, 
+            max_output_tokens=2048,
+        )
+        trace.append({"agent": "Tathya", "action": "Formatted final structured output (single-pass)", "output": exp_res})
+
+        # Numeric/trend-shaped questions get a matching chart, built entirely
+        # from the metrics already computed above — never from the LLM. Simple
+        # questions (greetings, qualitative asks) get none.
+        visual_intent = _classify_visual_intent(query)
+        visualization = _build_visualization(visual_intent, ctx, metrics, goals, profile) if visual_intent else None
+        if visualization:
+            trace.append({"agent": "Data", "action": f"Attached a '{visualization['type']}' visualization", "output": str({"type": visualization["type"]})})
+
+        return ChatResponse(
+            session_id="",
+            answer=exp_res,
+            confidence="high",
+            sources=[{"source": "MoneyKal Financial Brain", "timestamp": datetime.datetime.utcnow().isoformat()}],
+            reasoning_trace=trace,
+            disclaimer="This is an AI-generated simulation and does not constitute financial advice. Ensure you consult your board or a certified financial advisor.",
+            visualization=visualization,
+        )
+
+    def run_scenario_simulation(self, profile: Any, scenario_text: str) -> ScenarioSimulateResponse:
+        if classify_intent(scenario_text) == "informational":
+            return self._answer_informational(profile, scenario_text)
+        return self._run_scenario_pipeline(profile, scenario_text)
+
+    def _answer_informational(self, profile: Any, query_text: str) -> ScenarioSimulateResponse:
+        stages: List[Dict[str, str]] = [{
+            "agent": "Understand", "status": "done",
+            "summary": "Classified as an informational question about your current startup finances, routed to the same grounded flow Ask Twin uses, rather than a hypothetical simulation.",
+        }]
+        ctx, metrics, _snapshots = _ctx_and_metrics(profile)
+        stages.append({
+            "agent": "Watch", "status": "done",
+            "summary": f"Retrieved your startup position, cash {metrics['cash_position'].display}, gross burn {metrics['gross_burn'].display}, net burn {metrics['net_burn'].display}, runway {metrics['runway'].display}.",
+        })
+
+        chat_response = self.process_query(profile, query_text)
+
+        stages.append({"agent": "Check", "status": "done", "summary": "Answered directly from your stored startup data. No hypothetical numbers or projections were introduced."})
+
+        financial_impact = {k: v.value for k, v in metrics.items() if isinstance(v, MetricResult)}
+        return ScenarioSimulateResponse(
+            scenario=query_text, scenario_type="informational", mode="informational", parsed_params={},
+            stages=[StageTrace(**s) for s in stages], financial_impact=financial_impact, timeline=[],
+            recommendation=chat_response.answer, why="", risks=[], assumptions=[], teaching="",
+            disclaimer=chat_response.disclaimer,
+        )
+
+    def _run_scenario_pipeline(self, profile: Any, scenario_text: str) -> ScenarioSimulateResponse:
+        stages: List[Dict[str, str]] = []
+
+        scenario_type, params = parse_scenario(scenario_text)
+        stages.append({"agent": "Understand", "status": "done", "summary": describe_understanding(scenario_type, params, "₹")})
+
+        ctx, metrics, snapshots = _ctx_and_metrics(profile)
+        stages.append({
+            "agent": "Watch", "status": "done",
+            "summary": f"Retrieved your startup position, cash {metrics['cash_position'].display}, gross burn {metrics['gross_burn'].display}, net burn {metrics['net_burn'].display}, runway {metrics['runway'].display}.",
+        })
+
+        impact, timeline, assumptions, calc_risks, after_metrics = run_calculator(scenario_type, ctx, metrics, snapshots, params)
+        stages.append({"agent": "Simulate", "status": "done", "summary": f"Ran deterministic financial projections across {len(timeline)} milestone(s)."})
+
+        timeline_series = None
+        baseline_series = (metrics.get("cash_projection") or {}).get("series")
+        scenario_series = (after_metrics.get("cash_projection") or {}).get("series") if after_metrics else None
+        if baseline_series or scenario_series:
+            timeline_series = {
+                "unit": "INR", "horizon_months": 12,
+                "baseline": baseline_series or [], "scenario": scenario_series or [],
+            }
+
+        comparison_variants = generate_comparison_variants(scenario_type, ctx, metrics, snapshots, params)
+
+        recommendation, why = self._recommend(scenario_text, ctx, scenario_type, impact, calc_risks)
+        stages.append({"agent": "Recommend", "status": "done", "summary": "Generated a personalized recommendation grounded in the computed numbers."})
+
+        teaching = self._teach(scenario_text, scenario_type, ctx)
+        stages.append({"agent": "Teach", "status": "done", "summary": "Explained the financial concept behind this scenario."})
+
+        check_notes = validate_result(ctx, scenario_type, params)
+        risks = list(calc_risks) + check_notes
+        stages.append({"agent": "Check", "status": "done", "summary": f"Validated calculation inputs, flagged {len(risks)} risk(s)." if risks else "Validated calculation inputs. No red flags found."})
+
+        return ScenarioSimulateResponse(
+            scenario=scenario_text, scenario_type=scenario_type, mode="scenario",
+            parsed_params={k: v for k, v in params.items() if v is not None},
+            stages=[StageTrace(**s) for s in stages],
+            financial_impact=impact, timeline=timeline,
+            recommendation=recommendation, why=why,
+            risks=risks if risks else ["No material risks identified from the available data."],
+            assumptions=assumptions, teaching=teaching,
+            disclaimer="This simulation is educational and based on your current Startup Financial Twin. Consider consulting your board or a financial advisor before making major financial decisions.",
+            timeline_series=timeline_series, comparison_variants=comparison_variants,
+        )
+
+    def _recommend(self, scenario_text, ctx: StartupContext, scenario_type, impact, calc_risks):
+        if gemini_service.available():
+            prompt = (
+                f"Scenario: {scenario_text}\n"
+                f"Scenario type: {scenario_type}\n"
+                f"Company: {ctx.company_name or 'Unnamed'} ({ctx.stage or 'stage unknown'})\n"
+                f"Already-computed financial impact: {impact}\n"
+                f"Already-flagged risks: {calc_risks}\n"
+            )
+            data = gemini_service.generate_json(prompt, system_instruction=STARTUP_RECOMMEND_SYSTEM_PROMPT, temperature=0.4)
+            if data and data.get("recommendation"):
+                return data.get("recommendation", ""), data.get("why", "")
+        return self._fallback_recommendation(impact, calc_risks, ctx)
+
+    def _teach(self, scenario_text, scenario_type, ctx: StartupContext):
+        if gemini_service.available():
+            prompt = f"Scenario: {scenario_text}\nScenario type: {scenario_type}\nCompany stage: {ctx.stage}"
+            try:
+                return gemini_service.generate(prompt, system_instruction=STARTUP_TEACH_SYSTEM_PROMPT, temperature=0.5, max_output_tokens=512)
+            except Exception:
+                pass
+        return self._fallback_teaching(scenario_type)
+
+    @staticmethod
+    def _fallback_recommendation(impact, calc_risks, ctx: StartupContext):
+        if calc_risks:
+            return ("Hold off before committing to this exactly as described.", calc_risks[0])
+        runway_after = impact.get("runway_after")
+        if runway_after is not None and runway_after < 3:
+            return (
+                "This isn't advisable as described. It would push runway to a critically low level.",
+                f"Projected runway after this change is {runway_after:.1f} months, under the 3-month critical threshold.",
+            )
+        return (
+            "This looks workable based on your current numbers. Proceed, but keep watching runway and burn.",
+            "Projected runway stays above the critical threshold given your current cash and burn trajectory.",
+        )
+
+    def generate_weekly_suggestions(self, category_spend: Dict[str, Any], flags: List[Dict[str, Any]],
+                                     ctx: StartupContext, metrics: Dict[str, Any]) -> List[Dict[str, str]]:
+        """Rules already computed category_spend + flags — this only phrases
+        them. Never called with raw transactions; never invents numbers."""
+        if category_spend.get("status") != "actual":
+            return [{"title": "Not enough data yet", "detail": category_spend.get("note") or "Log a few weeks of expenses to unlock savings suggestions."}]
+
+        if gemini_service.available():
+            prompt = (
+                f"This week's total spend: {ctx.currency}{category_spend.get('this_week_total')}\n"
+                f"Last week's total spend: {ctx.currency}{category_spend.get('last_week_total')}\n"
+                f"Week-over-week change: {category_spend.get('pct_change')}%\n"
+                f"Category breakdown: {category_spend.get('categories')}\n"
+                f"Flags detected: {flags}\n"
+                f"Current runway: {metrics['runway'].display if metrics.get('runway') else 'unknown'}\n"
+                f"Financial health: {metrics['financial_health'].display if metrics.get('financial_health') else 'unknown'}\n"
+            )
+            data = gemini_service.generate_json(prompt, system_instruction=STARTUP_WEEKLY_SUGGESTIONS_SYSTEM_PROMPT, temperature=0.4)
+            if data and data.get("suggestions"):
+                return data["suggestions"]
+
+        return self._fallback_weekly_suggestions(category_spend, flags)
+
+    @staticmethod
+    def _fallback_weekly_suggestions(category_spend: Dict[str, Any], flags: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+        if not flags:
+            total = category_spend.get("this_week_total") or 0
+            return [{"title": "Spending looks stable", "detail": f"Total spend this week was ₹{group_indian(total)}, with no unusual category spikes detected."}]
+        out = []
+        for f in flags[:4]:
+            if f["type"] == "spike":
+                out.append({"title": f"{f['category']} spiked", "detail": f["detail"]})
+            elif f["type"] == "new_category":
+                out.append({"title": f"New: {f['category']}", "detail": f["detail"]})
+            elif f["type"] == "thin_runway":
+                out.append({"title": "Runway is tight", "detail": f["detail"]})
+        return out
+
+    @staticmethod
+    def _fallback_teaching(scenario_type):
+        concepts = {
+            "hire_people": "Every hire adds fully-loaded monthly cost (salary, benefits, overhead) to your burn — the real question isn't just 'can I afford this month' but 'how many months of runway does this cost me', since that's what determines how much time you have left to hit your next milestone.",
+            "raise_funding": "Raising capital extends runway but doesn't fix an unsustainable burn rate on its own — money bought with equity is the most expensive kind, since it's permanently diluting your ownership, so it's worth pairing a raise with a real plan to improve burn multiple or reach break-even.",
+            "change_expense": "Every recurring cost change compounds monthly. A small increase in fixed costs today keeps costing you every month going forward, which is why it shows up as a runway change, not just a one-time hit.",
+            "change_revenue": "Revenue growth is the only lever that improves your runway without diluting equity or cutting into your team, which is why founders track 'burn multiple' (burn ÷ net new revenue) as closely as burn itself.",
+        }
+        return concepts.get(scenario_type, "Every startup financial decision trades off runway (time left to operate), growth (revenue/traction), and dilution (equity given up to buy more time). Weighing a scenario means checking it against all three, not just the immediate cost or benefit.")
+
+
+startup_orchestrator = StartupOrchestrator()

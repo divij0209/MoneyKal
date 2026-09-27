@@ -1,0 +1,140 @@
+# Render blueprint: the API and the static site, both behind HTTPS.
+#
+# WHY BOTH SERVICES ARE HERE
+# --------------------------
+# The frontend calls the backend from the browser. If the two live on different
+# origins the calls are cross-origin, and if the page is https while the API is
+# http every one of them is blocked as mixed content with no visible error.
+# Publishing the static site with a /api/* rewrite onto the API service makes
+# them same-origin, which removes both problems at once and is exactly what
+# twin-app/js/config.js assumes when it resolves the base on an https page.
+#
+#   render blueprint launch   (or connect the repo in the Render dashboard)
+#
+# Secrets are marked sync:false — Render prompts for them on first deploy and
+# they are never committed here.
+
+services:
+  - type: web
+    name: moneykal-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    # Run migrations exactly once per deploy, not once per replica.
+    preDeployCommand: alembic upgrade head
+    envVars:
+      # The production database is the existing Supabase project, which is where
+      # every account, ledger row and billing order already lives. Pointing this
+      # at a freshly provisioned Render database instead would deploy a working
+      # app with an empty schema and no users, which looks like data loss even
+      # though nothing was deleted. Paste the Supabase connection string here on
+      # first deploy. (The optional Render database is at the bottom of this
+      # file, commented out, for anyone who wants a throwaway environment.)
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      # Same-origin through the static site's rewrite, so this is the only
+      # origin that needs to be allowed. Replace with the real hostname once
+      # the static site has one.
+      - key: CORS_ALLOW_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      # Checkout. pricing_config defaults this to "demo", where payment is
+      # SIMULATED: the order is granted exactly as a real one would be and no
+      # money moves. Deploying with that default hands every user a free ACT
+      # subscription. Any other value makes checkout answer 503
+      # "payments_unavailable" until a real gateway is wired up, which is the
+      # correct behaviour for production. Kal Coins redemption is unaffected —
+      # an order that coins cover in full never touches a gateway in any mode.
+      - key: PAYMENT_MODE
+        value: "live"
+      # Optional integrations. Each feature detects its own absence and hides
+      # or explains itself rather than failing, so these can stay unset.
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REDIRECT_URI
+        sync: false
+      - key: VAPI_PUBLIC_KEY
+        sync: false
+      # Varta in the browser calls back into this API, so it needs the public
+      # base URL of this service.
+      - key: VAPI_SERVER_URL
+        sync: false
+      # Varta over the telephone (Omnidim). Leave unset to keep outbound calling
+      # off: /voice/omnidim/call returns 503 and the UI says so, rather than
+      # failing halfway through.
+      - key: OMNIDIM_API_KEY
+        sync: false
+      - key: OMNIDIM_AGENT_ID
+        sync: false
+      - key: OMNIDIM_FROM_NUMBER_ID
+        sync: false
+      # Voice transcripts are user financial data. Off unless deliberately on.
+      - key: VOICE_PERSIST_TRANSCRIPTS
+        value: "false"
+      # WhatsApp logging (Evolution API).
+      - key: EVOLUTION_API_URL
+        sync: false
+      - key: EVOLUTION_API_KEY
+        sync: false
+      # Background jobs: Daily AI Insights, weekly reports, WhatsApp reminders,
+      # Gmail sync. These are NOT idempotent — the WhatsApp jobs send real
+      # messages — so exactly one instance may run them. Keep this "false" here
+      # and set it to "true" on a single worker, or keep the service at one
+      # instance and turn it on. Two replicas with this true means every user
+      # gets every reminder twice.
+      - key: ENABLE_SCHEDULER
+        value: "false"
+      # Creating tables from the models is refused against a remote database
+      # anyway; this makes the intent explicit.
+      - key: DB_AUTO_CREATE
+        value: "false"
+      # The WhatsApp dev helper endpoint stays off in production.
+      - key: WHATSAPP_TEST_SEND
+        value: "false"
+
+  - type: web
+    name: moneykal-web
+    runtime: static
+    # No build step: twin-app/ is plain HTML, CSS and JS with its third-party
+    # libraries vendored into twin-app/vendor/.
+    buildCommand: ""
+    staticPublishPath: ./twin-app
+    routes:
+      # Same-origin API. This is what lets the page be served over https
+      # without every fetch being blocked as mixed content.
+      - type: rewrite
+        source: /api/*
+        destination: https://moneykal-api.onrender.com/*
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains
+
+# Optional. Uncommented, this provisions a Render Postgres for a throwaway or
+# staging environment; point DATABASE_URL above at it with `fromDatabase`. It is
+# off by default so a blueprint launch cannot quietly stand up an empty database
+# beside the real Supabase one and serve it as production.
+#
+# databases:
+#   - name: moneykal-db
+#     plan: basic-256mb
+#     postgresMajorVersion: "16"

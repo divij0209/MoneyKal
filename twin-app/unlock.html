@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F4F2ED" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070809" media="(prefers-color-scheme: dark)">
+  <!-- A lock screen has nothing to offer a search engine, and the `next`
+       parameter should not be crawled or archived. -->
+  <meta name="robots" content="noindex, nofollow">
+  <title>Unlock MoneyKal</title>
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- login.css carries the auth palette, the field and button styles. This
+       page reuses them so the lock screen and the sign-in page are visibly the
+       same product; pin.css only adds what is specific to a PIN. -->
+  <link rel="stylesheet" href="css/login.css?v=2">
+  <link rel="stylesheet" href="css/pin.css?v=2">
+
+  <!-- Theme, before first paint. Same key and attribute as every other page. -->
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+
+  <script>
+    /* Who should never see this page.
+
+       Someone with no remembered device has nothing to unlock: send them to
+       the password form. Someone already holding a live session arrived here
+       by typing the URL; there is nothing to unlock for them either.
+
+       Both run before the page paints, so neither sees a lock screen flash. */
+    (function () {
+      function get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+      var device = get('moneykal_device');
+      var token = null;
+      try { token = JSON.parse(get('twin_session') || '{}').token; } catch (e) { /* ignore */ }
+
+      if (!device) {
+        window.location.replace(token ? 'dashboard.html' : 'login.html');
+        return;
+      }
+
+      /* The card stays hidden while js/unlock.js asks other tabs whether one
+         of them is unlocked (a fraction of a second). Without this, a new tab
+         that is about to be let straight through would flash a PIN form it
+         never needed. The timeout is a safety net: if the script failed to
+         load, the form must still appear rather than leave a blank page. */
+      document.documentElement.classList.add('pin-checking');
+      setTimeout(function () {
+        document.documentElement.classList.remove('pin-checking');
+      }, 2500);
+    })();
+  </script>
+</head>
+
+<body class="auth-page pin-page">
+
+  <div class="pin-shell">
+
+    <div class="auth-topbar pin-topbar">
+      <a href="index.html" class="auth-brand">
+        <span class="auth-brand__mark" aria-hidden="true">
+          <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+        </span>
+        <span class="auth-brand__name">Money<em>Kal</em></span>
+      </a>
+
+      <button type="button" id="theme-toggle" class="auth-iconbtn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"></path>
+        </svg>
+      </button>
+    </div>
+
+    <main class="pin-main">
+      <div class="pin-card">
+
+        <span class="pin-lockmark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+               stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2.5"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </span>
+
+        <h1 class="pin-title">Enter your MoneyKal PIN</h1>
+        <p class="pin-sub" id="pinAccount">This device is signed in. Your PIN unlocks it.</p>
+
+        <div id="pinError" class="auth-error" role="alert" aria-live="assertive"></div>
+
+        <form id="pinForm" novalidate autocomplete="off">
+          <label class="pin-fieldlabel" for="pinInput">PIN</label>
+          <input type="password" id="pinInput" class="pin-input" inputmode="numeric" pattern="[0-9]*"
+                 maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false"
+                 aria-describedby="pinHint" placeholder="••••">
+          <p class="pin-hint" id="pinHint">4 or 6 digits</p>
+
+          <button type="submit" class="btn-login-solid pin-submit" id="btnUnlock">
+            <span>Unlock</span>
+            <svg class="btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </form>
+
+        <div class="pin-alt">
+          <button type="button" class="auth-link auth-link--cyan" id="btnUsePassword">Use password instead</button>
+        </div>
+
+        <p class="pin-note" id="pinExpiry" hidden></p>
+      </div>
+
+      <div class="auth-secure pin-secure">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 5v6c0 5 3.4 9.1 8 11 4.6-1.9 8-6 8-11V5z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+        Your PIN is checked on our servers · never stored on this device
+      </div>
+    </main>
+
+    <footer class="auth-foot pin-foot">
+      <span>&copy; 2026 MoneyKal</span>
+      <a href="security.html">Security &amp; Privacy</a>
+      <a href="login.html">Sign in</a>
+    </footer>
+
+  </div>
+
+  <script src="js/config.js?v=1"></script>
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/pin.js?v=1"></script>
+  <script src="js/unlock.js?v=2"></script>
+</body>
+
+</html>

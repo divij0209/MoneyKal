@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hisaab: track every rupee | MoneyKal</title>
+  <meta name="description" content="Hisaab is MoneyKal's ledger. Scan a receipt, categorise money in and out, and keep a running answer to where it went.">
+
+  <link rel="icon" href="assets/brand/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+
+  <link rel="stylesheet" href="css/home.css?v=5">
+  <link rel="stylesheet" href="css/pages.css?v=1">
+  <!-- The Terms dialog opened from the footer: the same document and dialog as
+       the sign-in page; terms-dialog.css scopes its tokens to the dialog. -->
+  <link rel="stylesheet" href="css/terms-dialog.css?v=2">
+  <link rel="stylesheet" href="css/terms.css?v=1">
+
+  <script>
+    try {
+      document.documentElement.setAttribute(
+        'data-theme',
+        localStorage.getItem('moneykal_theme') === 'dark' ? 'dark' : 'light'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
+  </script>
+</head>
+
+<body class="mk">
+
+  <div class="mk-progress" aria-hidden="true"><i id="mkProgressBar"></i></div>
+
+  <header class="mk-nav" id="mkNav">
+    <a class="mk-nav__brand" href="index.html" aria-label="MoneyKal home">
+      <span class="mk-nav__logo" aria-hidden="true">
+        <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+      </span>
+      <span>MoneyKal</span>
+    </a>
+
+    <nav class="mk-nav__links" aria-label="Primary">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html" class="is-current">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+
+    <div class="mk-nav__actions">
+      <button id="theme-toggle" class="mk-icon-btn" aria-label="Toggle theme">
+        <svg id="theme-icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <svg id="theme-icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4.5"></circle>
+          <path d="M12 1.5v2.2M12 20.3v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M1.5 12h2.2M20.3 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6" />
+        </svg>
+      </button>
+      <button id="lang-toggle" class="mk-lang-btn">EN | हिं</button>
+      <a href="login.html" class="mk-nav__login">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+      <button class="mk-nav__burger" id="mkBurger" aria-label="Open menu" aria-expanded="false"
+        aria-controls="mkMobileMenu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="mk-sheet" id="mkMobileMenu" hidden>
+    <nav class="mk-sheet__links" aria-label="Mobile">
+      <a href="index.html#what">What MoneyKal is</a>
+      <a href="hisaab.html">Hisaab</a>
+      <a href="taxes.html">Taxes</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="app.html">App</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="security.html">Security</a>
+    </nav>
+    <div class="mk-sheet__actions">
+      <a href="login.html" class="mk-btn mk-btn--ghost">Log In</a>
+      <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+    </div>
+  </div>
+
+  <main id="top">
+
+    <section class="mk-phero">
+      <div class="mk-wrap mk-phero__inner">
+        <a class="mk-crumb" href="index.html"><span aria-hidden="true">&larr;</span> MoneyKal</a>
+        <h1 class="mk-phero__title">Hisaab</h1>
+      </div>
+
+      <div class="mk-wrap mk-phero__visual">
+        <div class="mk-hisaab" data-reveal data-demo="hisaab">
+          <div class="mk-hisaab__ledger">
+            <div class="mk-panel__bar">
+              <span class="mk-panel__title">Hisaab · August</span>
+              <span class="mk-panel__meta"><b id="mkHisaabCount">0</b> entries</span>
+            </div>
+            <ul class="mk-hisaab__list" id="mkHisaabList" aria-live="off"></ul>
+          </div>
+
+          <aside class="mk-hisaab__side">
+            <div class="mk-hisaab__totals">
+              <div>
+                <span>In</span>
+                <b class="is-in" id="mkHisaabIn" data-prefix="₹">₹0</b>
+              </div>
+              <div>
+                <span>Out</span>
+                <b class="is-out" id="mkHisaabOut" data-prefix="₹">₹0</b>
+              </div>
+              <div>
+                <span>Net</span>
+                <b id="mkHisaabNet" data-prefix="₹">₹0</b>
+              </div>
+            </div>
+
+            <p class="mk-eyebrow mk-hisaab__catlabel">Where it went</p>
+            <ul class="mk-cats" id="mkHisaabCats"></ul>
+
+            <p class="mk-demo__note">Illustrative month. In the product these are your own entries.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">What it does</p>
+          <h2 class="mk-h2">The ledger everything else reads from</h2>
+          <p class="mk-sub">Hisaab is the source of truth. Insights, simulations and the voice answers all compute over these entries, which is why the categories are fixed and every figure is traceable to a row.</p>
+        </header>
+
+        <ul class="mk-caps" data-reveal>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Capture</span>
+            <h3>Scan a receipt</h3>
+            <p>Photograph a receipt and MoneyKal reads it, pulling out the merchant, the date, the line items, the tax amount and the total, then proposes a category. You confirm or correct before anything is saved.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Ledger</span>
+            <h3>Money in and money out</h3>
+            <p>Every entry is income or expense, with an amount, a date, a description and a category. Add, edit and delete entries directly; the totals and the net figure recompute from the ledger rather than being stored separately.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Structure</span>
+            <h3>One fixed category set</h3>
+            <p>Twenty five categories cover income and expenses, from Salary, Freelance and Investment Return through Rent, Groceries, Utilities, Subscriptions, Payroll, Software, Marketing and Taxes. A fixed list is what makes month against month comparison meaningful.</p>
+          </li>
+          <li class="mk-cap">
+            <span class="mk-cap__k">Automation</span>
+            <h3>Import from Gmail</h3>
+            <p>Connect Gmail and MoneyKal reads bank transaction alerts, turning them into entries you review before they land. It also spots payment deadlines in the same mail and offers them to your calendar.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mk-section mk-section--tint">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">How it works</p>
+          <h2 class="mk-h2">Four steps, no bookkeeping knowledge needed</h2>
+          <p class="mk-sub">The flow is deliberately short. The work is in the reading, not the data entry.</p>
+        </header>
+
+        <ol class="mk-steps" data-reveal>
+          <li class="mk-step">
+            <span class="mk-step__n">01</span>
+            <div>
+              <h3>Add what happened</h3>
+              <p>Scan a receipt, log an entry by hand, or let a connected Gmail account propose entries from bank alerts.</p>
+            </div>
+          </li>
+          <li class="mk-step">
+            <span class="mk-step__n">02</span>
+            <div>
+              <h3>Confirm the reading</h3>
+              <p>Nothing is saved from a scan or an import until you accept it. You can change the category, the amount or the date first.</p>
+            </div>
+          </li>
+          <li class="mk-step">
+            <span class="mk-step__n">03</span>
+            <div>
+              <h3>Watch the totals move</h3>
+              <p>Money in, money out and the net figure recompute against the ledger, and the category breakdown updates with them.</p>
+            </div>
+          </li>
+          <li class="mk-step">
+            <span class="mk-step__n">04</span>
+            <div>
+              <h3>Read it back</h3>
+              <p>Weekly and monthly summaries compare this period against your usual one, and feed the readings you see elsewhere in MoneyKal.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="mk-section">
+      <div class="mk-wrap">
+        <header class="mk-head" data-reveal>
+          <p class="mk-eyebrow">Worth knowing</p>
+          <h2 class="mk-h2">Where the numbers come from</h2>
+          <p class="mk-sub">MoneyKal is explicit about which figures are computed and which are read from a document.</p>
+        </header>
+
+        <div class="mk-note" data-reveal>
+          <span class="mk-note__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>
+            </svg>
+          </span>
+          <div>
+            <h3>Receipt scanning uses a vision model</h3>
+            <p>Extraction is a language model reading an image, so it can misread a smudged or unusual receipt. That is exactly why the proposed values are shown for confirmation rather than written straight into your ledger.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <section class="mk-section mk-section--tint" id="hisaab">
+      <div class="mk-wrap">
+        <header class="mk-head mk-head--solo" data-reveal>
+          <p class="mk-eyebrow">Hisaab · Daily tracking</p>
+          <h2 class="mk-h2">
+            Every rupee, accounted for.<br>
+            <span class="mk-muted-text">Without the spreadsheet.</span>
+          </h2>
+          <p class="mk-sub">
+            Money in, money out, categorised as it lands. Salary, groceries, that subscription
+            you forgot about. Hisaab keeps the running answer to “where did it go?”
+          </p>
+        </header>
+      </div>
+    </section>
+
+    <section class="mk-pcta">
+      <div class="mk-wrap">
+        <h2>Start today</h2>
+        <p>Build the picture once, then let MoneyKal keep it current.</p>
+        <div class="mk-pcta__row">
+          <a href="register.html" class="mk-btn mk-btn--accent mk-btn--lg">
+            Start today <span class="mk-btn__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a href="login.html" class="mk-btn mk-btn--ghost mk-btn--lg">Log In</a>
+        </div>
+        <div class="mk-more">
+        <a href="taxes.html">Taxes</a>
+        <a href="intelligence.html">Intelligence</a>
+        <a href="app.html">App</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="security.html">Security &amp; Privacy</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="mk-footer">
+    <div class="mk-wrap">
+      <div class="mk-footer__top">
+        <div class="mk-footer__brandcol">
+          <a class="mk-footer__brand" href="index.html" aria-label="MoneyKal home">
+            <span class="mk-footer__logo" aria-hidden="true">
+              <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+            </span>
+            <span>MoneyKal</span>
+          </a>
+          <p class="mk-footer__tagline">Your Financial Brain</p>
+          <p class="mk-footer__about">MoneyKal is an intelligent personal finance platform. It reads your financial life, works out what it means, and helps you decide what to do next.</p>
+          <div class="mk-footer__cta">
+            <a href="register.html" class="mk-btn mk-btn--accent">Start today</a>
+            <a href="login.html" class="mk-footer__login">Log In</a>
+          </div>
+        </div>
+
+        <nav class="mk-footer__nav" aria-label="Footer">
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Platform</h2>
+            <ul class="mk-footer__list">
+              <li><a href="index.html#what">What MoneyKal is</a></li>
+              <li><a href="index.html#journeys">For individuals</a></li>
+              <li><a href="intelligence.html#cfo">For startups &amp; CFOs</a></li>
+              <li><a href="intelligence.html">Intelligence</a></li>
+              <li><a href="app.html">App</a></li>
+              <li><a href="pricing.html">Pricing</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Products</h2>
+            <ul class="mk-footer__list">
+              <li><a href="hisaab.html">Hisaab</a></li>
+              <li><a href="taxes.html">Taxes</a></li>
+              <li><a href="tathya.html">Tathya</a></li>
+              <li><a href="varta.html">Varta</a></li>
+              <li><a href="intelligence.html#simulate">What-If</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">In the app</h2>
+            <ul class="mk-footer__list">
+              <li><a href="dashboard.html?view=split">Money Splits</a></li>
+              <li><a href="dashboard.html">Freedom Balance</a></li>
+              <li><a href="dashboard.html">Risk alerts</a></li>
+            </ul>
+          </div>
+          <div class="mk-footer__col">
+            <h2 class="mk-footer__heading">Trust</h2>
+            <ul class="mk-footer__list">
+              <li><a href="security.html">Security &amp; Privacy</a></li>
+              <li><button type="button" class="mk-footer__linkbtn" data-terms-open>Terms &amp; Conditions</button></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+
+      <div class="mk-footer__bottom">
+        <p class="mk-footer__legal">&copy; 2026 MoneyKal. All rights reserved.</p>
+        <p class="mk-footer__note">MoneyKal is a financial modelling and planning tool &mdash; not a bank, a payment service or a registered investment adviser.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=1"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/home-landing.js?v=4"></script>
+  <script src="js/legal-terms.js?v=1"></script>
+  <script src="js/terms-consent.js?v=1"></script>
+</body>
+
+</html>

@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoneyKal Dashboard</title>
+  <link rel="icon" href="assets/brand/favicon.png">
+  <meta name="description" content="An intelligent financial brain that understands your money and simulates outcomes before you decide.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loaded asynchronously: media="print" keeps it off the critical path,
+       the onload promotes it once it arrives. Every font-family in the app
+       declares a system fallback, so a network that blocks or throttles
+       Google Fonts costs a font swap instead of a blank page. -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        media="print" onload="this.media='all';this.onload=null">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- app-theme extends the Overview's design tokens to the other views.
+       It must load before overview.css, whose higher-specificity rules keep
+       the Overview itself exactly as it is. -->
+  <link rel="stylesheet" href="css/app-theme.css?v=3">
+  <link rel="stylesheet" href="css/overview.css?v=4">
+  <!-- Daily Home reads the tokens overview.css declares, so it must load after it. -->
+  <link rel="stylesheet" href="css/daily-home.css?v=5">
+  <!-- live.life.fully is a self-contained overlay: it declares its own tokens
+       and every rule is scoped to .llf / .llf-portal, so load order relative to
+       the stylesheets above does not matter to either side. -->
+  <link rel="stylesheet" href="css/live-life.css?v=9">
+  <!-- Tax Calculator (Individual). Self-contained: every rule is scoped to
+       #view-tax, so load order relative to the stylesheets above is immaterial. -->
+  <link rel="stylesheet" href="css/tax.css?v=3">
+  <!-- Money Splits. Every rule is scoped to #view-split / .sp-*, and it
+       declares no palette of its own — it reads the tokens app-theme.css sets,
+       so it follows the app theme in both light and dark without a second
+       source of truth. Load order relative to the above is immaterial. -->
+  <link rel="stylesheet" href="css/split.css?v=4">
+  <!-- Startup-only views. Every rule is scoped to #view-fundraise or
+       #view-compliance, so load order relative to the sheets above is
+       immaterial and no existing view can be affected. -->
+  <link rel="stylesheet" href="css/startup-extra.css?v=6">
+  <!-- Tathya (chat) and Varta (voice). Scoped to #view-ask and .voice-overlay
+       and loaded last, so it refines the shared chat rules in styles.css and
+       app-theme.css without either being modified. -->
+  <link rel="stylesheet" href="css/tathya.css?v=1">
+  <!-- The i beside each page heading and its "what this feature does" panel. -->
+  <link rel="stylesheet" href="css/feature-info.css?v=1">
+  <!-- Plans & Billing and its checkout dialog. Tokens only, so it follows the theme. -->
+  <link rel="stylesheet" href="css/billing.css?v=4">
+  <!-- The PIN surfaces: the Account > Security card here, and the lock screen
+       on unlock.html, which loads this same sheet. -->
+  <link rel="stylesheet" href="css/pin.css?v=2">
+
+  <!-- The PIN gate. FIRST script on the page, deliberately: on a device that
+       chose "Keep me signed in", it removes the session and leaves for
+       unlock.html before any app script can parse, so a pasted or bookmarked
+       dashboard URL cannot reach a loaded app holding a live token. A device
+       that never opted in is not affected by it at all. -->
+  <script src="js/pin-gate.js?v=2"></script>
+  <script>
+    // `__mkPinLocked` means js/pin-gate.js has already decided this load and is
+    // on its way to the lock screen. It removes the session on purpose, so the
+    // missing token below is expected rather than a signed-out user — without
+    // this check the two navigations would race and the password form would
+    // sometimes win, defeating the PIN.
+    const sess = JSON.parse(localStorage.getItem('twin_session') || '{}');
+    if (!sess.token && !window.__mkPinLocked) {
+      window.location.href = 'login.html';
+    }
+    // Apply the saved Overview theme before first paint so a refresh doesn't
+    // flash the wrong palette. Defaults to dark. This attribute is read only by
+    // css/overview.css and is independent of the app-wide `data-theme`.
+    try {
+      document.documentElement.setAttribute(
+        'data-ov-theme',
+        localStorage.getItem('moneykal_ov_theme') === 'light' ? 'light' : 'dark'
+      );
+    } catch (e) { document.documentElement.setAttribute('data-ov-theme', 'dark'); }
+  </script>
+</head>
+
+<body>
+
+  <div class="shell" id="appShell">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <span class="sidebar__brand-logo" aria-hidden="true">
+          <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+        </span>
+        <span>MoneyKal</span>
+      </div>
+
+      <nav class="sidebar__nav">
+        <button class="navitem is-active" data-view="overview" aria-label="Overview" title="Overview">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="2.5" y="2.5" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4" />
+            <rect x="11.5" y="2.5" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4" />
+            <rect x="2.5" y="11.5" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4" />
+            <rect x="11.5" y="11.5" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.4" />
+          </svg>
+          <span class="navitem__label">Overview</span>
+        </button>
+        <button class="navitem" data-view="hisaab" data-persona="individual" aria-label="Hisaab" title="Hisaab">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="2.5" y="4" width="15" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4" />
+            <path d="M2.5 8h15M6 12h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+          </svg>
+          <span class="navitem__label">Hisaab</span>
+        </button>
+        <!-- Individual only. applyPersonaNav() hides it for Startup, and
+             switchView() refuses a hidden view, so the notification bell and
+             invitation links cannot open it for a Startup either. -->
+        <button class="navitem" data-view="split" data-persona="individual" aria-label="Money Splits" title="Money Splits">
+          <svg viewBox="0 0 20 20" fill="none">
+            <circle cx="6.5" cy="6" r="3" stroke="currentColor" stroke-width="1.4" />
+            <circle cx="13.5" cy="6" r="3" stroke="currentColor" stroke-width="1.4" />
+            <path d="M2 17c0-2.5 2-4.2 4.5-4.2S11 14.5 11 17" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            <path d="M13 12.9c2.4 0 4.5 1.6 4.5 4.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+          </svg>
+          <span class="navitem__label">Money Splits</span>
+        </button>
+        <!-- Individual only. Gated in tax.js on the real profile key rather
+             than data-persona: applyPersonaNav() maps every non-startup
+             persona to "individual", which would expose this to CFO users. -->
+        <button class="navitem" data-view="tax" id="navTax" hidden aria-label="Tax Calculator" title="Tax Calculator">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M6 2.5h8l1.5 1.5v13H4.5v-13L6 2.5Z" stroke="currentColor" stroke-width="1.4"
+              stroke-linejoin="round" />
+            <path d="M7.5 7h5M7.5 10h5M7.5 13h2.5" stroke="currentColor" stroke-width="1.2"
+              stroke-linecap="round" />
+          </svg>
+          <span class="navitem__label">Tax Calculator</span>
+        </button>
+        <button class="navitem" data-view="ask" aria-label="Tathya" title="Tathya">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M3 4.5h14v9H8.5L5 16.5v-3H3v-9Z" stroke="currentColor" stroke-width="1.4"
+              stroke-linejoin="round" />
+          </svg>
+          <span class="navitem__label">Tathya</span>
+        </button>
+        <button class="navitem" id="navVarta" data-varta-call type="button"
+                title="Varta calls your phone and talks through your numbers">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M18 14.4v2.1a1.5 1.5 0 0 1-1.6 1.5 14.8 14.8 0 0 1-6.5-2.3 14.6 14.6 0 0 1-4.5-4.5A14.8 14.8 0 0 1 3.1 4.6 1.5 1.5 0 0 1 4.6 3h2.1a1.5 1.5 0 0 1 1.5 1.3c.1.7.3 1.4.5 2.1a1.5 1.5 0 0 1-.3 1.6l-.9.9a12 12 0 0 0 4.5 4.5l.9-.9a1.5 1.5 0 0 1 1.6-.3c.7.2 1.4.4 2.1.5A1.5 1.5 0 0 1 18 14.4Z"
+              stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+          </svg>
+          <span class="navitem__label">Varta</span>
+          <span class="navitem__hint" id="navVartaHint" hidden></span>
+        </button>
+        <button class="navitem" data-view="simulate" aria-label="Simulate" title="Simulate">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M3 6h14M3 10h14M3 14h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="8" cy="6" r="1.6" fill="currentColor" />
+            <circle cx="13" cy="10" r="1.6" fill="currentColor" />
+            <circle cx="6" cy="14" r="1.6" fill="currentColor" />
+          </svg>
+          <span class="navitem__label">Simulate</span>
+        </button>
+        <button class="navitem" data-view="alerts" data-persona="startup" aria-label="Alerts" title="Alerts">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M10 2.5 17.5 16h-15L10 2.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            <path d="M10 8v3.5M10 13.5v.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+          </svg>
+          <span class="navitem__label">Alerts</span>
+        </button>
+        <button class="navitem" data-view="reports" aria-label="Reports" title="Reports">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M5 2.5h7l3 3v12H5v-15Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+            <path d="M7.5 9h5M7.5 12h5M7.5 15h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+          <span class="navitem__label">Reports</span>
+        </button>
+        <!-- Your Freedom Balance — the entry point into live.life.fully.
+             Sits last in the nav, directly under Reports. Deliberately not a
+             .navitem: those are wired to switchView() and to a #view-* section,
+             and this opens a full-screen overlay instead, so it only borrows
+             the nav item's appearance (see .llf-portal in css/live-life.css).
+             Stays hidden until overview.js confirms an Individual profile. -->
+        <button type="button" class="llf-portal" id="llfPortal" hidden
+                aria-haspopup="dialog" title="Your Freedom Balance">
+          <span class="llf-portal__icon" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="10" r="7.5"></circle>
+              <path d="M13 7l-1.8 4.2L7 13l1.8-4.2z"></path>
+            </svg>
+          </span>
+          <span class="llf-portal__text">Your Freedom Balance</span>
+        </button>
+        <!-- Startup only. Gated by data-persona, which applyPersonaNav()
+             toggles — the backend refuses these endpoints for any other
+             persona regardless, so this is presentation, not the boundary. -->
+        <button class="navitem" data-view="fundraise" data-persona="startup" aria-label="Fundraise" title="Fundraise">
+          <svg viewBox="0 0 20 20" fill="none">
+            <path d="M3 15.5 7.5 10l3.5 3L17 5.5" stroke="currentColor" stroke-width="1.4"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12.5 5.5H17V10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          <span class="navitem__label">Fundraise</span>
+        </button>
+        <button class="navitem" data-view="gst" data-persona="startup" aria-label="GST Calculator" title="GST Calculator">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="4" y="2.5" width="12" height="15" rx="1.5" stroke="currentColor" stroke-width="1.4" />
+            <rect x="6.5" y="5" width="7" height="3" rx="0.6" stroke="currentColor" stroke-width="1.2" />
+            <path d="M7 11h.1M10 11h.1M13 11h.1M7 14h.1M10 14h.1M13 14h.1" stroke="currentColor"
+              stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          <span class="navitem__label">GST Calculator</span>
+        </button>
+        <button class="navitem" data-view="compliance" data-persona="startup" aria-label="Compliance" title="Compliance">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="3" y="4" width="14" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4" />
+            <path d="M3 8h14M6.5 2.5v3M13.5 2.5v3" stroke="currentColor" stroke-width="1.4"
+              stroke-linecap="round" />
+            <path d="M7.5 12.5l1.5 1.5 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          <span class="navitem__label">Compliance</span>
+        </button>
+        <!-- Plans & Billing. Every persona. An account item rather than a
+             feature, so .navitem--account pushes it to the foot of the nav,
+             below the feature list (css/billing.css). -->
+        <button class="navitem navitem--account" data-view="billing">
+          <svg viewBox="0 0 20 20" fill="none">
+            <rect x="2.5" y="4.5" width="15" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4" />
+            <path d="M2.5 8h15M5.5 12.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+          </svg>
+          Plans &amp; Billing
+        </button>
+      </nav>
+
+      <div class="sidebar__foot">
+        <p>MoneyKal Financial Technologies</p>
+      </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <div class="main">
+
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar__title">
+          <!-- The i explains whichever feature is open; js/feature-info.js
+               reads the active view. It sits beside the h1, not inside it,
+               because switchView() rewrites the h1's text. -->
+          <div class="topbar__heading">
+            <h1 id="topbarTitle">Overview</h1>
+            <button type="button" class="feature-info-btn" data-feature-info="current"
+              aria-haspopup="dialog" aria-expanded="false" aria-controls="featureInfoPanel"
+              aria-label="About this feature" title="About this feature">i</button>
+          </div>
+          <p id="topbarSub">Live snapshot of your financial brain</p>
+        </div>
+        <div class="topbar__right" style="flex-direction: row; align-items: center; gap: 16px;">
+          <!-- Language. js/i18n.js paints and binds every .lang-toggle on the
+               page, so this needs no wiring of its own. -->
+          <button type="button" class="lang-toggle" aria-label="Switch to Hindi"><b>EN</b> | हिं</button>
+          <button id="theme-toggle" class="nav-icon-btn" aria-label="Toggle Theme"
+            style="background: none; border: none; cursor: pointer; color: var(--ink); padding: 0;">
+            <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="display:none;">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+          </button>
+          <!-- #btnLogout stays in the DOM because js/app.js binds the session
+               teardown to it and both account menus click it. It is hidden: the
+               menu beside it is the affordance now. -->
+          <div role="presentation" hidden>
+            <button id="btnLogout"
+              style="background: none; border: none; font-size: 11px; cursor: pointer; color: var(--ink-faint); margin-left: 10px; text-decoration: underline;">Log
+              out</button>
+          </div>
+
+          <!-- The same account menu the Overview header carries, so every view
+               ends a session the same way. Wired by js/overview.js. -->
+          <!-- Opens the shared account centre (#acct). The avatar is the
+               only affordance here; everything else lives in the dialog. -->
+          <button type="button" class="ov-avatar" id="tbAvatar" title="Account"
+                  aria-haspopup="dialog" aria-controls="acct" data-account-open>M</button>
+        </div>
+      </header>
+
+      <!-- ================= OVERVIEW VIEW — command center ================= -->
+      <section class="view is-active" id="view-overview">
+
+        <!-- ---------- 1. TOP AREA ---------- -->
+        <div class="ov-top">
+          <div>
+            <p class="ov-top__date" id="ovDate"></p>
+            <div class="ov-top__heading">
+              <h1 class="ov-top__greeting">Good morning, <span id="ovName">there</span></h1>
+              <button type="button" class="feature-info-btn" data-feature-info="overview"
+                aria-haspopup="dialog" aria-expanded="false" aria-controls="featureInfoPanel"
+                aria-label="About this feature" title="About this feature">i</button>
+            </div>
+          </div>
+          <div class="ov-top__right">
+            <!-- Notification inbox. Sits with the theme and account controls
+                 because it is account-level chrome, not part of any one
+                 section. The panel is a sibling of the button so the two share
+                 a positioning context; js/overview.js fills and opens it.
+
+                 Daily AI Insights never appear here - they have their own
+                 section further down this view, and the backend refuses to
+                 create an inbox row for an insight kind. -->
+            <div class="ov-notif" id="ovNotif">
+              <button type="button" class="ov-bell" id="ovBellBtn" title="Notifications"
+                      aria-label="Notifications" aria-haspopup="dialog" aria-expanded="false"
+                      aria-controls="ovNotifPanel">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="ov-bell__badge" id="ovBellBadge" hidden aria-hidden="true"></span>
+              </button>
+
+              <div class="ov-notif__panel" id="ovNotifPanel" role="dialog"
+                   aria-label="Notifications" hidden>
+                <div class="ov-notif__head">
+                  <span class="ov-notif__title">Notifications</span>
+                  <button type="button" class="ov-notif__readall" id="ovNotifReadAll" hidden>Mark all read</button>
+                </div>
+                <div class="ov-notif__list" id="ovNotifList"></div>
+              </div>
+            </div>
+
+            <button type="button" class="lang-toggle" aria-label="Switch to Hindi"><b>EN</b> | हिं</button>
+            <button type="button" class="ov-theme-btn" id="ovThemeBtn" title="Switch theme" aria-label="Switch theme">
+              <svg class="ov-theme-btn__sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"></circle><line x1="12" y1="1.5" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22.5"></line><line x1="4.22" y1="4.22" x2="6" y2="6"></line><line x1="18" y1="18" x2="19.78" y2="19.78"></line><line x1="1.5" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22.5" y2="12"></line><line x1="4.22" y1="19.78" x2="6" y2="18"></line><line x1="18" y1="6" x2="19.78" y2="4.22"></line></svg>
+              <svg class="ov-theme-btn__moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <!-- The avatar opens an account menu rather than logging out on
+                 the spot: it sits one stray click away from the theme toggle,
+                 and ending the session should be something you chose. The menu
+                 is a sibling of the avatar, not a child - the renderers that
+                 set the initial overwrite the avatar's whole text content. -->
+            <button type="button" class="ov-avatar" id="ovAvatar" title="Account"
+                    aria-haspopup="dialog" aria-controls="acct" data-account-open>M</button>
+        </div>
+
+        <!-- ============ DAILY HOME (Individual only) ============
+             The answer to "what is happening with my money today?", in the
+             order the user needs it: position, then the one thing worth
+             knowing, then what is about to leave the account, then what it is
+             all for. Rendered by js/home.js from GET /home; hidden entirely
+             for the Startup persona, whose Overview is unchanged. -->
+        <section class="dh" id="ovDailyHome" hidden aria-labelledby="dhSnapHeading">
+          <h2 class="sr-only" id="dhSnapHeading">Your money today</h2>
+
+          <!-- B. Financial snapshot -->
+          <div class="dh-snap" id="dhSnapshot"></div>
+
+          <!-- C. MoneyKal insight -->
+          <div class="dh-insight-slot" id="dhInsight"></div>
+
+          <!-- D2. Spending overview — this month, by the user's own categories -->
+          <section class="dh-block dh-spend-slot" id="dhSpending" aria-label="Spending overview"></section>
+
+          <!-- D2b. Budget Goals — progress bars per category -->
+          <section class="dh-block" id="dhBudgets" aria-label="Budget goals" hidden>
+            <div class="dh-block__header">
+              <h3 class="dh-block__title">Monthly Budgets</h3>
+              <button type="button" class="dh-block__action" id="btnAddBudget">+ Set Budget</button>
+            </div>
+            <ul class="dh-budget-list" id="dhBudgetList"></ul>
+          </section>
+
+          <!-- D3. Financial calendar — one dated view of every money event -->
+          <section class="dh-block dh-cal-slot" id="dhCalendar" aria-label="Financial calendar"></section>
+
+          <!-- D + E. What's coming up, and what it's all for -->
+          <div class="dh-split">
+            <section class="dh-block" id="dhUpcoming" aria-label="Upcoming payments"></section>
+            <section class="dh-block" id="dhGoal" aria-label="Goal progress"></section>
+          </div>
+        </section>
+
+        <div class="ov-actions">
+          <button type="button" class="ov-btn ov-btn--primary" data-goto="ask">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            Tathya
+          </button>
+          <button type="button" class="ov-btn" data-goto="simulate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h9"></path></svg>
+            Simulate
+          </button>
+          <button type="button" class="ov-btn" id="ovImportBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Import Data
+          </button>
+          <button type="button" class="ov-btn" id="btnImportStatement">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            Import PDF Statement
+          </button>
+        </div>
+
+        <!-- Existing persona strip + data tools (unchanged behaviour) -->
+        <div class="persona-strip" style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <span id="personaLabel"></span>
+            <span class="persona-strip__goal" id="goalStrip" style="margin-left: 12px;"></span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="btnDownloadExcelTemplate" class="btn-outline-sm" style="cursor: pointer; padding: 5px 12px; font-size: 12px; font-weight: 500; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink);">Excel Template</button>
+            <label class="btn-outline-sm" style="cursor: pointer; padding: 5px 12px; font-size: 12px; font-weight: 500; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink); margin: 0;">
+              Upload Excel
+              <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+            </label>
+            <button id="btnOpenEditProfile" class="btn-outline-sm" style="cursor: pointer; padding: 5px 14px; font-size: 12px; font-weight: 500; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--ink);">Edit Profile</button>
+          </div>
+        </div>
+
+        <!-- ---------- MASTER GRID ---------- -->
+        <div class="ov-grid">
+
+          <!-- ===== LEFT COLUMN ===== -->
+          <div class="ov-col">
+
+            <!-- 2. MAIN FINANCIAL OVERVIEW -->
+            <div class="ovc ov-hero">
+              <div class="ov-hero__top">
+                <div>
+                  <span class="ov-hero__label" id="ovHeroLabel">Total Cash Position</span>
+                  <div class="ov-hero__value" id="ovHeroValue">…</div>
+                  <div class="ov-hero__meta">
+                    <span class="ov-hero__delta" id="ovHeroDelta"></span>
+                    <span class="ov-hero__caption" id="ovHeroCaption"></span>
+                  </div>
+                </div>
+                <div class="ov-range" id="ovRange" role="group" aria-label="Chart time range">
+                  <button type="button" data-range="1M">1M</button>
+                  <button type="button" data-range="6M" class="is-active">6M</button>
+                  <button type="button" data-range="1Y">1Y</button>
+                  <button type="button" data-range="YTD">YTD</button>
+                </div>
+              </div>
+              <div class="ov-chart" id="ovChart"></div>
+            </div>
+
+            <!-- 9. FINANCIAL INSIGHTS -->
+            <div class="ov-insights" id="ovInsights"></div>
+
+            <!-- Raw profile metrics (#statGrid is populated by app.js/startup.js —
+                 the wrapper only adds the section label and is hidden when empty) -->
+            <section id="ovSnapshot">
+              <p class="ov-sec__label">Financial snapshot</p>
+              <div class="stat-grid" id="statGrid"></div>
+            </section>
+
+            <!-- Startup-only deep-dive panels (empty for Individual) -->
+            <div id="startupOverviewExtra"></div>
+
+          </div>
+
+          <!-- ===== RIGHT COLUMN: 8. ACCOUNTS + ACTIVITY ===== -->
+          <div class="ov-col ov-side">
+
+
+
+            <!-- MARKET PULSE — editorial rail, no card. Loads independently of
+                 the rest of the Overview so news latency never blocks the page. -->
+            <section class="ovc ov-mp" id="ovMarketPulse" aria-labelledby="ovMpHeading">
+              <div class="ovc__head">
+                <h3 class="ovc__title" id="ovMpHeading">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l3-7 4 14 3-7h4"></path></svg>
+                  Market Pulse
+                </h3>
+                <span class="ov-mp__live" id="ovMpLive">Live intelligence</span>
+              </div>
+              <div id="ovMpBody">
+                <p class="ov-mp__loading">Reading the market…</p>
+              </div>
+            </section>
+
+            <div class="ovc">
+              <div class="ovc__head">
+                <h3 class="ovc__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18"></path></svg>
+                  Accounts
+                </h3>
+                <button type="button" class="ovc__link" id="ovAccountsLink">Edit →</button>
+              </div>
+              <div id="ovAccountsBody"><p class="ovc__empty">No account data yet.</p></div>
+            </div>
+
+            <!-- Risk DNA. Filled by js/overview.js from GET /profile/risk, and
+                 hidden entirely for the startup persona, which has its own
+                 model. Every figure in it is computed deterministically by
+                 backend/services/risk_profile.py — none of it is AI-written. -->
+            <div class="ovc ov-risk" id="ovRisk" data-persona="individual" hidden>
+              <div class="ovc__head">
+                <h3 class="ovc__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
+                  Risk DNA
+                </h3>
+                <button type="button" class="ovc__link" id="ovRiskToggle" aria-expanded="false">How is this measured? →</button>
+              </div>
+              <div id="ovRiskBody"><p class="ovc__empty">Working out your risk position…</p></div>
+            </div>
+
+            <div class="ovc">
+              <div class="ovc__head">
+                <h3 class="ovc__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 22 20H2L12 2Z"></path><path d="M12 9v4M12 16v.1"></path></svg>
+                  <span id="alertPanelTitle">Risk alerts</span>
+                </h3>
+                <span class="dot dot--live"></span>
+              </div>
+              <ul class="alert-list" id="alertList"></ul>
+            </div>
+
+            <div class="ovc">
+              <div class="ovc__head">
+                <h3 class="ovc__title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                  <span id="historyPanelTitle">Recent activity</span>
+                </h3>
+              </div>
+              <ul class="decision-list" id="historyList"></ul>
+            </div>
+
+          </div>
+
+          <!-- ===== BELOW BOTH COLUMNS =====
+               Empty in the markup. On a wide screen js/overview.js moves the
+               right column's lower panels here whenever keeping them in the
+               column would run it past the end of the left one, so the two
+               columns finish together instead of leaving the middle of the
+               page blank. Nothing is ever moved out of view. -->
+          <div class="ov-band" id="ovBand" hidden></div>
+        </div>
+
+      </section>
+
+      <!-- ================= HISAAB VIEW (Startup) ================= -->
+      <section class="view" id="view-hisaab">
+        <div class="hisaab-summary" id="hisaabSummary"></div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Import from Gmail</h3>
+          </div>
+          <p class="chat-note" style="padding:0; margin-bottom:12px;" id="gmailStatusText">Checking Gmail connection…</p>
+          <div id="gmailAccountsList" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
+          <button class="btn btn--primary" id="btnConnectGmail" style="display:none;">Connect Gmail</button>
+          <button class="btn" id="btnSyncGmailNow" style="display:none;">Sync now</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Add a transaction</h3>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="scanStatus" class="chat-note" style="display:none; margin:0;">Scanning...</span>
+              <button type="button" class="btn btn-outline" style="padding:4px 8px; font-size:12px; min-height:0; display:flex; align-items:center; gap:6px;" id="btnCameraScan">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                Camera
+              </button>
+              <button type="button" class="btn btn-outline" style="padding:4px 8px; font-size:12px; min-height:0;" onclick="document.getElementById('receiptFileInput').click()">
+                Upload File
+              </button>
+              <input type="file" id="receiptFileInput" accept="image/*" capture="environment" style="display:none;">
+            </div>
+          </div>
+          <form id="hisaabForm" class="hisaab-form">
+            <select id="hxType" class="ob-input">
+              <option value="in">Money in</option>
+              <option value="out">Money out</option>
+            </select>
+            <select id="hxCategory" class="ob-input" required></select>
+            <input type="number" id="hxAmount" class="ob-input" placeholder="Amount (₹)" min="0" step="0.01" required>
+            <input type="date" id="hxDate" class="ob-input">
+            <input type="text" id="hxDescription" class="ob-input" placeholder="Description (optional)">
+            <button type="submit" class="btn btn--primary" id="hxSubmitBtn">Add</button>
+            <button type="button" class="btn" id="hxCancelEditBtn" style="display:none;">Cancel</button>
+          </form>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Transactions</h3>
+          </div>
+          <!-- Populated when a date is selected from the Overview calendar -->
+          <div id="hisaabFilterBar"></div>
+          <ul class="hisaab-list" id="hisaabList"></ul>
+        </div>
+      </section>
+
+      <!-- ================= TAX CALCULATOR (Individual) =================
+           Step 1: collection of every head of income. The running summary is
+           computed server-side (POST /tax/collect) so no statutory figure is
+           ever duplicated in the frontend. -->
+      <section class="view" id="view-tax">
+
+        <div class="tax-topbar">
+          <div class="tax-topbar__year">
+            <label for="taxYearSelect">Tax year</label>
+            <select id="taxYearSelect" class="ob-input"></select>
+          </div>
+
+          <span class="tax-act-badge" id="taxActBadge"></span>
+
+          <div class="tax-topbar__actions">
+            <span class="tax-save-state" id="taxSaveState"></span>
+            <button type="button" class="btn" id="btnTaxReset">Reset</button>
+            <button type="button" class="btn btn--primary" id="btnTaxSave">Save</button>
+          </div>
+
+          <!-- Filing progress. Presentation only: js/tax-progress.js counts
+               the section figures tax.js has already written onto the headers
+               below and writes the count and the bar width here. No figure is
+               computed twice and nothing here feeds the collect payload. -->
+          <div class="tax-progress">
+            <div class="tax-progress__meta">
+              <p class="tax-progress__label">Your tax return</p>
+              <p class="tax-progress__count" id="taxProgressCount">0 of 7 sections</p>
+            </div>
+            <div class="tax-progress__track" id="taxProgressBar" role="progressbar"
+                 aria-label="Sections with a figure" aria-valuemin="0"
+                 aria-valuenow="0" aria-valuemax="7">
+              <span class="tax-progress__fill"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- Regime comparison — the headline output ----------
+             Full width rather than in the summary rail: a side-by-side needs
+             the room, and this is the answer the user came for. -->
+        <section class="tax-compare" id="taxCompare" hidden>
+          <div class="tax-compare__cards">
+            <article class="tax-compare__card" id="taxCompareOld"></article>
+            <article class="tax-compare__card" id="taxCompareNew"></article>
+          </div>
+          <p class="tax-compare__verdict" id="taxCompareVerdict"></p>
+
+          <!-- Rule-based suggestions + the likely return form -->
+          <div class="tax-advice" id="taxAdvice" hidden>
+            <section class="tax-advice__panel">
+              <div class="tax-advice__head">
+                <h3>What to do about it</h3>
+                <span class="tax-advice__sub">Rule-based, from the figures above</span>
+              </div>
+              <ul class="tax-recs" id="taxRecs"></ul>
+            </section>
+
+            <section class="tax-advice__panel tax-itr" id="taxItrPanel" hidden>
+              <div class="tax-advice__head"><h3>Likely return form</h3></div>
+              <div id="taxItrBody"></div>
+            </section>
+          </div>
+        </section>
+
+        <div class="tax-layout">
+
+          <!-- ---------- Input column ---------- -->
+          <div class="tax-forms" id="taxForms">
+
+            <!-- Filing guides — one card per guide in cfg.filing_guides. The
+                 section stays hidden until the config arrives, so a failed
+                 load leaves no empty shell behind. -->
+            <section class="tax-filing-guides" id="taxFilingGuides" hidden>
+              <h3 class="tax-filing-guides__title">Step-by-step filing guide</h3>
+              <div class="tax-filing-guides__grid" id="taxFilingGuidesGrid"></div>
+            </section>
+
+            <!-- Taxpayer -->
+            <section class="tax-block">
+              <h3 class="tax-block__title">About you</h3>
+              <div class="tax-grid tax-grid--3 tax-grid--about">
+                <label class="tax-field">
+                  <span>Age</span>
+                  <input type="number" class="ob-input" id="txAge" data-help="taxpayer.age" min="0" max="120" value="30">
+                </label>
+                <label class="tax-field">
+                  <span>City</span>
+                  <input type="text" class="ob-input" id="txCity" data-help="taxpayer.city" placeholder="e.g. Mumbai">
+                </label>
+                <label class="tax-field tax-field--check">
+                  <input type="checkbox" id="txIsMetro" data-help="taxpayer.is_metro">
+                  <span>Metro city (affects HRA)</span>
+                </label>
+              </div>
+            </section>
+
+            <!-- 1. Salary -->
+            <details class="tax-head" id="headSalary">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">01</span>
+                <span class="tax-head__title">Salary</span>
+                <span class="tax-head__amount" data-head-amount="salary">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <label class="tax-field tax-field--check">
+                  <input type="checkbox" id="txSalaryEnabled" data-help="salary.enabled">
+                  <span>I have salary income</span>
+                </label>
+
+                <div class="tax-subsection" data-requires="txSalaryEnabled">
+                  <label class="tax-field tax-field--check">
+                    <input type="checkbox" id="txSalarySimple" data-help="salary.use_simple_mode">
+                    <span>I only know my gross salary (skip CTC structuring)</span>
+                  </label>
+
+                  <div data-simple-mode="on" hidden>
+                    <div class="tax-grid tax-grid--2">
+                      <label class="tax-field">
+                        <span>Gross annual salary</span>
+                        <input type="number" class="ob-input" id="txGrossSimple" data-help="salary.gross_salary_simple" min="0" placeholder="0">
+                      </label>
+                      <label class="tax-field">
+                        <span>TDS deducted</span>
+                        <input type="number" class="ob-input" id="txSalaryTdsSimple" data-help="salary.tds_deducted" min="0" placeholder="0">
+                      </label>
+                    </div>
+                  </div>
+
+                  <div data-simple-mode="off">
+                    <div class="tax-grid tax-grid--3">
+                      <label class="tax-field">
+                        <span>Annual CTC</span>
+                        <input type="number" class="ob-input" id="txCtc" data-help="salary.annual_ctc" min="0" placeholder="0">
+                      </label>
+                      <label class="tax-field">
+                        <span>Basic (% of CTC)</span>
+                        <input type="number" class="ob-input" id="txBasicPct" data-help="salary.basic_percent_of_ctc" min="0" max="100" value="30">
+                      </label>
+                      <label class="tax-field">
+                        <span>DA (% of CTC)</span>
+                        <input type="number" class="ob-input" id="txDaPct" data-help="salary.da_percent_of_ctc" min="0" max="100" value="20">
+                      </label>
+                    </div>
+                    <p class="tax-hint" id="txBasicDaHint"></p>
+
+                    <div class="tax-subhead">Employer contributions</div>
+                    <div class="tax-grid tax-grid--3">
+                      <label class="tax-field tax-field--check">
+                        <input type="checkbox" id="txGratuity" data-help="salary.gratuity_applicable"><span>Gratuity applicable</span>
+                      </label>
+                      <label class="tax-field tax-field--check">
+                        <input type="checkbox" id="txEmployerNps" data-help="salary.employer_nps"><span>Employer NPS</span>
+                      </label>
+                      <label class="tax-field tax-field--check">
+                        <input type="checkbox" id="txEmployerPf" data-help="salary.employer_pf"><span>Employer PF</span>
+                      </label>
+                    </div>
+
+                    <div class="tax-subhead">House Rent Allowance</div>
+                    <div class="tax-grid tax-grid--3">
+                      <label class="tax-field tax-field--check">
+                        <input type="checkbox" id="txHraEnabled" data-help="salary.hra.enabled"><span>HRA received</span>
+                      </label>
+                      <label class="tax-field">
+                        <span>HRA (% of Basic + DA)</span>
+                        <input type="number" class="ob-input" id="txHraPct" data-help="salary.hra.percent_of_basic_da" min="0" max="100" placeholder="0">
+                      </label>
+                      <label class="tax-field">
+                        <span>Annual rent paid</span>
+                        <input type="number" class="ob-input" id="txRentPaid" data-help="salary.rent_paid_annual" min="0" placeholder="0">
+                      </label>
+                    </div>
+                    <p class="tax-hint">The exemption is the lowest of three limits. See the HRA panel on the right for the working. Old regime only.</p>
+
+                    <div class="tax-subhead">Allowances &amp; reimbursements</div>
+                    <div class="tax-allowances" id="txAllowances"></div>
+
+                    <div class="tax-subhead">Motor car perquisite</div>
+                    <label class="tax-field tax-field--check">
+                      <input type="checkbox" id="txCarEnabled" data-help="salary.motor_car.enabled"><span>Car provided / reimbursed by employer</span>
+                    </label>
+                    <div class="tax-subsection" data-requires="txCarEnabled">
+                      <div class="tax-grid tax-grid--3">
+                        <label class="tax-field">
+                          <span>Car owned by</span>
+                          <select class="ob-input" id="txCarOwner" data-help="salary.motor_car.car_owner">
+                            <option value="employer">Employer</option>
+                            <option value="employee">Employee</option>
+                          </select>
+                        </label>
+                        <label class="tax-field">
+                          <span>Expenses borne by</span>
+                          <select class="ob-input" id="txCarExpense" data-help="salary.motor_car.expense_bearer">
+                            <option value="employer">Employer</option>
+                            <option value="employee">Employee</option>
+                          </select>
+                        </label>
+                        <label class="tax-field">
+                          <span>Usage</span>
+                          <select class="ob-input" id="txCarUsage" data-help="salary.motor_car.usage">
+                            <option value="mixed">Official &amp; personal</option>
+                            <option value="official">Official only</option>
+                            <option value="personal">Personal only</option>
+                          </select>
+                        </label>
+                        <label class="tax-field">
+                          <span>Engine</span>
+                          <select class="ob-input" id="txCarEngine" data-help="salary.motor_car.engine_type">
+                            <option value="small">&le; 1.6L or EV</option>
+                            <option value="large">&gt; 1.6L</option>
+                          </select>
+                        </label>
+                        <label class="tax-field">
+                          <span>Months available</span>
+                          <input type="number" class="ob-input" id="txCarMonths" data-help="salary.motor_car.months_available" min="0" max="12" value="12">
+                        </label>
+                        <label class="tax-field tax-field--check">
+                          <input type="checkbox" id="txCarChauffeur" data-help="salary.motor_car.chauffeur_provided"><span>Chauffeur provided</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <label class="tax-field">
+                      <span>TDS deducted on salary</span>
+                      <input type="number" class="ob-input" id="txSalaryTds" data-help="salary.tds_deducted" min="0" placeholder="0">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- 2. House property -->
+            <details class="tax-head" id="headHouse">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">02</span>
+                <span class="tax-head__title">House Property</span>
+                <span class="tax-head__amount" data-head-amount="house_property">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <label class="tax-field tax-field--check">
+                  <input type="checkbox" id="txHouseEnabled" data-help="house_property.enabled">
+                  <span>I own house property</span>
+                </label>
+                <div class="tax-subsection" data-requires="txHouseEnabled">
+                  <div id="txProperties"></div>
+                  <button type="button" class="btn btn-outline" id="btnAddProperty">+ Add property</button>
+                </div>
+              </div>
+            </details>
+
+            <!-- 3. PGBP -->
+            <details class="tax-head" id="headPgbp">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">03</span>
+                <span class="tax-head__title">Business / Profession</span>
+                <span class="tax-head__amount" data-head-amount="pgbp">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <label class="tax-field tax-field--check">
+                  <input type="checkbox" id="txPgbpEnabled" data-help="pgbp.enabled">
+                  <span>I have business or professional income</span>
+                </label>
+                <div class="tax-subsection" data-requires="txPgbpEnabled">
+
+                  <label class="tax-field tax-field--check">
+                    <input type="checkbox" id="txPresumptiveEnabled" data-help="pgbp.presumptive.enabled">
+                    <span>Use presumptive taxation</span>
+                  </label>
+                  <div class="tax-subsection" data-requires="txPresumptiveEnabled">
+                    <div class="tax-grid tax-grid--2">
+                      <label class="tax-field">
+                        <span>Scheme</span>
+                        <select class="ob-input" id="txPresumptiveScheme" data-help="pgbp.presumptive.scheme">
+                          <option value="44AD">44AD: Business</option>
+                          <option value="44ADA">44ADA: Profession</option>
+                        </select>
+                      </label>
+                      <label class="tax-field">
+                        <span>Gross turnover / receipts</span>
+                        <input type="number" class="ob-input" id="txTurnover" data-help="pgbp.presumptive.gross_turnover" min="0" placeholder="0">
+                      </label>
+                      <label class="tax-field" data-scheme="44AD">
+                        <span>Cash receipts</span>
+                        <input type="number" class="ob-input" id="txCashReceipts" data-help="pgbp.presumptive.cash_receipts" min="0" placeholder="0">
+                      </label>
+                      <label class="tax-field" data-scheme="44AD">
+                        <span>Digital receipts</span>
+                        <input type="number" class="ob-input" id="txDigitalReceipts" data-help="pgbp.presumptive.digital_receipts" min="0" placeholder="0">
+                      </label>
+                    </div>
+                    <p class="tax-hint" id="txPresumptiveHint"></p>
+                  </div>
+
+                  <label class="tax-field tax-field--check">
+                    <input type="checkbox" id="txRegularEnabled" data-help="pgbp.regular.enabled">
+                    <span>Normal provisions (books of account)</span>
+                  </label>
+                  <div class="tax-subsection" data-requires="txRegularEnabled">
+                    <div class="tax-grid tax-grid--3">
+                      <label class="tax-field">
+                        <span>Gross receipts</span>
+                        <input type="number" class="ob-input" id="txBizReceipts" data-help="pgbp.regular.gross_receipts" min="0" placeholder="0">
+                      </label>
+                      <label class="tax-field">
+                        <span>Total expenses</span>
+                        <input type="number" class="ob-input" id="txBizExpenses" data-help="pgbp.regular.total_expenses" min="0" placeholder="0">
+                      </label>
+                      <label class="tax-field">
+                        <span>Depreciation</span>
+                        <input type="number" class="ob-input" id="txBizDepreciation" data-help="pgbp.regular.depreciation" min="0" placeholder="0">
+                      </label>
+                    </div>
+                  </div>
+
+                  <label class="tax-field">
+                    <span>TDS deducted</span>
+                    <input type="number" class="ob-input" id="txPgbpTds" data-help="pgbp.tds_deducted" min="0" placeholder="0">
+                  </label>
+                </div>
+              </div>
+            </details>
+
+            <!-- 4. Capital gains -->
+            <details class="tax-head" id="headCapital">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">04</span>
+                <span class="tax-head__title">Capital Gains</span>
+                <span class="tax-head__amount" data-head-amount="capital_gains">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <label class="tax-field tax-field--check">
+                  <input type="checkbox" id="txCapitalEnabled" data-help="capital_gains.enabled">
+                  <span>I have capital gains</span>
+                </label>
+                <div class="tax-subsection" data-requires="txCapitalEnabled">
+                  <div class="tax-subhead">Listed equity &amp; equity mutual funds (STT paid)</div>
+                  <div class="tax-grid tax-grid--2">
+                    <label class="tax-field">
+                      <span id="lblStcg111a">Short-term gains</span>
+                      <input type="number" class="ob-input" id="txStcg111a" data-help="capital_gains.stcg_111a" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span id="lblLtcg112a">Long-term gains</span>
+                      <input type="number" class="ob-input" id="txLtcg112a" data-help="capital_gains.ltcg_112a" placeholder="0">
+                    </label>
+                  </div>
+                  <div class="tax-subhead">Other assets (property, gold, unlisted, debt funds)</div>
+                  <div class="tax-grid tax-grid--2">
+                    <label class="tax-field">
+                      <span>Short-term gains</span>
+                      <input type="number" class="ob-input" id="txStcgOther" data-help="capital_gains.stcg_other" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Long-term gains</span>
+                      <input type="number" class="ob-input" id="txLtcgOther" data-help="capital_gains.ltcg_other" placeholder="0">
+                    </label>
+                  </div>
+                  <div class="tax-subhead">Brought-forward losses</div>
+                  <div class="tax-grid tax-grid--3">
+                    <label class="tax-field">
+                      <span>Short-term loss</span>
+                      <input type="number" class="ob-input" id="txBfStcl" data-help="capital_gains.brought_forward_stcl" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Long-term loss</span>
+                      <input type="number" class="ob-input" id="txBfLtcl" data-help="capital_gains.brought_forward_ltcl" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>TDS deducted</span>
+                      <input type="number" class="ob-input" id="txCapitalTds" data-help="capital_gains.tds_deducted" min="0" placeholder="0">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- 5. Other sources -->
+            <details class="tax-head" id="headOther">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">05</span>
+                <span class="tax-head__title">Other Sources</span>
+                <span class="tax-head__amount" data-head-amount="other_sources">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <label class="tax-field tax-field--check">
+                  <input type="checkbox" id="txOtherEnabled" data-help="other_sources.enabled">
+                  <span>I have interest, dividend or other income</span>
+                </label>
+                <div class="tax-subsection" data-requires="txOtherEnabled">
+                  <div class="tax-grid tax-grid--3">
+                    <label class="tax-field">
+                      <span>Savings bank interest</span>
+                      <input type="number" class="ob-input" id="txSavingsInterest" data-help="other_sources.savings_interest" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Fixed deposit interest</span>
+                      <input type="number" class="ob-input" id="txFdInterest" data-help="other_sources.fd_interest" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Other interest</span>
+                      <input type="number" class="ob-input" id="txOtherInterest" data-help="other_sources.other_interest" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Dividend income</span>
+                      <input type="number" class="ob-input" id="txDividend" data-help="other_sources.dividend_income" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Family pension</span>
+                      <input type="number" class="ob-input" id="txFamilyPension" data-help="other_sources.family_pension" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Winnings (lottery / gaming)</span>
+                      <input type="number" class="ob-input" id="txWinnings" data-help="other_sources.winnings" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>Other income</span>
+                      <input type="number" class="ob-input" id="txOtherIncome" data-help="other_sources.other_income" min="0" placeholder="0">
+                    </label>
+                    <label class="tax-field">
+                      <span>TDS deducted</span>
+                      <input type="number" class="ob-input" id="txOtherTds" data-help="other_sources.tds_deducted" min="0" placeholder="0">
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- 6. Deductions -->
+            <details class="tax-head" id="headDeductions">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">06</span>
+                <span class="tax-head__title">Deductions</span>
+                <span class="tax-head__amount" id="taxDeductionsHeadAmount">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <p class="tax-hint" id="taxDeductionsIntro"></p>
+
+                <div class="tax-subhead">Fed in from your salary structure</div>
+                <div class="tax-grid tax-grid--2">
+                  <label class="tax-field">
+                    <span>Your own PF contribution (counts toward 80C)</span>
+                    <input type="number" class="ob-input" id="txEmployeePf" data-help="deductions.employee_pf_contribution" min="0" placeholder="0">
+                  </label>
+                  <label class="tax-field">
+                    <span>Home loan principal repaid (counts toward 80C)</span>
+                    <input type="number" class="ob-input" id="txHomeLoanPrincipal" data-help="deductions.home_loan_principal" min="0" placeholder="0">
+                  </label>
+                </div>
+
+                <div class="tax-subhead">Chapter VI-A</div>
+                <div class="tax-deductions" id="txDeductions"></div>
+              </div>
+            </details>
+
+            <!-- 7. Taxes already paid -->
+            <details class="tax-head" id="headTaxesPaid">
+              <summary class="tax-head__summary">
+                <span class="tax-head__index">07</span>
+                <span class="tax-head__title">Tax Already Paid</span>
+                <span class="tax-head__amount" id="taxPrepaidHeadAmount">…</span>
+              </summary>
+              <div class="tax-head__body">
+                <p class="tax-hint">
+                  TDS is picked up from each head above. Add anything you paid directly here.
+                  Reconcile the total against Form&nbsp;26AS / AIS before filing.
+                </p>
+                <div class="tax-grid tax-grid--2">
+                  <label class="tax-field">
+                    <span>Advance tax paid</span>
+                    <input type="number" class="ob-input" id="txAdvanceTax" data-help="advance_tax_paid" min="0" placeholder="0">
+                  </label>
+                  <label class="tax-field">
+                    <span>Self-assessment tax paid</span>
+                    <input type="number" class="ob-input" id="txSelfAssessmentTax" data-help="self_assessment_tax_paid" min="0" placeholder="0">
+                  </label>
+                </div>
+                <ul class="tax-tds-list" id="txTdsBreakdown"></ul>
+              </div>
+            </details>
+
+          </div>
+
+          <!-- ---------- Summary column ---------- -->
+          <aside class="tax-summary" id="taxSummary">
+            <section class="tax-rail">
+              <h3 class="tax-rail__title">Income summary</h3>
+
+              <div class="tax-summary__total">
+                <span class="tax-summary__total-label">Gross Total Income</span>
+                <span class="tax-summary__total-value" id="taxGti">₹0</span>
+              </div>
+
+              <ul class="tax-summary__heads" id="taxSummaryHeads"></ul>
+
+              <div class="tax-summary__row tax-summary__row--tds">
+                <span>Tax already paid</span>
+                <span id="taxTotalTds">₹0</span>
+              </div>
+
+              <div class="tax-summary__next" id="taxNextStep">
+                Tax computation, regime comparison and recommendations arrive in
+                the next steps.
+              </div>
+            </section>
+
+            <!-- Deductions — split by regime, since most are old-regime only -->
+            <section class="tax-rail" id="taxDeductionsPanel" hidden>
+              <h3 class="tax-rail__title">Deductions</h3>
+              <div id="taxDeductionsBody"></div>
+            </section>
+
+            <!-- HRA exemption — the three-limb test, showing which one bit -->
+            <section class="tax-rail" id="taxHraPanel" hidden>
+              <h3 class="tax-rail__title">HRA exemption</h3>
+              <div id="taxHraBody"></div>
+            </section>
+
+            <section class="tax-rail" id="taxWarningsPanel" hidden>
+              <h3 class="tax-rail__title">Points to note</h3>
+              <ul class="tax-warnings" id="taxWarnings"></ul>
+            </section>
+
+            <p class="tax-disclaimer" id="taxDisclaimer"></p>
+          </aside>
+
+        </div>
+      </section>
+
+      <!-- ================= MONEY SPLITS VIEW ================= -->
+      <!-- Rendered entirely by js/split.js on first open, so the markup here is
+           only the mount point — nothing static to fall out of sync with the
+           API. A merge left two copies of this section carrying the same id,
+           which put a second, permanently dead #view-split in the document and
+           orphaned the ALERTS heading below from the section it labels. -->
+      <section class="view" id="view-split"></section>
+
+      <!-- ================= ALERTS VIEW (Startup) ================= -->
+      <section class="view" id="view-alerts">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>Risk alerts</h3>
+            <span class="dot dot--live"></span>
+          </div>
+          <ul class="alert-list" id="alertsFullList"></ul>
+        </div>
+      </section>
+
+      <!-- ================= REPORTS VIEW ================= -->
+      <section class="view" id="view-reports">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>Daily financial brief</h3>
+          </div>
+          <div id="dailyBriefFull"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Weekly financial health report</h3>
+            <button class="btn" id="btnRefreshWeekly"
+              style="padding:6px 12px; font-size:12.5px; min-height:0;">Refresh</button>
+          </div>
+          <div id="weeklyReport"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Weekly spend report</h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="weeklyReportHistorySelect" class="ob-input"
+                style="width:auto; margin-bottom:0; padding:6px 10px; font-size:12.5px;"></select>
+              <button class="btn btn--primary" id="btnDownloadWeeklyPdf"
+                style="padding:6px 14px; font-size:12.5px; min-height:0;">Download PDF</button>
+            </div>
+          </div>
+          <div id="weeklySuggestions"></div>
+        </div>
+      </section>
+
+      <!-- ================= FUNDRAISE READINESS VIEW =================
+           Startup only. Every panel is filled by js/fundraise.js from
+           GET /startup/fundraise/readiness; nothing here is hardcoded. -->
+      <section class="view" id="view-fundraise">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>Fundraise readiness</h3>
+            <button class="btn" id="btnRefreshFundraise"
+              style="padding:6px 12px; font-size:12.5px; min-height:0;">Refresh</button>
+          </div>
+          <div id="frHero"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>What you would need to raise</h3>
+          </div>
+          <div id="frAsk"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Blocking your raise</h3>
+          </div>
+          <div id="frBlockers"></div>
+          <div class="panel__head" style="margin-top:18px;">
+            <h3>Worth watching</h3>
+          </div>
+          <div id="frWatch"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Your metrics against stage benchmarks</h3>
+          </div>
+          <div id="frBenchmarks"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>For context</h3>
+          </div>
+          <div class="stat-grid" id="frContext"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Diligence gaps</h3>
+            <span class="dot" id="frGapCount"
+              style="font-family:var(--font-mono); font-size:11px; color:var(--ink-muted);"></span>
+          </div>
+          <p style="color:var(--ink-muted); font-size:12.5px; line-height:1.6; margin:0 0 14px;">
+            Questions an investor will ask that your data cannot answer yet. Each one names exactly what
+            is missing and what supplying it unlocks.
+          </p>
+          <div id="frGaps"></div>
+        </div>
+
+        <div style="margin-top:16px;" id="frDisclaimer"></div>
+      </section>
+
+      <!-- ================= GST CALCULATOR VIEW =================
+           Startup only. Slabs, supply types and scheme rules are fetched from
+           GET /startup/gst/config — no rate is hardcoded in this markup. -->
+      <section class="view" id="view-gst">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>GST calculator</h3>
+            <span id="gstGstin"
+              style="font-family:var(--font-mono); font-size:11px; color:var(--ink-muted);"></span>
+          </div>
+          <div id="gstHeadline"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Invoice</h3>
+            <div class="cmp-filters">
+              <select id="gstMode" class="ob-input" title="Add GST on top, or extract it from an inclusive amount"></select>
+              <select id="gstSupply" class="ob-input" title="Decides the CGST/SGST versus IGST split"></select>
+              <input id="gstInvoiceDate" class="ob-input" type="date"
+                title="Invoice date — picks the rate structure in force on that day"
+                style="width:auto; margin-bottom:0; padding:6px 10px; font-size:12.5px;">
+              <select id="gstStructure" class="ob-input" title="Which rate structure applies"></select>
+            </div>
+          </div>
+
+          <div id="gstSupplyNote" style="margin-bottom:12px;"></div>
+
+          <div class="gst-table-wrap">
+            <table class="gst-table">
+              <thead>
+                <!-- data-help-key names the explanation in field_guidance
+                     (GET /startup/gst/config); gst.js adds the "i" button. -->
+                <tr>
+                  <th data-help-key="lineDescription">Description</th>
+                  <th data-help-key="lineHsn">HSN/SAC</th>
+                  <th class="num" data-help-key="lineQty">Qty</th>
+                  <th class="num" data-help-key="lineAmount">Amount</th>
+                  <th data-help-key="lineRate">Rate</th>
+                  <th class="num" data-help-key="lineCess">Cess %</th>
+                  <th class="num" data-help-key="lineDiscount">Discount</th>
+                  <th id="gstRcmHead" data-help-key="lineRcm" title="Reverse charge">RCM</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gstLines"></tbody>
+            </table>
+          </div>
+          <div id="gstLineHelp"></div>
+
+          <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+            <button class="btn" id="gstAddLine"
+              style="padding:6px 14px; font-size:12.5px; min-height:0;">+ Add line</button>
+            <button class="btn" id="gstClear"
+              style="padding:6px 14px; font-size:12.5px; min-height:0;">Clear</button>
+            <button class="btn btn--primary" id="gstSave"
+              style="padding:6px 14px; font-size:12.5px; min-height:0;">Save working set</button>
+            <span id="gstSaveState"
+              style="font-family:var(--font-mono); font-size:11px; color:var(--ink-muted);"></span>
+          </div>
+          <div id="gstWarnings" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="gst-two-col">
+          <div class="panel">
+            <div class="panel__head"><h3>Totals</h3></div>
+            <div id="gstTotals"></div>
+          </div>
+          <div class="panel">
+            <div class="panel__head"><h3>Rate-wise breakup</h3></div>
+            <div id="gstRateSummary"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Net payable for the period</h3>
+            <div class="cmp-filters">
+              <label style="font-size:12px; color:var(--ink-muted);" for="gstItc">Input tax credit</label>
+              <input id="gstItc" class="ob-input" type="number" min="0" step="any" placeholder="0"
+                style="width:140px; margin-bottom:0; padding:6px 10px; font-size:12.5px;">
+            </div>
+          </div>
+          <div id="gstNet"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Composition scheme comparison</h3>
+            <div class="cmp-filters">
+              <select id="gstComposition" class="ob-input"></select>
+              <input id="gstTurnover" class="ob-input" type="number" min="0" step="any"
+                placeholder="Annual turnover"
+                style="width:170px; margin-bottom:0; padding:6px 10px; font-size:12.5px;">
+            </div>
+          </div>
+          <div id="gstCompositionOut"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Registration threshold</h3>
+            <div class="cmp-filters">
+              <select id="gstBusinessType" class="ob-input"></select>
+              <label style="font-size:12px; color:var(--ink-muted); display:flex; align-items:center; gap:6px;">
+                <input id="gstSpecialState" type="checkbox"> Special category state
+              </label>
+            </div>
+          </div>
+          <div id="gstRegistration"></div>
+        </div>
+
+
+        <div class="gst-two-col">
+          <div class="panel">
+            <div class="panel__head"><h3>GSTIN checker</h3></div>
+            <div class="cmp-filters" style="margin-bottom:12px;">
+              <input id="gstGstinInput" class="ob-input" type="text" maxlength="15"
+                placeholder="15-character GSTIN"
+                style="width:230px; margin-bottom:0; padding:6px 10px; font-size:12.5px;
+                       font-family:var(--font-mono); text-transform:uppercase;">
+              <button class="btn" id="gstGstinCheck"
+                style="padding:6px 14px; font-size:12.5px; min-height:0;">Check</button>
+            </div>
+            <div id="gstGstinResult"></div>
+          </div>
+          <div class="panel">
+            <div class="panel__head"><h3>HSN / SAC finder</h3></div>
+            <div class="cmp-filters" style="margin-bottom:12px;">
+              <input id="gstHsnQuery" class="ob-input" type="text"
+                placeholder="Search by code or description"
+                style="width:230px; margin-bottom:0; padding:6px 10px; font-size:12.5px;">
+              <button class="btn" id="gstHsnSearch"
+                style="padding:6px 14px; font-size:12.5px; min-height:0;">Search</button>
+            </div>
+            <div id="gstHsnResult"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>What applies at your turnover</h3>
+          </div>
+          <div id="gstApplicability"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>How to file</h3>
+          </div>
+          <div id="gstFilingGuides"></div>
+        </div>
+
+        <div class="gst-two-col">
+          <div class="panel">
+            <div class="panel__head"><h3>Rate slabs</h3></div>
+            <div id="gstSlabRef"></div>
+          </div>
+          <div class="panel">
+            <div class="panel__head"><h3>Reverse charge</h3></div>
+            <div id="gstRcmRef"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;" id="gstDisclaimer"></div>
+      </section>
+
+      <!-- ================= COMPLIANCE CENTER VIEW =================
+           Startup only. Filled by js/compliance.js from
+           GET /startup/compliance. Due dates and penalty rates are served
+           by the backend so nothing statutory is hardcoded here. -->
+      <section class="view" id="view-compliance">
+        <div class="panel">
+          <div class="panel__head">
+            <h3>Compliance position</h3>
+            <div class="cmp-filters">
+              <select id="cmpYear" class="ob-input"></select>
+              <select id="cmpAmountsAre" class="ob-input" title="How your logged amounts should be read for GST">
+                <option value="inclusive">Amounts are GST-inclusive</option>
+                <option value="exclusive">Amounts are GST-exclusive</option>
+              </select>
+              <button class="btn" id="btnRefreshCompliance"
+                style="padding:6px 12px; font-size:12.5px; min-height:0;">Refresh</button>
+            </div>
+          </div>
+          <div class="cmp-summary" id="cmpSummary"></div>
+          <p style="color:var(--ink-faint); font-size:11px; font-family:var(--font-mono); margin:12px 0 0;"
+            id="cmpTrackingNote"></p>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Next up</h3>
+          </div>
+          <div id="cmpNext"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Full calendar</h3>
+            <div class="cmp-filters">
+              <select id="cmpCategory" class="ob-input">
+                <option value="all">All categories</option>
+              </select>
+              <select id="cmpStatus" class="ob-input">
+                <option value="actionable">Actionable only</option>
+                <option value="overdue">Overdue</option>
+                <option value="due_soon">Due soon</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="filed">Filed</option>
+                <option value="filed_late">Filed late</option>
+                <option value="not_applicable">Not applicable</option>
+                <option value="before_tracking">Before tracking</option>
+                <option value="all">Everything</option>
+              </select>
+              <button class="btn" id="btnCmpMarkAllFiled" hidden
+                style="padding:6px 12px; font-size:12.5px; min-height:0;"></button>
+              <span id="cmpListCount"
+                style="font-family:var(--font-mono); font-size:11px; color:var(--ink-muted);"></span>
+            </div>
+          </div>
+          <div id="cmpList"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Estimated GST</h3>
+          </div>
+          <div id="cmpGst"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>Estimated TDS</h3>
+          </div>
+          <div id="cmpTds"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel__head">
+            <h3>GST registration</h3>
+          </div>
+          <div id="cmpRegistration"></div>
+          <div class="panel__head" style="margin-top:18px;">
+            <h3>Not applicable to you</h3>
+          </div>
+          <div id="cmpNotApplicable"></div>
+        </div>
+
+        <div style="margin-top:16px;" id="cmpDisclaimer"></div>
+      </section>
+
+      <!-- ================= PLANS & BILLING VIEW =================
+           Every persona. Rendered entirely by js/billing.js from
+           GET /billing/me, /billing/catalog and /billing/orders, so the
+           markup here is only the mount point. -->
+      <section class="view" id="view-billing"></section>
+
+      <!-- ================= SIMULATE VIEW ================= -->
+      <section class="view" id="view-simulate">
+        <div class="sim-layout">
+
+          <div class="panel sim-form">
+            <div class="panel__head">
+              <h3>Run a simulation</h3>
+            </div>
+
+            <!-- Filled by renderHandoffNotice() when Ask MoneyKal's contextual
+                 Simulation CTA hands a discovered decision over. Empty
+                 otherwise, so a scenario typed here looks exactly as it always
+                 has. -->
+            <div id="simHandoffNotice"></div>
+
+            <label class="field">
+              <span>What financial scenario do you want to explore?</span>
+              <textarea id="scenarioInput" class="ob-input sim-scenario-input" rows="4"
+                placeholder="e.g. What happens if I invest ₹20,000 every month for 3 years?"></textarea>
+            </label>
+
+            <div class="sim-chip-row" id="simSuggestions"></div>
+
+            <button class="btn btn--primary btn--block" id="runSimBtn">Run simulation</button>
+
+            <div class="pipeline" id="pipeline"></div>
+          </div>
+
+          <div class="sim-results" id="simResults">
+            <!-- At-rest state. Replaced wholesale by js/app.js on the first run,
+                 so nothing here needs to stay in sync with a real result. It is
+                 an EXAMPLE and says so twice — it must never read as the user's
+                 own figures. -->
+            <div class="sim-example">
+              <p class="sim-example__lead">Describe a scenario in plain language and run it to see a
+                grounded breakdown here. This is what one looks like.</p>
+
+              <div class="sim-example__card" aria-label="Example simulation result">
+                <span class="sim-example__flag">Example &mdash; not your data</span>
+
+                <p class="sim-example__q">&ldquo;Should I buy a car worth 12 lakh with a 5 year loan at 9.5%?&rdquo;</p>
+
+                <div class="sim-example__grid">
+                  <div>
+                    <span class="sim-example__k">Monthly EMI</span>
+                    <strong class="sim-example__v">&#8377;25,202</strong>
+                  </div>
+                  <div>
+                    <span class="sim-example__k">Surplus after</span>
+                    <strong class="sim-example__v">&#8377;42,798<span class="sim-example__u">/mo</span></strong>
+                  </div>
+                  <div>
+                    <span class="sim-example__k">Total interest</span>
+                    <strong class="sim-example__v">&#8377;3,12,134</strong>
+                  </div>
+                  <div>
+                    <span class="sim-example__k">Verdict</span>
+                    <strong class="sim-example__v sim-example__v--ok">Affordable</strong>
+                  </div>
+                </div>
+
+                <p class="sim-example__formula">
+                  <span class="sim-example__k">How it is calculated</span>
+                  EMI = P&nbsp;&times;&nbsp;r&nbsp;&times;&nbsp;(1+r)<sup>n</sup> &divide; ((1+r)<sup>n</sup>&nbsp;&minus;&nbsp;1),
+                  on a reducing balance, with P&nbsp;=&nbsp;&#8377;12,00,000, r&nbsp;=&nbsp;9.5%&nbsp;&divide;&nbsp;12 and n&nbsp;=&nbsp;60.
+                </p>
+
+                <ul class="sim-example__notes">
+                  <li>Assumes the full price is financed with no down payment.</li>
+                  <li>Excludes insurance, registration and running costs.</li>
+                  <li>Every figure is computed here, not written by a language model.</li>
+                </ul>
+              </div>
+
+              <p class="sim-example__foot">Ask about a purchase, a loan, an EMI, an investment, a
+                savings goal or a period without income &mdash; in your own words.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:24px;">
+          <div class="panel__head">
+            <h3>Simulation history</h3>
+          </div>
+          <ul class="sim-history" id="simHistory">
+            <li class="empty-row">Loading your past simulations…</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ================= ASK TWIN VIEW ================= -->
+      <section class="view" id="view-ask" style="height: 100%; position: relative;">
+        <!-- Glowing background specific to chat -->
+        <div class="chat-glow-bg"></div>
+
+        <div style="display: flex; height: 100%; position: relative; z-index: 1;">
+
+          <div class="chat-history-sidebar">
+            <button class="btn btn-new-chat-gemini" id="btnNewChat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>New chat</span>
+            </button>
+            <div class="history-label">Recent</div>
+            <ul id="chatSessionList" class="gemini-history-list">
+              <!-- sessions will be injected here -->
+            </ul>
+          </div>
+
+          <div class="chat-panel gemini-chat-panel" style="flex: 1; margin: 0; max-height: calc(100vh - 140px);">
+            <div class="chat-greeting" id="chatGreeting">
+              <div class="tathya-hero">
+                <p class="tathya-hero__brand">Tathya</p>
+                <h2>What's the vibe, <span id="chatGreetingName">Harshit</span>?</h2>
+                <p class="tathya-hero__tag">Ask. Analyze. Act.</p>
+              </div>
+            </div>
+
+            <div class="chat-log" id="chatLog"></div>
+
+            <div class="chat-bottom-area">
+              <div class="chat-suggestions" id="chatSuggestions"></div>
+
+              <form class="chat-input gemini-input-pill" id="chatForm">
+                <button type="button" class="btn-attach" title="Attach file">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+
+                <input type="text" id="chatInput" placeholder="Ask Tathya…" autocomplete="off">
+
+                <div class="gemini-input-actions">
+                  <button type="button" class="btn-voice-gemini btn-voice-chat-input" id="btnVoiceChatInput" title="Varta · Voice assistant" aria-label="Varta · Voice assistant">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="23"></line>
+                      <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                    <span class="varta-chip__name">Varta</span>
+                  </button>
+                  <button type="submit" class="btn-send-gemini">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linejoin="round" stroke-linecap="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </button>
+                </div>
+              </form>
+              <p class="chat-note">Answers are generated from your sample profile data. This is demo mode, not a live
+                account connection.</p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
+
+    </div>
+  </div>
+
+  <!-- ================= VOICE MODE OVERLAY ================= -->
+  <div id="voiceOverlay" class="voice-overlay hidden">
+    <button class="voice-overlay__close" id="btnVoiceClose" title="Exit Voice Mode">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+
+    <div class="voice-overlay__content">
+      <p class="varta-lockup">
+        <span class="varta-lockup__name">Varta</span>
+        <span class="varta-lockup__role">Voice assistant</span>
+      </p>
+      <div class="voice-orb-container">
+        <div class="voice-orb" id="voiceOrb"></div>
+        <div class="voice-orb-ring"></div>
+        <div class="voice-orb-ring delay"></div>
+      </div>
+      <h2 class="voice-status" id="voiceStatus">Speak. Ask. Understand.</h2>
+      <p class="voice-hint" id="voiceHint">Tap the mic to start a live conversation</p>
+      <!-- Live only. Voice transcripts are not saved to chat history. -->
+      <div class="voice-transcript" id="voiceTranscript" aria-live="polite"></div>
+    </div>
+
+    <div class="voice-overlay__controls">
+      <button class="voice-btn voice-btn--ghost hidden" id="btnVoiceMute" title="Mute microphone">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+        </svg>
+      </button>
+      <button class="voice-btn" id="btnVoiceAction">
+        <svg id="iconVoiceMic" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="23"></line>
+          <line x1="8" y1="23" x2="16" y2="23"></line>
+        </svg>
+        <svg id="iconVoiceStop" viewBox="0 0 24 24" width="28" height="28" fill="currentColor" class="hidden">
+          <rect x="6" y="6" width="12" height="12"></rect>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- EDIT PROFILE MODAL -->
+  <div class="modal-overlay" id="editProfileModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="editProfileModalTitle">Edit Profile</h3>
+        <button class="modal-close" id="btnCloseEditProfileModal">&times;</button>
+      </div>
+      <div id="editProfileModalError" style="display:none; color: var(--warn, #ef4444); background: rgba(239, 68, 68, 0.1); padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 13px;"></div>
+      <form id="editProfileForm">
+        <div id="editProfileFieldsContainer"></div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px;">
+          <button type="button" class="btn-outline" id="btnCancelEditProfile" style="padding: 8px 16px; font-size: 13px;">Cancel</button>
+          <button type="submit" class="btn-login-solid" id="btnSaveEditProfile" style="padding: 8px 20px; font-size: 13px; margin: 0;">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ DAILY HOME MODALS ============ -->
+  <div class="modal-overlay" id="dhGoalModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="dhGoalModalTitle">Set a financial goal</h3>
+        <button class="modal-close" id="dhGoalModalClose" type="button">&times;</button>
+      </div>
+      <p class="dh-modal__err" id="dhGoalModalError" hidden></p>
+      <form id="dhGoalForm" class="dh-form">
+        <label class="dh-field">
+          <span>What are you saving for?</span>
+          <input type="text" id="dhGoalName" class="ob-input" placeholder="Emergency fund" maxlength="120" required>
+        </label>
+        <div class="dh-field-row">
+          <label class="dh-field">
+            <span>Target amount</span>
+            <input type="number" id="dhGoalTarget" class="ob-input" placeholder="100000" min="1" step="1" required>
+          </label>
+          <label class="dh-field">
+            <span>Saved so far</span>
+            <input type="number" id="dhGoalCurrent" class="ob-input" placeholder="0" min="0" step="1" value="0">
+          </label>
+        </div>
+        <div class="dh-field-row">
+          <label class="dh-field">
+            <span>Target date <em>optional</em></span>
+            <input type="date" id="dhGoalDate" class="ob-input">
+          </label>
+          <label class="dh-field">
+            <span>Type</span>
+            <select id="dhGoalCategory" class="ob-input">
+              <option value="emergency_fund">Emergency fund</option>
+              <option value="travel">Travel</option>
+              <option value="purchase">Purchase</option>
+              <option value="investment">Investment</option>
+              <option value="custom" selected>Something else</option>
+            </select>
+          </label>
+        </div>
+        <div class="dh-form__actions">
+          <button type="button" class="btn-outline dh-btn-ghost" id="dhGoalCancel">Cancel</button>
+          <button type="submit" class="btn btn--primary dh-btn-go" id="dhGoalSubmit">Save goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="dhUpcomingModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add an upcoming payment</h3>
+        <button class="modal-close" id="dhUpcomingModalClose" type="button">&times;</button>
+      </div>
+      <p class="dh-modal__err" id="dhUpcomingModalError" hidden></p>
+      <form id="dhUpcomingForm" class="dh-form">
+        <label class="dh-field">
+          <span>What is it?</span>
+          <input type="text" id="dhUpName" class="ob-input" placeholder="Electricity bill" maxlength="120" required>
+        </label>
+        <div class="dh-field-row">
+          <label class="dh-field">
+            <span>Amount</span>
+            <input type="number" id="dhUpAmount" class="ob-input" placeholder="2400" min="1" step="1" required>
+          </label>
+          <label class="dh-field">
+            <span>Due date</span>
+            <input type="date" id="dhUpDate" class="ob-input" required>
+          </label>
+        </div>
+        <div class="dh-field-row">
+          <label class="dh-field">
+            <span>Category</span>
+            <select id="dhUpCategory" class="ob-input"></select>
+          </label>
+          <label class="dh-field">
+            <span>Repeats</span>
+            <select id="dhUpRecurrence" class="ob-input">
+              <option value="none">Single</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+        </div>
+        <label class="dh-field">
+          <span>Payment Link (Optional)</span>
+          <input type="url" id="dhUpUrl" class="ob-input" placeholder="https://netflix.com">
+        </label>
+        <div class="dh-form__actions">
+          <button type="button" class="btn-outline dh-btn-ghost" id="dhUpcomingCancel">Cancel</button>
+          <button type="submit" class="btn btn--primary dh-btn-go" id="dhUpcomingSubmit">Add payment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BUDGET GOAL MODAL -->
+  <div class="modal-overlay" id="budgetModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Set a Monthly Budget</h3>
+        <button class="modal-close" id="btnCloseBudgetModal" type="button">&times;</button>
+      </div>
+      <p class="dh-modal__err" id="budgetModalError" hidden></p>
+      <form id="budgetForm" class="dh-form">
+        <div class="dh-field-row">
+          <label class="dh-field">
+            <span>Category</span>
+            <select id="budgetCategory" class="ob-input">
+              <option value="Food &amp; Dining">Food &amp; Dining</option>
+              <option value="Transport">Transport</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Education">Education</option>
+              <option value="Travel">Travel</option>
+              <option value="Subscriptions">Subscriptions</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label class="dh-field">
+            <span>Monthly Limit</span>
+            <input type="number" id="budgetLimit" class="ob-input" placeholder="3000" min="1" step="1" required>
+          </label>
+        </div>
+        <label class="dh-field">
+          <span>Notes (Optional)</span>
+          <input type="text" id="budgetNotes" class="ob-input" placeholder="e.g. includes Swiggy">
+        </label>
+        <div class="dh-form__actions">
+          <button type="button" class="btn-outline dh-btn-ghost" id="btnCancelBudget">Cancel</button>
+          <button type="submit" class="btn btn--primary dh-btn-go" id="btnSubmitBudget">Save Budget</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- PDF STATEMENT IMPORT MODAL -->
+  <div class="modal-overlay" id="pdfImportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Import Bank Statement</h3>
+        <button class="modal-close" id="btnClosePdfModal" type="button">&times;</button>
+      </div>
+      <p style="color: var(--ink-faint); font-size: 13px; margin-bottom: 16px;">Upload a PDF bank statement. The AI will automatically extract all transactions and add them to Hisaab. Duplicates are skipped safely.</p>
+      <p class="dh-modal__err" id="pdfModalError" hidden></p>
+      <div id="pdfDropZone" style="border: 2px dashed var(--line-strong); border-radius: 10px; padding: 36px 24px; text-align: center; cursor: pointer; transition: border-color 0.2s; background: var(--surface-raised);">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="var(--ink-faint)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; display: block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        <p style="margin: 0; font-size: 15px; font-weight: 500;" id="pdfDropText">Click or drag & drop your PDF here</p>
+        <p style="margin: 6px 0 0; font-size: 12px; color: var(--ink-faint);">PDF files only · max 10 MB</p>
+        <input type="file" id="pdfFileInput" accept=".pdf" style="display:none">
+      </div>
+      <div id="pdfResult" style="margin-top: 16px; display:none;">
+        <div id="pdfResultText" style="padding: 14px; border-radius: 8px; background: var(--surface-raised); font-size: 14px; line-height: 1.6;"></div>
+      </div>
+      <div class="dh-form__actions" style="margin-top: 20px;">
+        <button type="button" class="btn-outline dh-btn-ghost" id="btnCancelPdf">Close</button>
+        <button type="button" class="btn btn--primary dh-btn-go" id="btnUploadPdf" disabled>Upload & Parse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA MODAL -->
+  <div class="modal-overlay" id="cameraModal" style="z-index: 9999;">
+    <div class="modal-card" style="width: auto; max-width: 90vw;">
+      <div class="modal-header">
+        <h3>Camera Scan</h3>
+        <button class="modal-close" id="btnCloseCameraModal">&times;</button>
+      </div>
+      <div style="padding: 16px; display: flex; flex-direction: column; align-items: center;">
+        <video id="cameraVideoFeed" autoplay playsinline style="max-width: 100%; max-height: 60vh; border-radius: 8px; background: #000;"></video>
+        <canvas id="cameraCanvas" style="display: none;"></canvas>
+        <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;">
+          <button type="button" class="btn-outline" id="btnCameraCancel" style="padding: 10px 20px;">Cancel</button>
+          <button type="button" class="btn btn--primary" id="btnCameraCapture" style="padding: 10px 24px; font-weight: bold;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            Capture
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Right-Side Call Widget -->
+  <button type="button" class="floating-call-btn" id="btnVoiceMode" title="Call MoneyKal Varta" aria-label="Call MoneyKal Varta">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+    </svg>
+    <span class="floating-call-btn__pulse"></span>
+    <span class="floating-call-btn__label">Call Varta</span>
+  </button>
+
+
+  <!-- ==================================================================
+       live.life.fully — a full-viewport overlay that sits beside the app.
+
+       Outside .shell on purpose: it owns the whole viewport when open and
+       must never inherit the dashboard's grid, padding or theme. Everything
+       inside is rendered by js/live-life.js from GET /live-life; the markup
+       here is only the stage, the chrome and the empty section slots.
+       ================================================================== -->
+  <div class="llf" id="llf" hidden aria-hidden="true" role="dialog" aria-modal="true"
+       aria-label="My Freedom Balance">
+
+
+    <header class="llf__bar">
+      <span class="llf__brand">
+        <span class="mk-mark" aria-hidden="true">
+          <img src="assets/brand/moneykal-mark.png" alt="" width="32" height="32">
+        </span>
+        MoneyKal
+      </span>
+      <button type="button" class="llf__ctrl" id="llfClose" title="Close (Esc)"
+              aria-label="Close My Freedom Balance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </header>
+
+    <div class="llf__scroll" id="llfScroll">
+
+      <!-- 1. My Freedom Balance: the figure, what it means, and how income
+              becomes it. The opening and the income flow share the first
+              screen, so the number is never seen without its explanation. -->
+      <section class="llf-hero" id="llfHero">
+        <div class="llf-fb" id="llfHeroCards"></div>
+      </section>
+
+      <!-- 2-4. The rest of the story: what is shaping it, what would change it,
+                and what it all means. Hidden until the API has filled them. -->
+      <section class="llf-sec llf-fb-sec" id="llfShapeSec" hidden></section>
+      <section class="llf-sec llf-fb-sec" id="llfLeverSec" hidden></section>
+      <section class="llf-sec llf-fb-sec" id="llfMeaningSec" hidden></section>
+
+      <!-- 5. live.life.fully: what the balance is for. The identity used to
+              open the page; it now introduces the half that puts the money
+              to use, after the reader knows how much there is. -->
+      <section class="llf-sec llf-bridge" id="llfBridge">
+        <p class="llf-hero__eyebrow">Money isn’t just about surviving</p>
+        <h2 class="llf-bridge__title">live. life. <span>fully</span></h2>
+        <p class="llf-hero__sub" id="llfSubtitle"></p>
+      </section>
+
+      <!-- 6-10. Rendered from the API; each stays hidden until it has content -->
+      <section class="llf-sec" id="llfMomentSec" hidden></section>
+      <section class="llf-sec" id="llfAdventureSec" hidden></section>
+      <section class="llf-sec" id="llfStashSec" hidden></section>
+      <section class="llf-sec" id="llfCatsSec"></section>
+      <section class="llf-sec" id="llfCheckSec"></section>
+
+    </div>
+
+    <!-- Create / fund a stash. Writes through the existing goal endpoints. -->
+    <div class="llf-sheet" id="llfSheet" hidden></div>
+  </div>
+
+  <!-- Vendored locally rather than loaded from a CDN. These three were the
+       first scripts on the page with neither defer nor async, so the browser
+       blocked on all three before it would fetch any application script: on a
+       slow or CDN-blocking network the shell rendered, the sidebar showed
+       every persona's items because gating is JS, and nothing ever loaded.
+       None of the three is needed at boot — marked renders chat markdown,
+       html2canvas and jsPDF only run on an export — so they are also deferred. -->
+  <script defer src="vendor/marked.min.js"></script>
+  <script defer src="vendor/html2canvas.min.js"></script>
+  <script defer src="vendor/jspdf.umd.min.js"></script>
+  <!-- ============ Daily AI Insights — schedule ============
+       Opened by the Schedule button on the Daily AI Insights section, which
+       used to open Edit Profile. Saved through PUT /home/insight-schedule and
+       executed by backend/scheduler.py. Markup lives here rather than being
+       built in JS so it is translatable and inspectable like the rest of the
+       view; js/home.js fills and opens it. -->
+  <!-- ======================================================================
+       ACCOUNT CENTRE
+
+       One dialog for everything about the person using MoneyKal: who they are,
+       what MoneyKal knows about their money, how the product behaves for them,
+       and how to leave. Declared once and opened from every avatar in the app,
+       so the Individual and Startup/CFO journeys cannot drift apart.
+
+       Structure follows the Overview's existing modal idiom (.ov-sched): a
+       scrim, a rounded panel, uppercase section labels and 42px inputs. It is
+       a full-height sheet under 640px and a centred dialog above it.
+
+       Fields are rendered by js/account.js from GET /profile/me and saved with
+       the update routes that already exist. Nothing here invents a figure.
+       ====================================================================== -->
+  <div class="acct" id="acct" hidden role="dialog" aria-modal="true" aria-labelledby="acctTitle">
+    <div class="acct__scrim" data-account-close></div>
+
+    <div class="acct__panel">
+      <header class="acct__head">
+        <h2 class="acct__title" id="acctTitle">Account</h2>
+        <button type="button" class="acct__close" data-account-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <!-- Identity ------------------------------------------------------ -->
+      <section class="acct__id">
+        <div class="acct__pic">
+          <div class="acct__avatar" id="ovPicPreview" aria-hidden="true">M</div>
+          <button type="button" class="acct__picbtn" id="ovPicChoose">Change</button>
+        </div>
+        <div class="acct__idtext">
+          <p class="acct__name" id="acctName">Signed in</p>
+          <p class="acct__email" id="acctEmail">MoneyKal account</p>
+          <span class="acct__badge" id="acctPersona">Individual</span>
+        </div>
+      </section>
+
+      <div class="acct__picrow">
+        <button type="button" class="acct__btn" id="ovPicSave" hidden>Save picture</button>
+        <button type="button" class="acct__btn acct__btn--ghost" id="ovPicCancel" hidden>Cancel</button>
+        <button type="button" class="acct__btn acct__btn--ghost" id="ovPicRemove" hidden>Remove picture</button>
+        <p class="acct__hint" id="ovPicHint">PNG, JPG or WebP, up to 4 MB.</p>
+        <p class="acct__msg" id="ovPicMsg" role="status" hidden></p>
+      </div>
+      <input type="file" id="ovPicInput" accept="image/png,image/jpeg,image/webp" hidden>
+
+      <!-- Tabs ---------------------------------------------------------- -->
+      <nav class="acct__tabs" role="tablist" aria-label="Account sections">
+        <button type="button" class="acct__tab is-active" role="tab" data-acct-tab="details" aria-selected="true">Details</button>
+        <button type="button" class="acct__tab" role="tab" data-acct-tab="money" aria-selected="false">Financial profile</button>
+        <button type="button" class="acct__tab" role="tab" data-acct-tab="prefs" aria-selected="false">Preferences</button>
+        <button type="button" class="acct__tab" role="tab" data-acct-tab="privacy" aria-selected="false">Security</button>
+      </nav>
+
+      <div class="acct__body">
+        <!-- Personal details -->
+        <section class="acct__pane is-active" data-acct-pane="details">
+          <p class="acct__lede">How MoneyKal addresses you, and how to reach you.</p>
+          <div class="acct__grid" id="acctDetails"></div>
+        </section>
+
+        <!-- Financial profile -->
+        <section class="acct__pane" data-acct-pane="money">
+          <p class="acct__lede" id="acctMoneyLede">The figures every projection, the tax engine and your Risk DNA are computed from. Change one and the whole app follows.</p>
+          <div class="acct__grid" id="acctMoney"></div>
+        </section>
+
+        <!-- Preferences -->
+        <section class="acct__pane" data-acct-pane="prefs">
+          <p class="acct__lede">How the product behaves for you. These apply everywhere you are signed in.</p>
+
+          <div class="acct__pref">
+            <div>
+              <p class="acct__preflabel">Language</p>
+              <p class="acct__prefhint">Applies across the whole app and is remembered on this device.</p>
+            </div>
+            <div class="acct__seg" role="group" aria-label="Language">
+              <button type="button" class="acct__segbtn" data-acct-lang="en">English</button>
+              <button type="button" class="acct__segbtn" data-acct-lang="hi">हिंदी</button>
+            </div>
+          </div>
+
+          <div class="acct__pref">
+            <div>
+              <p class="acct__preflabel">Appearance</p>
+              <p class="acct__prefhint">Light or dark, remembered on this device.</p>
+            </div>
+            <div class="acct__seg" role="group" aria-label="Appearance">
+              <button type="button" class="acct__segbtn" data-acct-theme="light">Light</button>
+              <button type="button" class="acct__segbtn" data-acct-theme="dark">Dark</button>
+            </div>
+          </div>
+
+          <div class="acct__grid" id="acctPrefs"></div>
+        </section>
+
+        <!-- Security & privacy -->
+        <section class="acct__pane" data-acct-pane="privacy">
+          <p class="acct__lede">What MoneyKal holds, and what it will never ask for.</p>
+
+          <!-- MoneyKal PIN. js/account.js fills the badge and the lede from
+               GET /auth/pin/status on open, so this markup starts in the
+               state that is true for every account: unknown until asked. -->
+          <div class="acct-pin" id="acctPin">
+            <div class="acct-pin__head">
+              <h4 class="acct-pin__title">MoneyKal PIN</h4>
+              <span class="acct-pin__badge acct-pin__badge--off" id="acctPinBadge">Checking…</span>
+            </div>
+            <p class="acct-pin__lede" id="acctPinLede">
+              A 4- or 6-digit PIN unlocks MoneyKal on a device you chose to stay signed in on.
+              It is checked on our servers and never stored on your device. Your password is
+              still required every 3 days.
+            </p>
+
+            <div class="acct-pin__actions" id="acctPinActions">
+              <button type="button" class="acct__btn" id="acctPinSetBtn">Set up PIN</button>
+              <button type="button" class="acct__btn" id="acctPinOffBtn" hidden>Turn off PIN</button>
+            </div>
+
+            <form class="acct-pin__form" id="acctPinForm" hidden autocomplete="off">
+              <div class="acct-pin__row">
+                <label class="acct-pin__field">
+                  <span class="acct-pin__label">New PIN</span>
+                  <input type="password" class="acct-pin__input" id="acctPinNew" inputmode="numeric"
+                         pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="4 or 6 digits">
+                </label>
+                <label class="acct-pin__field">
+                  <span class="acct-pin__label">Confirm PIN</span>
+                  <input type="password" class="acct-pin__input" id="acctPinConfirm" inputmode="numeric"
+                         pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="Repeat it">
+                </label>
+              </div>
+              <div class="acct-pin__row">
+                <label class="acct-pin__field">
+                  <!-- Setting a PIN is a credential change, so the server asks
+                       for the account password even though this session is
+                       already signed in. -->
+                  <span class="acct-pin__label">Account password</span>
+                  <input type="password" class="acct-pin__input" id="acctPinPassword"
+                         autocomplete="current-password" placeholder="Confirm it is you">
+                </label>
+              </div>
+              <div class="acct-pin__actions">
+                <button type="submit" class="acct__btn acct__btn--primary" id="acctPinSave">Save PIN</button>
+                <button type="button" class="acct__btn" id="acctPinCancel">Cancel</button>
+              </div>
+            </form>
+
+            <p class="acct-pin__status" id="acctPinStatus" role="status" aria-live="polite"></p>
+          </div>
+
+          <ul class="acct__facts">
+            <li><b>Your password</b> is stored as a bcrypt hash. Nobody, including us, can read it back.</li>
+            <li><b>No payment credentials.</b> There is no field anywhere in MoneyKal for a card number, UPI PIN or net-banking login.</li>
+            <li><b>Your data is yours alone.</b> Every figure is locked to this account; no other account can read it.</li>
+            <li><b>AI answers send a pseudonymous copy</b> of your figures to a model provider — never your name, email or account id.</li>
+          </ul>
+          <div class="acct__links">
+            <a class="acct__link" href="security.html" target="_blank" rel="noopener">Security &amp; privacy, in full →</a>
+            <a class="acct__link" href="#" data-terms-open>Terms &amp; conditions →</a>
+          </div>
+        </section>
+      </div>
+
+      <footer class="acct__foot">
+        <button type="button" class="acct__logout" id="acctLogout">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Log out
+        </button>
+        <div class="acct__save">
+          <span class="acct__status" id="acctStatus" role="status"></span>
+          <button type="button" class="acct__btn acct__btn--primary" id="acctSave">Save changes</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <div class="ov-sched" id="ovSchedModal" hidden>
+    <div class="ov-sched__scrim" data-sched-close></div>
+
+    <div class="ov-sched__panel" role="dialog" aria-modal="true" aria-labelledby="ovSchedTitle">
+      <div class="ov-sched__head">
+        <h3 class="ov-sched__title" id="ovSchedTitle">Daily AI Insights</h3>
+        <button type="button" class="ov-sched__close" data-sched-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <p class="ov-sched__lede">Choose when MoneyKal reads your money and writes
+        your insight. It appears in this section — never as a notification.</p>
+
+      <div class="ov-sched__body">
+        <label class="ov-sched__field">
+          <span class="ov-sched__label">Time</span>
+          <input type="time" id="ovSchedTime" class="ov-sched__input" value="09:00">
+        </label>
+
+        <label class="ov-sched__field">
+          <span class="ov-sched__label">Frequency</span>
+          <!-- Options are written by js/home.js from the list the API returns,
+               so the dialog can never offer a frequency the scheduler cannot
+               honour. -->
+          <select id="ovSchedFreq" class="ov-sched__input"></select>
+        </label>
+
+        <label class="ov-sched__toggle">
+          <input type="checkbox" id="ovSchedEnabled" checked>
+          <span class="ov-sched__track" aria-hidden="true"><i></i></span>
+          <span class="ov-sched__toggleLabel">
+            <b>Enable schedule</b>
+            <em id="ovSchedSummary">Every day at 09:00</em>
+          </span>
+        </label>
+
+        <p class="ov-sched__note" id="ovSchedNote" hidden></p>
+      </div>
+
+      <div class="ov-sched__foot">
+        <button type="button" class="ov-sched__btn ov-sched__btn--ghost" data-sched-close>Cancel</button>
+        <button type="button" class="ov-sched__btn ov-sched__btn--primary" id="ovSchedSave">Save schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Before i18n.js, so the shared theme control is bound first -->
+  <!-- Must load before any script that calls the API: it resolves the
+       backend base URL for local, tunnelled and deployed builds alike. -->
+  <script src="js/config.js?v=1"></script>
+  <script src="js/app-shell.js?v=1"></script>
+  <!-- Translation store, then the engine that reads it. -->
+  <script src="js/i18n-strings.js?v=6"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js?v=6"></script>
+  <script src="js/api.js?v=13"></script>
+  <script src="js/startup.js?v=11"></script>
+  <!-- Before app.js so window.renderOvCommandCenter exists by the time
+       loadProfileAndRender() runs, whatever the fetch timing. -->
+  <script src="js/home.js?v=7"></script>
+  <script src="js/overview.js?v=6"></script>
+  <!-- Scenery first, then the controller. Both before app.js, so window.liveLife
+       exists by the time loadProfileAndRender() reaches overview.js. -->
+  <script src="js/live-life.js?v=7"></script>
+  <!-- Before app.js so window.taxCalculator exists when loadProfileAndRender()
+       decides whether this persona may see the Tax Calculator. -->
+  <script src="js/tax.js?v=2"></script>
+  <!-- Reads the figures tax.js renders and reflects them as filing progress.
+       Read-only; load order after tax.js is for clarity, not dependency. -->
+  <script src="js/tax-progress.js?v=1"></script>
+  <!-- Startup-only views. Both depend on helpers defined in startup.js
+       (suStatusLabel, suCalcInfoHtml, svgProgressRing) and app.js
+       (escapeHtml), but only inside function bodies that run on demand, so
+       loading before app.js is safe — the same arrangement startup.js uses. -->
+  <script src="js/fundraise.js?v=2"></script>
+  <script src="js/compliance.js?v=3"></script>
+  <script src="js/gst.js?v=5"></script>
+  <script src="js/feature-info.js?v=2"></script>
+  <script src="js/avatar.js?v=1"></script>
+  <script src="js/pin.js?v=1"></script>
+  <script src="js/account.js?v=2"></script>
+  <script src="js/app.js?v=14"></script>
+  <!-- After app.js: renders with its escapeHtml, and switchView opens it. -->
+  <script src="js/billing.js?v=5"></script>
+  <!-- After app.js: split.js's init() calls window.switchView when the page is
+       opened on a deep link, and mounts the notification bell into the topbar. -->
+  <script src="js/split.js?v=4"></script>
+  <script src="js/voice.js?v=9"></script>
+</body>
+
+</html>
